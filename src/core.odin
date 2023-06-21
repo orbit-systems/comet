@@ -13,46 +13,7 @@ import "core:strconv"
 main :: proc() {
 
     // load arguments
-    {
-        if len(os.args) < 2 {
-            print_help()
-            os.exit(0)
-        }
-
-        parsed_args : [dynamic]cmd_arg
-        defer delete(parsed_args)
-
-        for argument in os.args[1:] {
-            split_arg := strings.split(argument, ":")
-            if len(split_arg) == 1 {
-                append(&parsed_args, cmd_arg{argument, ""})
-            } else {
-                append(&parsed_args, cmd_arg{split_arg[0], split_arg[1]})
-            }
-        }
-
-        for argument, index in parsed_args {
-            switch argument.key {
-            case "-help":
-                print_help()
-                os.exit(0)
-            case "-debug":
-                ok := false
-                flag_dbg_verbosity, ok = strconv.parse_int(argument.val)
-                if !ok {
-                    die("ERR: expected int, got \"%s\"\n", argument.val)
-                }
-            case "-no-color":
-                flag_no_color = true
-            case: // default
-                if index == 0 && argument.key[0] != '-' {
-                    inpath = os.args[1]
-                    continue
-                }
-                die("ERR: invalid argument \"%s\"\n", argument.key)
-            }
-        }
-    }
+    load_arguments()
 
     file, readstatus := os.read_entire_file(inpath)
     if (!readstatus) {
@@ -100,6 +61,47 @@ loop :: proc() {
         }
     }
 
+}
+
+load_arguments :: proc() {
+    if len(os.args) < 2 {
+        print_help()
+        os.exit(0)
+    }
+
+    parsed_args : [dynamic]cmd_arg
+    defer delete(parsed_args)
+
+    for argument in os.args[1:] {
+        split_arg := strings.split(argument, ":")
+        if len(split_arg) == 1 {
+            append(&parsed_args, cmd_arg{argument, ""})
+        } else {
+            append(&parsed_args, cmd_arg{split_arg[0], split_arg[1]})
+        }
+    }
+
+    for argument, index in parsed_args {
+        switch argument.key {
+        case "-help":
+            print_help()
+            os.exit(0)
+        case "-debug":
+            ok := false
+            flag_dbg_verbosity, ok = strconv.parse_int(argument.val)
+            if !ok {
+                die("ERR: expected int, got \"%s\"\n", argument.val)
+            }
+        case "-no-color":
+            flag_no_color = true
+        case: // default
+            if index == 0 && argument.key[0] != '-' {
+                inpath = os.args[1]
+                continue
+            }
+            die("ERR: invalid argument \"%s\"\n", argument.key)
+        }
+    }
 }
 
 flag_dbg_verbosity  := -1
