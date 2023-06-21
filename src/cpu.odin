@@ -16,7 +16,7 @@ exec_instruction :: proc(cpu: ^aphelion_cpu_state, ins: ins_info) {
         case 0x63: //branching instructions
             switch(ins.func) {
                 case 0: //BRA
-                    cpu.registers[pc] = cpu.registers[pc] + se_to_u64(ins.imm, 20)*4
+                    cpu.registers[pc] += se_to_u64(ins.imm, 20)*4
                     cpu.increment_next = false
             }
     }

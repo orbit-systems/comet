@@ -9,3 +9,5 @@ loop:
 	addr rc, rb, rz
 	addr rb, ra, rz
 	bra loop
+
+int 0
