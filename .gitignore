@@ -1,0 +1,7 @@
+*.exe
+*.o
+*.ps1
+*.bin
+
+aas
+comet
