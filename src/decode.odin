@@ -10,7 +10,7 @@ ins_info :: struct {
     rde    : u8,
     rs1    : u8,
     rs2    : u8,
-    imm    : u32,
+    imm    : u64,
 }
 
 raw_decode :: proc(ins: u32) -> (ins_dec: ins_info) {
@@ -19,32 +19,33 @@ raw_decode :: proc(ins: u32) -> (ins_dec: ins_info) {
     current_fmt := ins_formats[ins_dec.opcode]
 
     switch ins_formats[ins_dec.opcode] {
-        case ins_fmt.R:
-            ins_dec.rde  = cast(u8) (ins >> 28 & 0xF)
-            ins_dec.rs1  = cast(u8) (ins >> 24 & 0xF)
-            ins_dec.rs2  = cast(u8) (ins >> 20 & 0xF)
-            ins_dec.imm  =          (ins >> 8  & 0xFFF)
-        case ins_fmt.M:
-            ins_dec.rde  = cast(u8) (ins >> 28 & 0xF)
-            ins_dec.rs1  = cast(u8) (ins >> 24 & 0xF)
-            ins_dec.imm  =          (ins >> 8  & 0xFFFF)
-        case ins_fmt.F:
-            ins_dec.rde  = cast(u8) (ins >> 28 & 0xF)
-            ins_dec.func = cast(u8) (ins >> 24 & 0xF)
-            ins_dec.imm  =          (ins >> 8  & 0xFFFF)
-        case ins_fmt.J:
-            ins_dec.rde  = cast(u8) (ins >> 28 & 0xF)
-            ins_dec.imm  =          (ins >> 8  & 0xFFFFF)
-        case ins_fmt.B:
-            ins_dec.func = cast(u8) (ins >> 28 & 0xF)
-            ins_dec.imm  =          (ins >> 8  & 0xFFFFF)
+    case ins_fmt.R:
+        ins_dec.rde  = cast(u8)  (ins >> 28 & 0xF)
+        ins_dec.rs1  = cast(u8)  (ins >> 24 & 0xF)
+        ins_dec.rs2  = cast(u8)  (ins >> 20 & 0xF)
+        ins_dec.imm  = cast(u64) (ins >> 8  & 0xFFF)
+    case ins_fmt.M:
+        ins_dec.rde  = cast(u8)  (ins >> 28 & 0xF)
+        ins_dec.rs1  = cast(u8)  (ins >> 24 & 0xF)
+        ins_dec.imm  = cast(u64) (ins >> 8  & 0xFFFF)
+    case ins_fmt.F:
+        ins_dec.rde  = cast(u8)  (ins >> 28 & 0xF)
+        ins_dec.func = cast(u8)  (ins >> 24 & 0xF)
+        ins_dec.imm  = cast(u64) (ins >> 8  & 0xFFFF)
+    case ins_fmt.J:
+        ins_dec.rde  = cast(u8)  (ins >> 28 & 0xF)
+        ins_dec.imm  = cast(u64) (ins >> 8  & 0xFFFFF)
+    case ins_fmt.B:
+        ins_dec.func = cast(u8)  (ins >> 28 & 0xF)
+        ins_dec.imm  = cast(u64) (ins >> 8  & 0xFFFFF)
     }
     
     return
 }
 
-se_to_u64 :: proc(val:u32, bitsize: u8) -> u64 {
-    return transmute(u64) ((i64(val) << (64-bitsize)) >> (64-bitsize))
+// lmao
+se_to_u64 :: proc(val:u64, bitsize: u8) -> u64 {
+    return u64(i64(val << (64-bitsize)) >> (64-bitsize))
 }
 
 ins_formats := map[u8]ins_fmt{

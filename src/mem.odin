@@ -37,7 +37,30 @@ read_u8 :: proc(address: u64) -> u8 {
     }
 }
 
-write :: proc(address: u64, value: u8) {
+write_u64 :: proc(address: u64, value: u64) {
+    write_u8(address,     u8(value))
+    write_u8(address + 1, u8(value >> 8))
+    write_u8(address + 2, u8(value >> 16))
+    write_u8(address + 3, u8(value >> 24))
+    write_u8(address + 4, u8(value >> 32))
+    write_u8(address + 5, u8(value >> 40))
+    write_u8(address + 6, u8(value >> 48))
+    write_u8(address + 7, u8(value >> 56))
+}
+
+write_u32 :: proc(address: u64, value: u32) {
+    write_u8(address,     u8(value))
+    write_u8(address + 1, u8(value >> 8))
+    write_u8(address + 2, u8(value >> 16))
+    write_u8(address + 3, u8(value >> 24))
+}
+
+write_u16 :: proc(address: u64, value: u16) {
+    write_u8(address,     u8(value))
+    write_u8(address + 1, u8(value >> 8))
+}
+
+write_u8 :: proc(address: u64, value: u8) {
     if (len(memory) <= int(address)) {
         // if memory written to has not been allocated, allocate more
         extramem := make([]u8, int(address) - len(memory))

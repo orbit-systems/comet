@@ -36,28 +36,32 @@ loop :: proc() {
     cpu_state.running = true
 
     for (cpu_state.running == true) {
-        if (cpu_state.cycle > 100) {
-            cpu_state.running = false
-        }
-
-        cpu_state.increment_next = true
         cpu_state.cycle += 1
         
-        i_info := raw_decode(read_u32(cpu_state.registers[pc]))
+        raw_ins := read_u32(cpu_state.registers[pc])
+        
+        cpu_state.registers[st] &= 0x00000000FFFFFFFF
+        cpu_state.registers[st] |= u64(raw_ins) << 32
+
+        ins_info := raw_decode(raw_ins)
 
         // print cpu state every cycle if debug level >= 1
-        dbg(1, "\ncycle: %d\npc: 0x%8x st: 0x%8x sp: 0x%8x fp: 0x%8x\n", cpu_state.cycle, cpu_state.registers[pc], cpu_state.registers[st], cpu_state.registers[sp], cpu_state.registers[fp])
-        dbg(1, "ra: 0x%8x rb: 0x%8x rc: 0x%8x rd: 0x%8x\nre: 0x%8x rf: 0x%8x rg: 0x%8x rh: 0x%8x\nri: 0x%8x rj: 0x%8x rk: 0x%8x\n", 
+        dbg(1, "\ncycle: %d\npc: 0x%16x st: 0x%16x sp: 0x%16x fp: 0x%16x\n", cpu_state.cycle, cpu_state.registers[pc], cpu_state.registers[st], cpu_state.registers[sp], cpu_state.registers[fp])
+        dbg(1, "ra: 0x%16x rb: 0x%16x rc: 0x%16x rd: 0x%16x\nre: 0x%16x rf: 0x%16x rg: 0x%16x rh: 0x%16x\nri: 0x%16x rj: 0x%16x rk: 0x%16x\n", 
             cpu_state.registers[ra], cpu_state.registers[rb], cpu_state.registers[rc], cpu_state.registers[rd],
             cpu_state.registers[re], cpu_state.registers[rf], cpu_state.registers[rg], cpu_state.registers[rh],
             cpu_state.registers[ri], cpu_state.registers[rj], cpu_state.registers[rk])
 
 
         //actually do the instruction
-        exec_instruction(&cpu_state, i_info)
+        exec_instruction(&cpu_state, ins_info)
 
         if cpu_state.increment_next {
             cpu_state.registers[pc] += 4
+        }
+
+        if flag_cycle_limit != 0 && (cpu_state.cycle >= flag_cycle_limit) {
+            cpu_state.running = false
         }
     }
 
@@ -92,6 +96,12 @@ load_arguments :: proc() {
             if !ok {
                 die("ERR: expected int, got \"%s\"\n", argument.val)
             }
+        case "-max-cycles":
+            ok := false
+            flag_cycle_limit, ok = strconv.parse_u64(argument.val)
+            if !ok {
+                die("ERR: expected int, got \"%s\"\n", argument.val)
+            }
         case "-no-color":
             flag_no_color = true
         case: // default
@@ -105,6 +115,7 @@ load_arguments :: proc() {
 }
 
 flag_dbg_verbosity  := -1
+flag_cycle_limit    : u64 = 0
 flag_no_color       := false
 inpath              := ""
 
