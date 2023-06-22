@@ -148,21 +148,28 @@ exec_instruction :: proc(cpu: ^aphelion_cpu_state, ins: ins_info) {
     case 0x50: // stack controls
         switch ins.func {
         case 0: // push
-
+            cpu.registers[sp] -= 8
+            write_u64(cpu.registers[sp], cpu.registers[ins.rde])
+        case 1: // pushi
+            cpu.registers[sp] -= 8
+            write_u64(cpu.registers[sp], cpu.registers[ins.rde])
+        case 2: // pushi
+            cpu.registers[sp] -= 8
+            write_u64(cpu.registers[sp], cpu.registers[ins.rde])
         }    
 
     case 0x63: // b(cc)
         switch ins.func {
         case 0: // bra
             cpu.registers[pc] += sign_extend_to_u64(ins.imm, 20)*4
-            
         }
-    case:
-        die("invalid instruction\n")
+    case: // trigger invalid opcode interrupt
+        cpu.registers[pc] = read_u64(8)
 
     }
 
-    cpu_state.increment_next = (prev_pc == cpu.registers[pc])
+    cpu.registers[rz] = 0
+    cpu.increment_next = (prev_pc == cpu.registers[pc])
 
 }
 
