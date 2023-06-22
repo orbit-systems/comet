@@ -82,16 +82,16 @@ exec_instruction :: proc(cpu: ^aphelion_cpu_state, ins: ins_info) {
         cpu.registers[ins.rde] = cpu.registers[ins.rs1] - sign_extend_to_u64(ins.imm, 16) - u64(get_st_flag(cpu, st_flag.borrow))
         set_flags_arithmetic_imm(cpu, ins)
     case 0x38: // mulr
-        cpu.registers[ins.rde] = cpu.registers[ins.rs1] * cpu.registers[ins.rs2]
+        cpu.registers[ins.rde] = u64(i64(cpu.registers[ins.rs1]) * i64(cpu.registers[ins.rs2]))
         set_flags_arithmetic_reg(cpu, ins)
     case 0x39: // muli
-        cpu.registers[ins.rde] = cpu.registers[ins.rs1] * sign_extend_to_u64(ins.imm, 16)
+        cpu.registers[ins.rde] = u64(i64(cpu.registers[ins.rs1]) * i64(sign_extend_to_u64(ins.imm, 16)))
         set_flags_arithmetic_imm(cpu, ins)
     case 0x3a: // divr
-        cpu.registers[ins.rde] = cpu.registers[ins.rs1] / cpu.registers[ins.rs2]
+        cpu.registers[ins.rde] = u64(i64(cpu.registers[ins.rs1]) / i64(cpu.registers[ins.rs2]))
         set_flags_arithmetic_reg(cpu, ins)
     case 0x3b: // divi
-        cpu.registers[ins.rde] = cpu.registers[ins.rs1] / sign_extend_to_u64(ins.imm, 16)
+        cpu.registers[ins.rde] = u64(i64(cpu.registers[ins.rs1]) / i64(sign_extend_to_u64(ins.imm, 16)))
         set_flags_arithmetic_imm(cpu, ins)
     
     case 0x40: // andr
