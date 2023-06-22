@@ -44,7 +44,7 @@ raw_decode :: proc(ins: u32) -> (ins_dec: ins_info) {
 }
 
 // lmao
-se_to_u64 :: proc(val:u64, bitsize: u8) -> u64 {
+sign_extend_to_u64 :: proc(val:u64, bitsize: u8) -> u64 {
     return u64(i64(val << (64-bitsize)) >> (64-bitsize))
 }
 
