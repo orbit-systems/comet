@@ -20,7 +20,7 @@ dbg :: proc(level: int, msg: string, args: ..any) {
 print_help :: proc() {
     fmt.print("\nusage: comet (path) [flags]\n")
     fmt.print("\n-debug:[int]         debug info verbosity")
-    fmt.print("\n-keep-dupl-inc       do not filter duplicate file includes")
+    fmt.print("\n-max-cycles:[int]    halt after cycle count has been reached")
     fmt.print("\n-halt-on-inv         halt on invalid opcode")
     fmt.print("\n-bench               output benchmarking information after execution is halted")
     fmt.print("\n-help                display this text\n\n")
