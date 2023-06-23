@@ -7,6 +7,7 @@ package comet
 
 import "core:fmt"
 import "core:os"
+import "core:time"
 import "core:strings"
 import "core:strconv"
 
@@ -22,8 +23,24 @@ main :: proc() {
     }
 
     append(&memory, ..file[:])
+
+    overall_timer : time.Stopwatch
+    if flag_benchmark {
+        time.stopwatch_start(&overall_timer)
+    }
     
     loop()
+    if flag_benchmark {
+        time.stopwatch_stop(&overall_timer)
+        duration_s := time.duration_seconds(time.stopwatch_duration(overall_timer))
+        duration_ms := time.duration_milliseconds(time.stopwatch_duration(overall_timer))
+        cycles_per_sec := f64(cpu_state.cycle) / duration_s
+        fmt.printf("overall time : %fs (%fms)\n", duration_s, duration_ms)
+        fmt.printf("total cycles : %d\n", cpu_state.cycle)
+        fmt.printf("cycles/sec   : %f\n", cycles_per_sec)
+    }
+
+
 }
 
 // init aphelion cpu state
@@ -104,6 +121,10 @@ load_arguments :: proc() {
             }
         case "-no-color":
             flag_no_color = true
+        case "-halt-on-inv":
+            flag_halt_inv_op = true
+        case "-bench":
+            flag_benchmark = true
         case: // default
             if index == 0 && argument.key[0] != '-' {
                 inpath = os.args[1]
@@ -117,6 +138,8 @@ load_arguments :: proc() {
 flag_dbg_verbosity  := -1
 flag_cycle_limit    : u64 = 0
 flag_no_color       := false
+flag_halt_inv_op    := false
+flag_benchmark      := false
 inpath              := ""
 
 cmd_arg :: struct {

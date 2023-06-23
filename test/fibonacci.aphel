@@ -1,4 +1,4 @@
-//.loc 0xA00
+.loc 0xA00
 
 lli ra, 0
 lli rb, 1

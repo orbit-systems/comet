@@ -9,6 +9,10 @@ exec_instruction :: proc(cpu: ^aphelion_cpu_state, ins: ins_info) {
     case 0x0A: // nop
     case 0x10: // int
         cpu.registers[pc] = read_u64(8 * ins.imm)
+        if flag_halt_inv_op && ins.imm == 1 {
+            cpu.running = false
+            return
+        }
     case 0x11: // inv
         cpu.registers[pc] = read_u64(0x28)
     case 0x12: // usr
@@ -152,19 +156,126 @@ exec_instruction :: proc(cpu: ^aphelion_cpu_state, ins: ins_info) {
             write_u64(cpu.registers[sp], cpu.registers[ins.rde])
         case 1: // pushi
             cpu.registers[sp] -= 8
-            write_u64(cpu.registers[sp], cpu.registers[ins.rde])
-        case 2: // pushi
+            write_u64(cpu.registers[sp], sign_extend_to_u64(ins.imm, 16))
+        case 2: // pushz
             cpu.registers[sp] -= 8
-            write_u64(cpu.registers[sp], cpu.registers[ins.rde])
-        }    
-
+            write_u64(cpu.registers[sp], ins.imm)
+        case 3: // pushc
+            cpu.registers[sp] -= 2
+            write_u16(cpu.registers[sp], u16(ins.imm))
+        case 4: // pop
+            cpu.registers[ins.rde] = read_u64(cpu.registers[sp])
+            cpu.registers[sp] += 8
+        case 5: // enter
+            cpu.registers[sp] -= 8
+            write_u64(cpu.registers[sp], cpu.registers[fp]) // push fp
+            cpu.registers[fp] = cpu.registers[sp]
+        case 6: // leave
+            cpu.registers[sp] = cpu.registers[fp]
+            cpu.registers[fp] = read_u64(cpu.registers[sp])
+            cpu.registers[sp] += 8
+        case 7: // reloc
+            cpu.registers[sp] = cpu.registers[ins.rde]
+            cpu.registers[fp] = cpu.registers[ins.rde] - sign_extend_to_u64(ins.imm, 16)
+        }
+    
+    case 0x60: // ljal
+        cpu.registers[sp] -= 8
+        write_u64(cpu.registers[sp], cpu.registers[pc]+4)
+        cpu.registers[pc] = cpu.registers[ins.rs1] + (sign_extend_to_u64(ins.imm, 16)*4)
+    case 0x61: // ljalr
+        cpu.registers[ins.rs1] = cpu.registers[pc]+4
+        cpu.registers[pc] = cpu.registers[ins.rs1] + (sign_extend_to_u64(ins.imm, 16)*4)
+    case 0x62:
+        switch ins.func {
+        case 0:
+            cpu.registers[pc] = read_u64(cpu.registers[sp])
+            cpu.registers[sp] += 8
+        case 1:
+            cpu.registers[pc] = cpu.registers[ins.rde]
+        case:
+            cpu.registers[pc] = read_u64(8)
+            if flag_halt_inv_op {
+                cpu.running = false
+                return
+            }
+        }
     case 0x63: // b(cc)
         switch ins.func {
         case 0: // bra
             cpu.registers[pc] += sign_extend_to_u64(ins.imm, 20)*4
+        case 1: // beq
+            if get_st_flag(cpu, st_flag.equal) {
+                cpu.registers[pc] += sign_extend_to_u64(ins.imm, 20)*4
+            }
+        case 2: // bez
+            if get_st_flag(cpu, st_flag.zero) {
+                cpu.registers[pc] += sign_extend_to_u64(ins.imm, 20)*4
+            }
+        case 3: // blt
+            if get_st_flag(cpu, st_flag.less) {
+                cpu.registers[pc] += sign_extend_to_u64(ins.imm, 20)*4
+            }
+        case 4: // ble
+            if get_st_flag(cpu, st_flag.less) || get_st_flag(cpu, st_flag.equal) {
+                cpu.registers[pc] += sign_extend_to_u64(ins.imm, 20)*4
+            }
+        case 5: // bltu
+            if get_st_flag(cpu, st_flag.less_unsigned) {
+                cpu.registers[pc] += sign_extend_to_u64(ins.imm, 20)*4
+            }
+        case 6: // bleu
+            if get_st_flag(cpu, st_flag.less_unsigned) || get_st_flag(cpu, st_flag.equal) {
+                cpu.registers[pc] += sign_extend_to_u64(ins.imm, 20)*4
+            }
+        case 7: // bpe
+            if get_st_flag(cpu, st_flag.parity) {
+                cpu.registers[pc] += sign_extend_to_u64(ins.imm, 20)*4
+            }
+        case 8: // reserved ig?
+        case 9: // beq
+            if !get_st_flag(cpu, st_flag.equal) {
+                cpu.registers[pc] += sign_extend_to_u64(ins.imm, 20)*4
+            }
+        case 10: // bnz
+            if !get_st_flag(cpu, st_flag.zero) {
+                cpu.registers[pc] += sign_extend_to_u64(ins.imm, 20)*4
+            }
+        case 11: // bge
+            if get_st_flag(cpu, st_flag.greater) || get_st_flag(cpu, st_flag.equal) {
+                cpu.registers[pc] += sign_extend_to_u64(ins.imm, 20)*4
+            }
+        case 12: // bgt
+            if get_st_flag(cpu, st_flag.greater) {
+                cpu.registers[pc] += sign_extend_to_u64(ins.imm, 20)*4
+            }
+        case 13: // bgeu
+            if get_st_flag(cpu, st_flag.greater_unsigned) || get_st_flag(cpu, st_flag.equal) {
+                cpu.registers[pc] += sign_extend_to_u64(ins.imm, 20)*4
+            }
+        case 14: // bgtu
+            if get_st_flag(cpu, st_flag.greater_unsigned) {
+                cpu.registers[pc] += sign_extend_to_u64(ins.imm, 20)*4
+            }
+        case 15: // bpd
+            if !get_st_flag(cpu, st_flag.parity) {
+                cpu.registers[pc] += sign_extend_to_u64(ins.imm, 20)*4
+            }
         }
+    case 0x64: // jal
+        cpu.registers[sp] -= 8
+        write_u64(cpu.registers[sp], cpu.registers[pc]+4)
+        cpu.registers[pc] += sign_extend_to_u64(ins.imm, 20)*4
+    case 0x65: // ljalr
+        cpu.registers[ins.rde] = cpu.registers[pc]+4
+        cpu.registers[pc] += sign_extend_to_u64(ins.imm, 20)*4
+    
     case: // trigger invalid opcode interrupt
         cpu.registers[pc] = read_u64(8)
+        if flag_halt_inv_op {
+            cpu.running = false
+            return
+        }
 
     }
 
