@@ -31,6 +31,10 @@ set_style :: proc(code: ANSI) {
     fmt.printf("\x1b[%dm", code)
 }
 
+style :: proc(code: ANSI) -> string {
+    return fmt.aprintf("\x1b[%dm", code)
+}
+
 ANSI :: enum {
 
     Reset       = 0,

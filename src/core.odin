@@ -62,16 +62,33 @@ loop :: proc() {
 
         ins_info := raw_decode(raw_ins)
 
-        // print cpu state every cycle if debug level >= 1
-        dbg(1, "\ncycle: %d\npc: 0x%16x st: 0x%16x sp: 0x%16x fp: 0x%16x\n", cpu_state.cycle, cpu_state.registers[pc], cpu_state.registers[st], cpu_state.registers[sp], cpu_state.registers[fp])
-        dbg(1, "ra: 0x%16x rb: 0x%16x rc: 0x%16x rd: 0x%16x\nre: 0x%16x rf: 0x%16x rg: 0x%16x rh: 0x%16x\nri: 0x%16x rj: 0x%16x rk: 0x%16x\n", 
+        dbg(1,"cycle %d ", cpu_state.cycle)
+
+        if flag_dbg_verbosity >= 1 {
+            set_style(ANSI.FG_Yellow)
+            fmt.printf("@ %4x ", cpu_state.registers[register_names.pc])
+            set_style(ANSI.FG_Default)
+            //fmt.printf("| ")
+            if flag_dbg_verbosity > 1 {
+                fmt.printf("\n\t")
+            }
+            if flag_dbg_verbosity == 1 {
+                fmt.printf("| ")
+            }
+            print_asm(ins_info)
+        }
+
+        //actually do the instruction
+        exec_instruction(&cpu_state, ins_info)
+
+        // print cpu state every cycle if debug level >= 2
+        dbg(2, "\tpc: 0x%16x st: 0x%16x sp: 0x%16x fp: 0x%16x\n", 
+            cpu_state.registers[pc], cpu_state.registers[st], cpu_state.registers[sp], cpu_state.registers[fp])
+        dbg(2, "\tra: 0x%16x rb: 0x%16x rc: 0x%16x rd: 0x%16x\n\tre: 0x%16x rf: 0x%16x rg: 0x%16x rh: 0x%16x\n\tri: 0x%16x rj: 0x%16x rk: 0x%16x\n", 
             cpu_state.registers[ra], cpu_state.registers[rb], cpu_state.registers[rc], cpu_state.registers[rd],
             cpu_state.registers[re], cpu_state.registers[rf], cpu_state.registers[rg], cpu_state.registers[rh],
             cpu_state.registers[ri], cpu_state.registers[rj], cpu_state.registers[rk])
 
-
-        //actually do the instruction
-        exec_instruction(&cpu_state, ins_info)
 
         if cpu_state.increment_next {
             cpu_state.registers[pc] += 4

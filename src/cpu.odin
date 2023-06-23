@@ -1,6 +1,6 @@
 package comet
 
-exec_instruction :: proc(cpu: ^aphelion_cpu_state, ins: ins_info) {
+exec_instruction :: proc(cpu: ^aphelion_cpu_state, ins: instruction_info) {
     using register_names
 
     prev_pc := cpu.registers[pc]
@@ -318,7 +318,7 @@ st_flag :: enum u8 {
     borrow_unsigned,
 }
 
-set_flags_arithmetic_reg :: proc(cpu: ^aphelion_cpu_state, ins: ins_info) {
+set_flags_arithmetic_reg :: proc(cpu: ^aphelion_cpu_state, ins: instruction_info) {
     set_st_flag(cpu, st_flag.sign,   cpu.registers[ins.rde] < 0)
     set_st_flag(cpu, st_flag.zero,   cpu.registers[ins.rde] == 0)
     set_st_flag(cpu, st_flag.parity, cpu.registers[ins.rde] % 2 == 0)
@@ -334,7 +334,7 @@ set_flags_arithmetic_reg :: proc(cpu: ^aphelion_cpu_state, ins: ins_info) {
     set_st_flag(cpu, st_flag.less_unsigned,    cpu.registers[ins.rs1] < cpu.registers[ins.rs2])
 }
 
-set_flags_arithmetic_imm :: proc(cpu: ^aphelion_cpu_state, ins: ins_info) {
+set_flags_arithmetic_imm :: proc(cpu: ^aphelion_cpu_state, ins: instruction_info) {
     set_st_flag(cpu, st_flag.sign,   cpu.registers[ins.rde] < 0)
     set_st_flag(cpu, st_flag.zero,   cpu.registers[ins.rde] == 0)
     set_st_flag(cpu, st_flag.parity, cpu.registers[ins.rde] % 2 == 0)
@@ -350,7 +350,7 @@ set_flags_arithmetic_imm :: proc(cpu: ^aphelion_cpu_state, ins: ins_info) {
     set_st_flag(cpu, st_flag.less_unsigned,    cpu.registers[ins.rs1] < ins.imm)
 }
 
-set_flags_logical_reg :: proc(cpu: ^aphelion_cpu_state, ins: ins_info) {
+set_flags_logical_reg :: proc(cpu: ^aphelion_cpu_state, ins: instruction_info) {
     set_st_flag(cpu, st_flag.sign,   cpu.registers[ins.rde] < 0)
     set_st_flag(cpu, st_flag.zero,   cpu.registers[ins.rde] == 0)
     set_st_flag(cpu, st_flag.parity, cpu.registers[ins.rde] % 2 == 0)
@@ -362,7 +362,7 @@ set_flags_logical_reg :: proc(cpu: ^aphelion_cpu_state, ins: ins_info) {
     set_st_flag(cpu, st_flag.less_unsigned,    cpu.registers[ins.rs1] < cpu.registers[ins.rs2])
 }
 
-set_flags_logical_imm :: proc(cpu: ^aphelion_cpu_state, ins: ins_info) {
+set_flags_logical_imm :: proc(cpu: ^aphelion_cpu_state, ins: instruction_info) {
     set_st_flag(cpu, st_flag.sign,   cpu.registers[ins.rde] < 0)
     set_st_flag(cpu, st_flag.zero,   cpu.registers[ins.rde] == 0)
     set_st_flag(cpu, st_flag.parity, cpu.registers[ins.rde] % 2 == 0)
