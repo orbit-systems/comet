@@ -1,7 +1,7 @@
 .loc 0xA00
 
-llis ra, 0xA
-llis rb, 0x1
+llis ra, 0xFFFF
+llis rb, 0xAAAA
 swp ra, rb
 nop
 nop

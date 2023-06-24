@@ -137,7 +137,7 @@ ins_formats := map[u8]ins_fmt{
     0x24 = ins_fmt.M,
     0x25 = ins_fmt.M,
     0x26 = ins_fmt.M,
-    0x26 = ins_fmt.M,
+    0x27 = ins_fmt.M,
 
     0x30 = ins_fmt.R,
     0x31 = ins_fmt.M,
