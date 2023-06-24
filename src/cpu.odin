@@ -57,7 +57,7 @@ exec_instruction :: proc(cpu: ^aphelion_cpu_state, ins: instruction_info) {
     case 0x26: // swp
         temp := cpu.registers[ins.rs1]
         cpu.registers[ins.rs1] = cpu.registers[ins.rs2]
-        cpu.registers[ins.rs2] = cpu.registers[ins.rs1]
+        cpu.registers[ins.rs2] = temp
     case 0x27: // mov
         cpu.registers[ins.rde] = cpu.registers[ins.rs1]
 

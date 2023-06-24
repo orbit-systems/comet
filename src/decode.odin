@@ -220,7 +220,7 @@ ins_names := map[[2]u8]string{
     {0x24, 0}   = "st"   ,
     {0x25, 0}   = "stb"  ,
     {0x26, 0}   = "swp"  ,
-    {0x26, 0}   = "mov"  ,
+    {0x27, 0}   = "mov"  ,
 
     {0x30, 0}   = "addr" ,
     {0x31, 0}   = "addi" ,

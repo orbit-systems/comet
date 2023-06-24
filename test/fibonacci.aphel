@@ -6,6 +6,8 @@ lli rc, 1
 
 loop:
     addr ra, rb, rc
-    addr rc, rb, rz
-    addr rb, ra, rz
+    // addr rc, rb, rz
+    // addr rb, ra, rz
+    mov rc, rb
+    mov rb, ra
     bra loop
