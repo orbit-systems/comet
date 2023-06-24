@@ -1,0 +1,7 @@
+.loc 0xA00
+
+llis ra, 0xA
+llis rb, 0x1
+swp ra, rb
+nop
+nop

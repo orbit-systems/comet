@@ -51,13 +51,13 @@ exec_instruction :: proc(cpu: ^aphelion_cpu_state, ins: instruction_info) {
         cpu.registers[ins.rde] |= u64(read_u8(cpu.registers[ins.rs1] + ins.imm))
     
     case 0x24: // st
-        write_u64(cpu.registers[ins.rs2] + ins.imm, cpu.registers[ins.rs1])
+        write_u64(cpu.registers[ins.rs1] + ins.imm, cpu.registers[ins.rde])
     case 0x25: // stb
-        write_u8(cpu.registers[ins.rs2] + ins.imm, u8(cpu.registers[ins.rs1]))
+        write_u8(cpu.registers[ins.rs1] + ins.imm, u8(cpu.registers[ins.rde]))
     case 0x26: // swp
-        temp := cpu.registers[ins.rs1]
-        cpu.registers[ins.rs1] = cpu.registers[ins.rs2]
-        cpu.registers[ins.rs2] = temp
+        temp := cpu.registers[ins.rde]
+        cpu.registers[ins.rde] = cpu.registers[ins.rs1]
+        cpu.registers[ins.rs1] = temp
     case 0x27: // mov
         cpu.registers[ins.rde] = cpu.registers[ins.rs1]
 
