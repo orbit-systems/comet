@@ -7,7 +7,7 @@ main:
     loop:
         lb  rb, ra, 0   // load character
         add rb, rb, 0   // set flags
-        bez zero        // check if null
+        beq zero        // check if null '\0'
         
         stb rb, rz, 0x9FF // send character to out
         add ra, ra, 1   // increment string pointer
@@ -16,10 +16,10 @@ main:
 
     
 zero:
-    bra zero
+    bra main
 
 
 
 
 .loc 0x1000
-.string "aphelion!\0"
+.string "aphelion!\n\0"

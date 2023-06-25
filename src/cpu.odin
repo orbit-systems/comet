@@ -1,5 +1,7 @@
 package comet
 
+import "core:fmt"
+
 exec_instruction :: proc(cpu: ^aphelion_cpu_state, ins: instruction_info) {
     using register_names
 
@@ -201,6 +203,12 @@ exec_instruction :: proc(cpu: ^aphelion_cpu_state, ins: instruction_info) {
             }
         }
     case 0x63: // b(cc)
+        // fmt.printf("sign: %t\n", get_st_flag(cpu, 0))
+        // fmt.printf("zero: %t\n", get_st_flag(cpu, 1))
+        // fmt.printf("parity: %t\n", get_st_flag(cpu, 2))
+        // fmt.printf("carry: %t\n", get_st_flag(cpu, 3))
+        // fmt.printf("borrow: %t\n", get_st_flag(cpu, 4))
+        // fmt.printf("equal: %t\n", get_st_flag(cpu, 5))
         switch ins.func {
         case 0: // bra
             cpu.registers[pc] += sign_extend_to_u64(ins.imm, 20)*4
@@ -378,11 +386,11 @@ get_st_flag :: proc{get_st_flag_fl, get_st_flag_u8}
 set_st_flag :: proc{set_st_flag_fl, set_st_flag_u8}
 
 get_st_flag_fl :: proc(cpu: ^aphelion_cpu_state, bit: st_flag) -> bool {
-    return (cpu.registers[register_names.st] & (1 << u8(bit))) == 1
+    return (cpu.registers[register_names.st] & (1 << u8(bit))) >> u8(bit) == 1
 }
 
 get_st_flag_u8 :: proc(cpu: ^aphelion_cpu_state, bit: u8) -> bool {
-    return (cpu.registers[register_names.st] & (1 << bit)) == 1
+    return (cpu.registers[register_names.st] & (1 << bit)) >> bit == 1
 }
 
 set_st_flag_fl :: proc(cpu: ^aphelion_cpu_state, bit: st_flag, value: bool) {
