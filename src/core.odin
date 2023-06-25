@@ -39,8 +39,6 @@ main :: proc() {
         fmt.printf("total cycles : %d\n", cpu_state.cycle)
         fmt.printf("cycles/sec   : %f\n", cycles_per_sec)
     }
-
-
 }
 
 // init aphelion cpu state
