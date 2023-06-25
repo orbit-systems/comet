@@ -309,7 +309,7 @@ ins_op_to_field := map[[2]u8][]iff{
      {0x24, 0}   = []iff{iff.RDE, iff.RS1, iff.IMM},
      {0x25, 0}   = []iff{iff.RDE, iff.RS1, iff.IMM},
      {0x26, 0}   = []iff{iff.RDE, iff.RS1},
-     {0x26, 0}   = []iff{iff.RDE, iff.RS1},
+     {0x27, 0}   = []iff{iff.RDE, iff.RS1},
 
      {0x30, 0}   = []iff{iff.RDE, iff.RS1, iff.RS2},
      {0x31, 0}   = []iff{iff.RDE, iff.RS1, iff.IMM},
