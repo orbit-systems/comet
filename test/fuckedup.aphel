@@ -1,3 +1,0 @@
-.loc 0xA00
-
-llis ra, 0xFFFF

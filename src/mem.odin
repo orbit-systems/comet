@@ -1,5 +1,7 @@
 package comet
 
+import "core:fmt"
+
 // i think there is a more efficient way to store this later but i am not smart enough to implement this now
 memory: [dynamic]u8
 
@@ -61,6 +63,16 @@ write_u16 :: proc(address: u64, value: u16) {
 }
 
 write_u8 :: proc(address: u64, value: u8) {
+    if address == 0x9FF {
+        if flag_dbg_verbosity > 0 {
+            fmt.print("CHAROUT: ")
+            fmt.print(rune(value))
+            fmt.print("\n")
+        } else {
+            fmt.print(rune(value))
+        }
+        return;
+    }
     if (len(memory) <= int(address)) {
         // if memory written to has not been allocated, allocate more
         extramem := make([]u8, int(address) - len(memory))

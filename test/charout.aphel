@@ -1,0 +1,25 @@
+.loc 0xA00
+
+main:
+    llis    ra, 0x1000  // string pointer
+    llis    rb, 0       // current character value
+
+    loop:
+        lb  rb, ra, 0   // load character
+        add rb, rb, 0   // set flags
+        bez zero        // check if null
+        
+        stb rb, rz, 0x9FF // send character to out
+        add ra, ra, 1   // increment string pointer
+        bra loop
+
+
+    
+zero:
+    bra zero
+
+
+
+
+.loc 0x1000
+.string "aphelion!\0"
