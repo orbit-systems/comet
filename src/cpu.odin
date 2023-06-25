@@ -24,22 +24,22 @@ exec_instruction :: proc(cpu: ^aphelion_cpu_state, ins: instruction_info) {
             cpu.registers[ins.rde] &= 0xFFFFFFFFFFFF0000
             cpu.registers[ins.rde] |= ins.imm
         case 1: // llis
-            cpu.registers[ins.rde] =  ins.imm
+            cpu.registers[ins.rde] =  sign_extend_to_u64(ins.imm,16)
         case 2: // lui
             cpu.registers[ins.rde] &= 0xFFFFFFFF0000FFFF
             cpu.registers[ins.rde] |= ins.imm << 16
         case 3: // luis
-            cpu.registers[ins.rde] =  ins.imm << 16
+            cpu.registers[ins.rde] =  sign_extend_to_u64(ins.imm,16) << 16
         case 4: // lti
             cpu.registers[ins.rde] &= 0xFFFF0000FFFFFFFF
             cpu.registers[ins.rde] |= ins.imm << 32
         case 5: // ltis
-            cpu.registers[ins.rde] =  ins.imm << 32
+            cpu.registers[ins.rde] =  sign_extend_to_u64(ins.imm,16) << 32
         case 6: // ltui
             cpu.registers[ins.rde] &= 0x0000FFFFFFFFFFFF
             cpu.registers[ins.rde] |= ins.imm << 48
         case 7: // ltuis
-            cpu.registers[ins.rde] =  ins.imm << 48
+            cpu.registers[ins.rde] =  sign_extend_to_u64(ins.imm,16) << 48
         }
 
     case 0x21: // ld
