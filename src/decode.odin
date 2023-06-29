@@ -52,7 +52,6 @@ sign_extend_to_u64 :: proc(val:u64, bitsize: u8) -> u64 {
 
 // for debug output
 print_asm :: proc(ins: instruction_info) {
-    
 
     if !([2]u8{ins.opcode, ins.func} in ins_names) {
         set_style(ANSI.Bold)
@@ -66,6 +65,9 @@ print_asm :: proc(ins: instruction_info) {
 
     set_style(ANSI.Bold)
     fmt.print(name)
+    for i in 0..<(5-len(name)) {
+        fmt.print(" ")
+    }
     set_style(ANSI.Reset)
     delete(name)
 
@@ -95,25 +97,28 @@ print_asm :: proc(ins: instruction_info) {
 }
 
 print_registers :: proc(cpu: ^aphelion_cpu_state) {
+
     using register_names
-    set_style(ANSI.Bold); fmt.print("\tpc: "); set_style(ANSI.Reset); fmt.printf("0x%16x ", cpu.registers[pc])
-    set_style(ANSI.Bold); fmt.print("\tst: "); set_style(ANSI.Reset); fmt.printf("0x%16x ", cpu.registers[st])
-    set_style(ANSI.Bold); fmt.print("\tsp: "); set_style(ANSI.Reset); fmt.printf("0x%16x ", cpu.registers[sp])
-    set_style(ANSI.Bold); fmt.print("\tfp: "); set_style(ANSI.Reset); fmt.printf("0x%16x ", cpu.registers[fp])
-    fmt.print("\n")
-    set_style(ANSI.Bold); fmt.print("\tra: "); set_style(ANSI.Reset); fmt.printf("0x%16x ", cpu.registers[ra])
-    set_style(ANSI.Bold); fmt.print("\trb: "); set_style(ANSI.Reset); fmt.printf("0x%16x ", cpu.registers[rb])
-    set_style(ANSI.Bold); fmt.print("\trc: "); set_style(ANSI.Reset); fmt.printf("0x%16x ", cpu.registers[rc])
-    set_style(ANSI.Bold); fmt.print("\trd: "); set_style(ANSI.Reset); fmt.printf("0x%16x ", cpu.registers[rd])
-    fmt.print("\n")
-    set_style(ANSI.Bold); fmt.print("\tre: "); set_style(ANSI.Reset); fmt.printf("0x%16x ", cpu.registers[re])
-    set_style(ANSI.Bold); fmt.print("\trf: "); set_style(ANSI.Reset); fmt.printf("0x%16x ", cpu.registers[rf])
-    set_style(ANSI.Bold); fmt.print("\trg: "); set_style(ANSI.Reset); fmt.printf("0x%16x ", cpu.registers[rg])
-    set_style(ANSI.Bold); fmt.print("\trh: "); set_style(ANSI.Reset); fmt.printf("0x%16x ", cpu.registers[rh])
-    fmt.print("\n")
-    set_style(ANSI.Bold); fmt.print("\tri: "); set_style(ANSI.Reset); fmt.printf("0x%16x ", cpu.registers[ri])
-    set_style(ANSI.Bold); fmt.print("\trj: "); set_style(ANSI.Reset); fmt.printf("0x%16x ", cpu.registers[rj])
-    set_style(ANSI.Bold); fmt.print("\trk: "); set_style(ANSI.Reset); fmt.printf("0x%16x ", cpu.registers[rk])
+    
+    fmt.print("\t")
+    set_style(ANSI.Bold); fmt.print("pc: "); set_style(ANSI.Reset); fmt.printf("0x%16x ", cpu.registers[pc])
+    set_style(ANSI.Bold); fmt.print("st: "); set_style(ANSI.Reset); fmt.printf("0x%16x ", cpu.registers[st])
+    set_style(ANSI.Bold); fmt.print("sp: "); set_style(ANSI.Reset); fmt.printf("0x%16x ", cpu.registers[sp])
+    set_style(ANSI.Bold); fmt.print("fp: "); set_style(ANSI.Reset); fmt.printf("0x%16x ", cpu.registers[fp])
+    fmt.print("\n\t")
+    set_style(ANSI.Bold); fmt.print("ra: "); set_style(ANSI.Reset); fmt.printf("0x%16x ", cpu.registers[ra])
+    set_style(ANSI.Bold); fmt.print("rb: "); set_style(ANSI.Reset); fmt.printf("0x%16x ", cpu.registers[rb])
+    set_style(ANSI.Bold); fmt.print("rc: "); set_style(ANSI.Reset); fmt.printf("0x%16x ", cpu.registers[rc])
+    set_style(ANSI.Bold); fmt.print("rd: "); set_style(ANSI.Reset); fmt.printf("0x%16x ", cpu.registers[rd])
+    fmt.print("\n\t")
+    set_style(ANSI.Bold); fmt.print("re: "); set_style(ANSI.Reset); fmt.printf("0x%16x ", cpu.registers[re])
+    set_style(ANSI.Bold); fmt.print("rf: "); set_style(ANSI.Reset); fmt.printf("0x%16x ", cpu.registers[rf])
+    set_style(ANSI.Bold); fmt.print("rg: "); set_style(ANSI.Reset); fmt.printf("0x%16x ", cpu.registers[rg])
+    set_style(ANSI.Bold); fmt.print("rh: "); set_style(ANSI.Reset); fmt.printf("0x%16x ", cpu.registers[rh])
+    fmt.print("\n\t")
+    set_style(ANSI.Bold); fmt.print("ri: "); set_style(ANSI.Reset); fmt.printf("0x%16x ", cpu.registers[ri])
+    set_style(ANSI.Bold); fmt.print("rj: "); set_style(ANSI.Reset); fmt.printf("0x%16x ", cpu.registers[rj])
+    set_style(ANSI.Bold); fmt.print("rk: "); set_style(ANSI.Reset); fmt.printf("0x%16x ", cpu.registers[rk])
     fmt.print("\n")
 }
 

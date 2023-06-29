@@ -5,6 +5,8 @@ package comet
 // ╰───────╯
 // by kaylatheegg, spsandwichman
 
+// TODO - IO slows the emulator down - multithread!!!!!!!!
+
 import "core:fmt"
 import "core:os"
 import "core:time"
@@ -42,7 +44,7 @@ main :: proc() {
 }
 
 // init aphelion cpu state
-cpu_state : aphelion_cpu_state
+cpu_state := aphelion_cpu_state{}
 
 loop :: proc() {
     using register_names
@@ -60,26 +62,19 @@ loop :: proc() {
 
         ins_info := raw_decode(raw_ins)
 
-        dbg(1,"cycle %d ", cpu_state.cycle)
+        //dbg(1, "current memory len 0x%X ", len(memory))
+        dbg(1, "cycle %d ", cpu_state.cycle)
 
         if flag_dbg_verbosity >= 1 {
             set_style(ANSI.FG_Yellow)
             fmt.printf("@ %4x ", cpu_state.registers[register_names.pc])
             set_style(ANSI.FG_Default)
-            fmt.printf("| ")
             print_asm(ins_info)
         }
 
         //actually do the instruction
         exec_instruction(&cpu_state, ins_info)
 
-        // print cpu state every cycle if debug level >= 2
-        // dbg(2, "\tpc: 0x%16x st: 0x%16x sp: 0x%16x fp: 0x%16x\n", 
-        //     cpu_state.registers[pc], cpu_state.registers[st], cpu_state.registers[sp], cpu_state.registers[fp])
-        // dbg(2, "\tra: 0x%16x rb: 0x%16x rc: 0x%16x rd: 0x%16x\n\tre: 0x%16x rf: 0x%16x rg: 0x%16x rh: 0x%16x\n\tri: 0x%16x rj: 0x%16x rk: 0x%16x\n", 
-        //     cpu_state.registers[ra], cpu_state.registers[rb], cpu_state.registers[rc], cpu_state.registers[rd],
-        //     cpu_state.registers[re], cpu_state.registers[rf], cpu_state.registers[rg], cpu_state.registers[rh],
-        //     cpu_state.registers[ri], cpu_state.registers[rj], cpu_state.registers[rk])
         if flag_dbg_verbosity >= 2 {
             print_registers(&cpu_state)
         }

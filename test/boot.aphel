@@ -2,24 +2,25 @@
 //we can use this as a boot up test for the cpu too, to test instructions
 
 start:
-    lli ra, 0xF00D
-    lui ra, 0xCAFE
-    llis rb, 0x50
-    st ra, rb, 0x0
-    ld rb, rb, 0x0
-    andr rb, ra, rb
-    llis rk, 0x1
-    bez failure
+    lli     ra, 0xF00D
+    lui     ra, 0xCAFE
+    llis    rb, 0x50
+    st      ra, rb, 0x0
+    ld      rb, rb, 0x0
+    andr    rb, ra, rb
+    llis    rk, 0x1
+    bez     failure
 
     //initialise interrupt table
-    lli ra, 0x07FF
+    lli     ra, 0x07FF
+
     loop:
         //store 0x00000010 in rb (int 0)
-        llis rb, 0x10
-        st rb, ra, 0x0
-        subi, ra, ra, 0x8
-        bez success
-        bra loop
+        llis    rb, 0x10
+        st      rb, ra, 0x0
+        subi    ra, ra, 0x8
+        bez     success
+        bra     loop
 
 
 

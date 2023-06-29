@@ -12,14 +12,9 @@ main:
         stb rb, rz, 0x9FF // send character to out
         add ra, ra, 1   // increment string pointer
         bra loop
-
-
     
 zero:
     bra main
 
-
-
-
 .loc 0x1000
-.string "aphelion!\n\0"
+.string "Aphelion!\n\0"

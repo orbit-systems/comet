@@ -65,17 +65,22 @@ write_u16 :: proc(address: u64, value: u16) {
 write_u8 :: proc(address: u64, value: u8) {
     if address == 0x9FF {
         if flag_dbg_verbosity > 0 {
-            fmt.print("CHAROUT '")
+            set_style(ANSI.FG_Red)
+            set_style(ANSI.Bold)
+            fmt.print("CHAROUT")
+            set_style(ANSI.Reset)
+            fmt.print(" '")
             fmt.print(rune(value))
-            fmt.print("'\n")
+            fmt.printf("' (0x%x)\n", value)
         } else {
             fmt.print(rune(value))
         }
         return;
     }
-    if (len(memory) <= int(address)) {
+    if (u64(len(memory)) <= u64(address)) {
         // if memory written to has not been allocated, allocate more
-        extramem := make([]u8, int(address) - len(memory))
+        extramem, ok := make([]u8, (address - u64(len(memory)))+1)
+        //die("ERR: cannot allocate more system memory (write to 0x%16x attempted)", address)
         append(&memory, ..extramem[:])
     }
 
