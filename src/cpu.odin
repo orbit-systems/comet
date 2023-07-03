@@ -152,35 +152,33 @@ exec_instruction :: proc(cpu: ^aphelion_cpu_state, ins: instruction_info) {
         cpu.registers[ins.rde] = cpu.registers[ins.rs1] >> ins.imm
         set_flags_logical_imm(cpu, ins)
     
-    case 0x50: // stack controls
-        switch ins.func {
-        case 0: // push
-            cpu.registers[sp] -= 8
-            write_u64(cpu.registers[sp], cpu.registers[ins.rde])
-        case 1: // pushi
-            cpu.registers[sp] -= 8
-            write_u64(cpu.registers[sp], sign_extend_to_u64(ins.imm, 16))
-        case 2: // pushz
-            cpu.registers[sp] -= 8
-            write_u64(cpu.registers[sp], ins.imm)
-        case 3: // pushc
-            cpu.registers[sp] -= 2
-            write_u16(cpu.registers[sp], u16(ins.imm))
-        case 4: // pop
-            cpu.registers[ins.rde] = read_u64(cpu.registers[sp])
-            cpu.registers[sp] += 8
-        case 5: // enter
-            cpu.registers[sp] -= 8
-            write_u64(cpu.registers[sp], cpu.registers[fp]) // push fp
-            cpu.registers[fp] = cpu.registers[sp]
-        case 6: // leave
-            cpu.registers[sp] = cpu.registers[fp]
-            cpu.registers[fp] = read_u64(cpu.registers[sp])
-            cpu.registers[sp] += 8
-        case 7: // reloc
-            cpu.registers[sp] = cpu.registers[ins.rde]
-            cpu.registers[fp] = cpu.registers[ins.rde] - sign_extend_to_u64(ins.imm, 16)
-        }
+    case 0x50: // push
+        cpu.registers[sp] -= 8
+        write_u64(cpu.registers[sp], cpu.registers[ins.rs1])
+    case 0x51: // pushi
+        cpu.registers[sp] -= 8
+        write_u64(cpu.registers[sp], sign_extend_to_u64(ins.imm, 16))
+    case 0x52: 
+        cpu.registers[sp] -= 8
+        write_u64(cpu.registers[sp], ins.imm)
+    case 0x53: // pushc
+        cpu.registers[sp] -= 2
+        write_u16(cpu.registers[sp], u16(ins.imm))
+    case 0x54: // pop
+        cpu.registers[ins.rde] = read_u64(cpu.registers[sp])
+        cpu.registers[sp] += 8
+    case 0x55: // enter
+        cpu.registers[sp] -= 8
+        write_u64(cpu.registers[sp], cpu.registers[fp]) // push fp
+        cpu.registers[fp] = cpu.registers[sp]
+    case 0x56: // leave
+        cpu.registers[sp] = cpu.registers[fp]
+        cpu.registers[fp] = read_u64(cpu.registers[sp])
+        cpu.registers[sp] += 8
+    case 0x57: // reloc
+        cpu.registers[sp] = cpu.registers[ins.rs1]
+        cpu.registers[fp] = cpu.registers[ins.rs1] - sign_extend_to_u64(ins.imm, 16)
+
     
     case 0x60: // ljal
         cpu.registers[sp] -= 8
@@ -190,20 +188,12 @@ exec_instruction :: proc(cpu: ^aphelion_cpu_state, ins: instruction_info) {
         cpu.registers[ins.rs1] = cpu.registers[pc]+4
         cpu.registers[pc] = cpu.registers[ins.rs1] + (sign_extend_to_u64(ins.imm, 16)*4)
     case 0x62: // ret
-        switch ins.func {
-        case 0:
-            cpu.registers[pc] = read_u64(cpu.registers[sp])
-            cpu.registers[sp] += 8
-        case 1:
-            cpu.registers[pc] = cpu.registers[ins.rde]
-        case:
-            cpu.registers[pc] = read_u64(8)
-            if flag_halt_inv_op {
-                cpu.running = false
-                return
-            }
-        }
-    case 0x63: // b(cc)
+        cpu.registers[pc] = read_u64(cpu.registers[sp])
+        cpu.registers[sp] += 8
+    case 0x63: // retr
+        cpu.registers[pc] = cpu.registers[ins.rde]
+        
+    case 0x64: // b(cc)
         // fmt.printf("sign: %t\n", get_st_flag(cpu, 0))
         // fmt.printf("zero: %t\n", get_st_flag(cpu, 1))
         // fmt.printf("parity: %t\n", get_st_flag(cpu, 2))
@@ -286,12 +276,12 @@ exec_instruction :: proc(cpu: ^aphelion_cpu_state, ins: instruction_info) {
                 pc_modified = true
             }
         }
-    case 0x64: // jal
+    case 0x65: // jal
         cpu.registers[sp] -= 8
         write_u64(cpu.registers[sp], cpu.registers[pc]+4)
         cpu.registers[pc] += sign_extend_to_u64(ins.imm, 20)*4
         pc_modified = true
-    case 0x65: // ljalr
+    case 0x66: // ljalr
         cpu.registers[ins.rde] = cpu.registers[pc]+4
         cpu.registers[pc] += sign_extend_to_u64(ins.imm, 20)*4
         pc_modified = true

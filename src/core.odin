@@ -5,6 +5,8 @@ package comet
 // ╰───────╯
 // by kaylatheegg, spsandwichman
 
+// using aphelion v0.2.1
+
 // TODO - IO slows the emulator down - multithread!!!!!!!!
 
 import "core:fmt"
