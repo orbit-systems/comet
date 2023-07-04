@@ -40,6 +40,12 @@ read_u8 :: proc(address: u64) -> u8 {
 }
 
 write_u64 :: proc(address: u64, value: u64) {
+
+    if address == 0x810 {
+        gpu_process_command(agpu, value)
+        return
+    }
+
     write_u8(address,     u8(value))
     write_u8(address + 1, u8(value >> 8))
     write_u8(address + 2, u8(value >> 16))

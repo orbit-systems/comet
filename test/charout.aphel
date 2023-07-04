@@ -1,20 +1,23 @@
 .loc 0xA00
 
 main:
-    llis    ra, 0x1000  // string pointer
-    llis    rb, 0       // current character value
+    add     ra, sp, >str    // string pointer
+    llis    rb, 0           // current character value
 
     loop:
-        lb  rb, ra, 0   // load character
-        add rb, rb, 0   // set flags
-        beq zero        // check if null '\0'
+        lb  rb, ra, 0       // load character
+        add rb, rb, 0       // set flags
+        beq zero            // check if null '\0'
         
-        stb rb, rz, 0x9FF // send character to out
-        add ra, ra, 1   // increment string pointer
+        sb  rb, rz, 0x9FF   // send character to out
+        add ra, ra, 1       // increment string pointer
         bra loop
     
 zero:
     bra main
 
-.loc 0x1000
-.string "Aphelion!\n\0"
+
+
+
+str:
+    .string "Aphelion!\n\0"

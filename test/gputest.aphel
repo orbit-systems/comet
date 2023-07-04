@@ -1,0 +1,84 @@
+
+.loc 0xA00
+start:
+    lli     ra, 0xFFFF
+    reloc   ra, 0x0
+    llis    ra, 0x0
+
+main:
+    lli     ra, 0x0
+    lli     rb, 0x0 
+    
+    lli     rc, 0x80
+    lli     rd, 0x80
+    lli     rd, 0x80
+
+loop:
+    test    ra, 640
+    bgt     increment
+    jal     send_pixel
+    add     ra, ra, 0x1
+    add     rc, rc, 0x3
+    add     rd, rd, 0x1
+    add     rd, rd, 0x5
+    bra     loop
+
+increment:
+    addi    rb, rb, 0x1
+    llis    ra, 0x0
+
+    test    rb, 480
+    bgt     render
+
+    bra     loop
+
+render:
+    llis    rg, 0x8
+    sw      rg, rz, 0x810
+    llis    rb, 0
+    bra     loop
+
+
+/*
+    ra = x
+    rb = y
+    rc = r
+    rd = g
+    re = b
+*/
+
+//XXYYRGB(0x03)
+send_pixel:
+
+    // sanitize
+    and     ra, ra, 0xFFFF
+    and     rb, rb, 0xFFFF
+    and     rc, rc, 0xFF
+    and     rd, rd, 0xFF
+    and     re, re, 0xFF
+    llis    rf, 0x03
+    
+    // move into position
+    shl     ra, ra, 48
+    shl     rb, rb, 32
+    shl     rc, rc, 24
+    shl     rd, rd, 16
+    shl     re, re, 8
+
+    // move into rf
+    or      rf, rf, ra
+    or      rf, rf, rb
+    or      rf, rf, rc
+    or      rf, rf, rd
+    or      rf, rf, re
+
+    sw      rf, rz, 0x810
+
+    // restore values
+    lsr     ra, ra, 48
+    lsr     rb, rb, 32
+    lsr     rc, rc, 24
+    lsr     rd, rd, 16
+    lsr     re, re, 8
+
+    ret 

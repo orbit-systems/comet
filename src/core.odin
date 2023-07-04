@@ -15,6 +15,10 @@ import "core:time"
 import "core:strings"
 import "core:strconv"
 
+// init aphelion cpu state
+cpu_state := aphelion_cpu_state{}
+agpu := gpu{}
+
 main :: proc() {
 
     // load arguments
@@ -33,6 +37,10 @@ main :: proc() {
         time.stopwatch_start(&overall_timer)
     }
     
+    agpu = gpu_init()
+
+        
+
     loop()
     if flag_benchmark {
         time.stopwatch_stop(&overall_timer)
@@ -44,9 +52,6 @@ main :: proc() {
         fmt.printf("cycles/sec   : %f\n", cycles_per_sec)
     }
 }
-
-// init aphelion cpu state
-cpu_state := aphelion_cpu_state{}
 
 loop :: proc() {
     using register_names
