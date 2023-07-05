@@ -17,7 +17,7 @@ import "core:strconv"
 
 // init aphelion cpu state
 cpu_state := aphelion_cpu_state{}
-agpu := gpu{}
+gpu := gpu_state{}
 
 main :: proc() {
 
@@ -37,7 +37,7 @@ main :: proc() {
         time.stopwatch_start(&overall_timer)
     }
     
-    agpu = gpu_init()
+    gpu = gpu_init()
 
         
 
