@@ -9,45 +9,68 @@ gpu_width  :: 640
 gpu_height :: 480
 
 gpu_state :: struct {
-    window : ^sdl2.Window,
-    render : ^sdl2.Renderer,
-    cpos   : [2]u16,
-    ccolor : [3]u8,
-    command_buffer : [dynamic]u64,
-    command_mutex  : bool,
-}
-
-gpu_init :: proc() -> gpu_state {
-
-    newgpu := gpu_state{}
-
-    newgpu.window = sdl2.CreateWindow("comet", sdl2.WINDOWPOS_CENTERED, sdl2.WINDOWPOS_CENTERED, gpu_width, gpu_height, sdl2.WINDOW_SHOWN)
-    newgpu.render = sdl2.CreateRenderer(newgpu.window, -1, sdl2.RENDERER_SOFTWARE)
-
-    return newgpu
+    window          : ^sdl2.Window,
+    render          : ^sdl2.Renderer,
+    cpos            : [2]u16,
+    ccolor          : [3]u8,
+    command_buffer  : [dynamic]u64,
+    command_mutex   : bool,
+    key_buffer      : [dynamic]u8,
+    key_mutex       : bool,
+    global_pause    : bool,
 }
 
 gpu_thread_loop :: proc(t: ^thread.Thread) {
     intgpu := cast(^gpu_state)(t.data)
+
+    intgpu.window = sdl2.CreateWindow("comet", sdl2.WINDOWPOS_CENTERED, sdl2.WINDOWPOS_CENTERED, gpu_width, gpu_height, sdl2.WINDOW_SHOWN)
+    intgpu.render = sdl2.CreateRenderer(intgpu.window, -1, sdl2.RENDERER_SOFTWARE)
+
     for {
-        for !did_acquire(&(intgpu.command_mutex)) {
-            thread.yield() // sit back and relax
-        }
-        
-        // change this at some point
-        if len(intgpu.command_buffer) == 0 {
-            intgpu.command_mutex = false
-            thread.yield()
-            continue
+        event : sdl2.Event
+        for (sdl2.PollEvent(&event)) {
+            //fmt.printf("%v\n", event.type)
+            #partial switch event.type {
+            case .QUIT:
+                return
+            case .KEYDOWN:
+                if event.key.keysym.sym == .ESCAPE {
+                    return
+                }
+            case .WINDOWEVENT:
+                // fmt.printf("%v\n", event.window.event)
+                // if event.window.event == .LEAVE {
+                //     intgpu.global_pause = true
+                //     thread.yield()
+                //     continue
+                // }
+                // if event.window.event == .ENTER {
+                //     intgpu.global_pause = false
+                // }
+            case:
+                continue
+            }
+            
         }
 
-        // execute all pending commands
-        for len(intgpu.command_buffer) != 0 {
-            com := intgpu.command_buffer[0]
-            ordered_remove(&(intgpu.command_buffer), 0)
-            gpu_process_command(intgpu, com)
+        for did_acquire(&(intgpu.command_mutex)) {
+             // change this at some point
+            if len(intgpu.command_buffer) == 0 {
+                intgpu.command_mutex = false
+                thread.yield()
+                break
+            }
+
+            // execute all pending commands
+            for len(intgpu.command_buffer) != 0 {
+                //fmt.printf("%v\n", len(intgpu.command_buffer))
+                com := intgpu.command_buffer[0]
+                ordered_remove(&(intgpu.command_buffer), 0)
+                gpu_process_command(intgpu, com)
+            }
+            intgpu.command_mutex = false
         }
-        intgpu.command_mutex = false
+        thread.yield()
     }
 }
 
@@ -56,13 +79,11 @@ gpu_process_command :: proc(gpu: ^gpu_state, command: u64) {
     switch u8(0xFF & command) {
     case 3:
         gpu_command_draw_pixel(gpu, command)
-        //sdl2.RenderPresent(gpu.render)
     case 4:
     case 5:
     case 6:
     case 7:
     case 8:
-        //fmt.printf("RENDER\n")
         sdl2.RenderPresent(gpu.render)
     }
 }

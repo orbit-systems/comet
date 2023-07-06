@@ -1,3 +1,7 @@
+
+.loc 0x810
+GPU:
+
 .loc 0xA00
 start:
     lli     ra, 0xFFFF
@@ -13,7 +17,7 @@ main:
     lli     re, 0x0
 
 loop:
-    cmpi    ra, 640
+    cmpi    ra, 320 //640
     bgt     increment
     bra     send_pixel
     send_pixel_end:
@@ -27,7 +31,7 @@ increment:
     addi    rb, rb, 0x1
     llis    ra, 0x0
 
-    cmpi    rb, 480
+    cmpi    rb, 200 //480
     bgt     render
 
     bra     loop
@@ -36,10 +40,10 @@ render:
     
     llis    rg, 0x6
     lui     rg, 0x0414
-    sw      rg, rz, 0x810
+    sw      rg, pc, >GPU
 
     llis    rg, 0x8
-    sw      rg, rz, 0x810
+    sw      rg, pc, >GPU
     llis    rb, 0
     bra     loop
 
@@ -77,7 +81,7 @@ send_pixel:
     or      rf, rf, rd
     or      rf, rf, re
 
-    sw      rf, rz, 0x810
+    sw      rf, pc, >GPU
 
     // restore values
     lsr     ra, ra, 48
