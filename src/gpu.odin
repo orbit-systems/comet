@@ -25,6 +25,8 @@ gpu_thread_loop :: proc(t: ^thread.Thread) {
 
     intgpu.window = sdl2.CreateWindow("comet", sdl2.WINDOWPOS_CENTERED, sdl2.WINDOWPOS_CENTERED, gpu_width, gpu_height, sdl2.WINDOW_SHOWN)
     intgpu.render = sdl2.CreateRenderer(intgpu.window, -1, sdl2.RENDERER_SOFTWARE)
+    icon := sdl2.LoadBMP("src/img/comet.bmp")
+    sdl2.SetWindowIcon(intgpu.window, icon)
 
     for {
         event : sdl2.Event

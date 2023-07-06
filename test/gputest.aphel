@@ -9,12 +9,12 @@ start:
     llis    ra, 0x0
 
 main:
-    lli     ra, 0x0
-    lli     rb, 0x0 
+    llis    ra, 0x0
+    llis    rb, 0x0 
     
-    lli     rc, 0x0
-    lli     rd, 0x0
-    lli     re, 0x0
+    llis    rc, 0x0
+    llis    rd, 0x0
+    llis    re, 0x0
 
 loop:
     cmpi    ra, 640
