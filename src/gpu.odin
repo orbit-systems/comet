@@ -52,9 +52,11 @@ gpu_thread_loop :: proc(t: ^thread.Thread) {
 }
 
 gpu_process_command :: proc(gpu: ^gpu_state, command: u64) {
+    //fmt.printf("GPUCOM::%16x\n", command)
     switch u8(0xFF & command) {
     case 3:
         gpu_command_draw_pixel(gpu, command)
+        //sdl2.RenderPresent(gpu.render)
     case 4:
     case 5:
     case 6:
