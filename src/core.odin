@@ -14,10 +14,11 @@ import "core:os"
 import "core:time"
 import "core:strings"
 import "core:strconv"
+import "core:thread"
 
 // init aphelion cpu state
 cpu_state := aphelion_cpu_state{}
-agpu := gpu{}
+gpu := gpu_state{}
 
 main :: proc() {
 
@@ -37,9 +38,12 @@ main :: proc() {
         time.stopwatch_start(&overall_timer)
     }
     
-    agpu = gpu_init()
+    gpu = gpu_init()
 
-        
+    gpu_thread := thread.create(gpu_thread_loop)
+    gpu_thread.data = &gpu
+    gpu_thread.id = 1
+    thread.start(gpu_thread)
 
     loop()
     if flag_benchmark {

@@ -13,9 +13,10 @@ main:
     lli     re, 0x0
 
 loop:
-    test    ra, 640
+    cmpi    ra, 640
     bgt     increment
-    jal     send_pixel
+    bra     send_pixel
+    send_pixel_end:
     add     ra, ra, 1
     add     rc, rc, 3
     add     rd, rd, 1
@@ -26,7 +27,7 @@ increment:
     addi    rb, rb, 0x1
     llis    ra, 0x0
 
-    test    rb, 480
+    cmpi    rb, 480
     bgt     render
 
     bra     loop
@@ -85,4 +86,4 @@ send_pixel:
     lsr     rd, rd, 16
     lsr     re, re, 8
 
-    ret 
+    bra     send_pixel_end

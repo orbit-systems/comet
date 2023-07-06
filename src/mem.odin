@@ -1,6 +1,8 @@
 package comet
 
 import "core:fmt"
+import "core:thread"
+import "core:intrinsics"
 
 // i think there is a more efficient way to store this later but i am not smart enough to implement this now
 memory: [dynamic]u8
@@ -42,7 +44,12 @@ read_u8 :: proc(address: u64) -> u8 {
 write_u64 :: proc(address: u64, value: u64) {
 
     if address == 0x810 {
-        gpu_process_command(agpu, value)
+        //gpu_process_command(gpu, value)
+        for !did_acquire(&(gpu.command_mutex)) {
+            thread.yield() // sit back and relax
+        }
+        append(&(gpu.command_buffer), value)
+        gpu.command_mutex = false
         return
     }
 
