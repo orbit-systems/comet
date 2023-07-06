@@ -34,10 +34,10 @@ gpu_thread_loop :: proc(t: ^thread.Thread) {
             thread.yield() // sit back and relax
         }
         
-        // hacky and gross
+        // change this at some point
         if len(intgpu.command_buffer) == 0 {
             intgpu.command_mutex = false
-            //thread.yield()
+            thread.yield()
             continue
         }
 
