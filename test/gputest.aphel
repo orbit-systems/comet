@@ -17,7 +17,7 @@ main:
     lli     re, 0x0
 
 loop:
-    cmpi    ra, 320 //640
+    cmpi    ra, 640
     bgt     increment
     bra     send_pixel
     send_pixel_end:
@@ -31,7 +31,7 @@ increment:
     addi    rb, rb, 0x1
     llis    ra, 0x0
 
-    cmpi    rb, 200 //480
+    cmpi    rb, 480
     bgt     render
 
     bra     loop
