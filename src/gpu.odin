@@ -41,13 +41,13 @@ gpu_thread_loop :: proc(t: ^thread.Thread) {
             continue
         }
 
-        // pop command off of queue
-        com := intgpu.command_buffer[0]
-        ordered_remove(&(intgpu.command_buffer), 0)
+        // execute all pending commands
+        for len(intgpu.command_buffer) != 0 {
+            com := intgpu.command_buffer[0]
+            ordered_remove(&(intgpu.command_buffer), 0)
+            gpu_process_command(intgpu, com)
+        }
         intgpu.command_mutex = false
-
-        gpu_process_command(intgpu, com)
-
     }
 }
 
