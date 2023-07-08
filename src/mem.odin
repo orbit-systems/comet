@@ -43,6 +43,7 @@ read_u8 :: proc(address: u64) -> u8 {
 
 write_u64 :: proc(address: u64, value: u64) {
 
+    //fmt.printf("write_u64: 0x%x\n", address)
     if address == 0x810 {
         //gpu_process_command(gpu, value)
         for !did_acquire(&(gpu.command_mutex)) {
