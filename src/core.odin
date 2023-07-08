@@ -5,20 +5,23 @@ package comet
 // ╰───────╯
 // by kaylatheegg, spsandwichman
 
-// using aphelion v0.2.1
+// using aphelion v0.2.2
 
 // TODO - IO slows the emulator down - multithread!!!!!!!!
 
+import sdl2 "vendor:sdl2"
 import "core:fmt"
 import "core:os"
 import "core:time"
 import "core:strings"
 import "core:strconv"
 import "core:thread"
+import "core:intrinsics"
 
 // init aphelion cpu state
 cpu_state := aphelion_cpu_state{}
 gpu := gpu_state{}
+gpu_thread : ^thread.Thread
 
 main :: proc() {
 
@@ -38,9 +41,9 @@ main :: proc() {
         time.stopwatch_start(&overall_timer)
     }
     
-    gpu = gpu_init()
+    //gpu = gpu_init()
 
-    gpu_thread := thread.create(gpu_thread_loop)
+    gpu_thread = thread.create(gpu_thread_loop)
     gpu_thread.data = &gpu
     gpu_thread.id = 1
     thread.start(gpu_thread)
@@ -63,7 +66,15 @@ loop :: proc() {
     cpu_state.registers[pc] = 0xA00 // start at beginning of ram
     cpu_state.running = true
 
-    for (cpu_state.running == true) {
+    for cpu_state.running {
+
+        if gpu.global_pause {
+            //fmt.print("GLOBAL_PAUSE\n")
+            thread.yield()
+            continue
+        }
+        //fmt.printf("%v\n", gpu.global_pause)
+
         cpu_state.cycle += 1
         
         raw_ins := read_u32(cpu_state.registers[pc])
@@ -95,6 +106,13 @@ loop :: proc() {
         }
 
         if flag_cycle_limit != 0 && (cpu_state.cycle >= flag_cycle_limit) {
+            cpu_state.running = false
+        }
+
+        if thread.is_done(gpu_thread) {
+            //fmt.println("MAIN: DESTROY GPU THREAD")
+            thread.terminate(gpu_thread, 0)
+            thread.destroy(gpu_thread)
             cpu_state.running = false
         }
     }

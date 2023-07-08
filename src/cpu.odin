@@ -46,18 +46,18 @@ exec_instruction :: proc(cpu: ^aphelion_cpu_state, ins: instruction_info) {
             cpu.registers[ins.rde] =  sign_extend_to_u64(ins.imm,16) << 48
         }
 
-    case 0x21: // ld
-        cpu.registers[ins.rde] = read_u64(cpu.registers[ins.rs1] + ins.imm)
+    case 0x21: // lw
+        cpu.registers[ins.rde] = read_u64(cpu.registers[ins.rs1] + sign_extend_to_u64(ins.imm, 16))
     case 0x22: // lbs
         cpu.registers[ins.rde] = u64(read_u8(cpu.registers[ins.rs1] + ins.imm))
     case 0x23: // lb
         cpu.registers[ins.rde] &= 0xFFFFFFFFFFFFFF00
         cpu.registers[ins.rde] += u64(read_u8(cpu.registers[ins.rs1] + ins.imm))
     
-    case 0x24: // st
-        write_u64(cpu.registers[ins.rs1] + ins.imm, cpu.registers[ins.rde])
-    case 0x25: // stb
-        write_u8(cpu.registers[ins.rs1] + ins.imm, u8(cpu.registers[ins.rde]))
+    case 0x24: // sw
+        write_u64(cpu.registers[ins.rs1] + sign_extend_to_u64(ins.imm, 16), cpu.registers[ins.rde])
+    case 0x25: // sb
+        write_u8(cpu.registers[ins.rs1] + sign_extend_to_u64(ins.imm, 16), u8(cpu.registers[ins.rde]))
     case 0x26: // swp
         temp := cpu.registers[ins.rde]
         cpu.registers[ins.rde] = cpu.registers[ins.rs1]
