@@ -20,7 +20,7 @@ raw_decode :: proc(ins: u32) -> (ins_dec: instruction_info) {
     ins_dec.opcode = cast(u8) (ins & 0xFF)
     current_fmt := ins_formats[ins_dec.opcode]
 
-    switch ins_formats[ins_dec.opcode] {
+    switch current_fmt {
     case ins_fmt.R:
         ins_dec.rde  = cast(u8)  (ins >> 28 & 0xF)
         ins_dec.rs1  = cast(u8)  (ins >> 24 & 0xF)
@@ -122,7 +122,9 @@ print_registers :: proc(cpu: ^aphelion_cpu_state) {
     fmt.print("\n")
 }
 
-ins_formats := map[u8]ins_fmt{
+ins_formats : [256]ins_fmt
+
+dynamic_map_ins_formats := map[u8]ins_fmt{
     0x0A = ins_fmt.B,
     0x10 = ins_fmt.B,
     0x11 = ins_fmt.M,
