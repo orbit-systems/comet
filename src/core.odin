@@ -40,13 +40,18 @@ main :: proc() {
     if flag_benchmark {
         time.stopwatch_start(&overall_timer)
     }
-    
-    //gpu = gpu_init()
 
     gpu_thread = thread.create(gpu_thread_loop)
     gpu_thread.data = &gpu
     gpu_thread.id = 1
     thread.start(gpu_thread)
+
+
+    // fucking hilarious - translate slow dynamic map into hard array during initialization
+    for key, value in dynamic_map_ins_formats {
+        ins_formats[key] = value
+    }
+
 
     loop()
     if flag_benchmark {
