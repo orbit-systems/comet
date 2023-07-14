@@ -78,17 +78,18 @@ write_u16 :: proc(address: u64, value: u16) {
 
 write_u8 :: proc(address: u64, value: u8) {
     if address == 0x9FF {
-        if flag_dbg_verbosity > 0 {
-            set_style(ANSI.FG_Red)
-            set_style(ANSI.Bold)
-            fmt.print("CHAROUT")
-            set_style(ANSI.Reset)
-            fmt.print(" '")
-            fmt.print(rune(value))
-            fmt.printf("' (0x%x)\n", value)
-        } else {
-            fmt.print(rune(value))
-        }
+        // if flag_dbg_verbosity > 0 {
+        //     set_style(ANSI.FG_Red)
+        //     set_style(ANSI.Bold)
+        //     fmt.print("CHAROUT")
+        //     set_style(ANSI.Reset)
+        //     fmt.print(" '")
+        //     fmt.print(rune(value))
+        //     fmt.printf("' (0x%x)\n", value)
+        // } else {
+        //     fmt.print(rune(value))
+        // }
+        fmt.print(rune(value))
         return;
     }
     if (u64(len(memory)) <= u64(address)) {

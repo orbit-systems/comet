@@ -23,7 +23,7 @@ gpu_state :: struct {
 
 gpu_thread_proc :: proc(t: ^thread.Thread) {
 
-    for {
+    main_loop: for {
         for did_acquire(&(comet.gpu.mutex)) {
              // change this at some point
             if len(comet.gpu.command_buffer) == 0 {
@@ -43,6 +43,7 @@ gpu_thread_proc :: proc(t: ^thread.Thread) {
         }
         thread.yield()
     }
+    
 }
 
 gpu_process_command :: proc(command: u64) {

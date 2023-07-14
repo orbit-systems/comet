@@ -94,21 +94,21 @@ loop :: proc() {
         ins_info := raw_decode(raw_ins)
 
         //dbg(1, "current memory len 0x%X ", len(memory))
-        dbg(1, "cycle %d ", comet.cpu.cycle)
+        // dbg(1, "cycle %d ", comet.cpu.cycle)
 
-        if flag_dbg_verbosity >= 1 {
-            set_style(ANSI.FG_Yellow)
-            fmt.printf("@ %4x ", comet.cpu.registers[register_names.pc])
-            set_style(ANSI.FG_Default)
-            print_asm(ins_info)
-        }
+        // if flag_dbg_verbosity >= 1 {
+        //     set_style(ANSI.FG_Yellow)
+        //     fmt.printf("@ %4x ", comet.cpu.registers[register_names.pc])
+        //     set_style(ANSI.FG_Default)
+        //     print_asm(ins_info)
+        // }
 
         //actually do the instruction
         exec_instruction(&comet.cpu, ins_info)
 
-        if flag_dbg_verbosity >= 2 {
-            print_registers(&comet.cpu)
-        }
+        // if flag_dbg_verbosity >= 2 {
+        //     print_registers(&comet.cpu)
+        // }
 
         comet.cpu.registers[pc] += 4 * transmute(u64)(comet.cpu.increment_next)
 
@@ -118,7 +118,6 @@ loop :: proc() {
             //fmt.println("MAIN: DESTROY GPU THREAD")
             thread.terminate(comet.gpu_thread, 0)
             thread.destroy(comet.gpu_thread)
-            thread.terminate(comet.win_thread, 0)
             thread.destroy(comet.win_thread)
             comet.cpu.running = false
         }
@@ -150,11 +149,7 @@ load_arguments :: proc() {
             print_help()
             os.exit(0)
         case "-debug":
-            ok := false
-            flag_dbg_verbosity, ok = strconv.parse_int(argument.val)
-            if !ok {
-                die("ERR: expected int, got \"%s\"\n", argument.val)
-            }
+            flag_debug = true
         case "-max-cycles":
             ok := false
             flag_cycle_limit, ok = strconv.parse_u64(argument.val)
@@ -177,7 +172,7 @@ load_arguments :: proc() {
     }
 }
 
-flag_dbg_verbosity  := -1
+flag_debug          := false
 flag_cycle_limit    : u64 = 0
 flag_no_color       := false
 flag_halt_inv_op    := false

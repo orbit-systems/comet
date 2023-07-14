@@ -1,7 +1,9 @@
 *.exe
 *.o
+*.out
 *.ps1
 *.bin
+*.pdb
 
 comet
 .vscode

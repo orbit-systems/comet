@@ -13,13 +13,14 @@ die :: proc(msg: string, args: ..any) {
     os.exit(die_exit_code)
 }
 
+@(deprecated="dont use dbg()! we have debug window support now")
 dbg :: proc(level: int, msg: string, args: ..any) {
-    if flag_dbg_verbosity >= level do fmt.printf(msg, ..args)
+    if flag_debug do fmt.printf(msg, ..args)
 }
 
 print_help :: proc() {
     fmt.print("\nusage: comet (path) [flags]\n")
-    fmt.print("\n-debug:[int]         debug info verbosity")
+    fmt.print("\n-debug               launch window with debug information")
     fmt.print("\n-max-cycles:[int]    halt after cycle count has been reached")
     fmt.print("\n-halt-on-inv         halt on invalid opcode")
     fmt.print("\n-no-color            disable ANSI formatting")
