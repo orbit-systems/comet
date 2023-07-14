@@ -287,10 +287,28 @@ exec_instruction :: proc(cpu: ^aphelion_cpu_state, ins: instruction_info) {
 
 }
 
+do_cpu_cycle :: proc() {
+    using register_names
+    comet.cpu.cycle += 1
+        
+    comet.cpu.raw_ins = read_u32(comet.cpu.registers[pc])
+    
+    comet.cpu.registers[st] &= 0x00000000FFFFFFFF
+    comet.cpu.registers[st] |= u64(comet.cpu.raw_ins) << 32
+
+    comet.cpu.ins_info = raw_decode(comet.cpu.raw_ins)
+
+    //actually do the instruction
+    exec_instruction(&comet.cpu, comet.cpu.ins_info)
+
+    comet.cpu.registers[pc] += 4 * transmute(u64)(comet.cpu.increment_next)
+}
 
 aphelion_cpu_state :: struct {
     registers       : [16]u64,
     running         : bool,
+    paused          : bool,
+    step            : bool,
     cycle           : u64,
     increment_next  : b64,
     raw_ins         : u32,

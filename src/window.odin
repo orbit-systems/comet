@@ -11,6 +11,7 @@ import "core:os"
 import "core:time"
 
 // TODO use sdl2.UpdateTexture instead of create and destroy texture
+// TODO this leaks very steadily - too bad!
 
 
 state := struct {
@@ -31,11 +32,14 @@ out_window_state :: struct {
     
     gpu_buf_surface : ^sdl2.Surface,
     gpu_buf_texture : ^sdl2.Texture,
+
+    view_buffer_select : bool,
 }
 
 surface_from_display_buffer :: #force_inline proc() -> ^sdl2.Surface {
+
     return sdl2.CreateRGBSurfaceFrom(
-        &comet.gpu.display_buffer,
+        comet.win.view_buffer_select ? &comet.gpu.draw_buffer : &comet.gpu.display_buffer,
         gpu_width, 
         gpu_height,
         gpu_channels * 8,
@@ -103,9 +107,6 @@ win_thread_proc :: proc(t: ^thread.Thread) {
 
 
     main_loop: for {
-
-        // cycle_snapshot = comet.cpu.cycle
-        // time_snapshot = time.duration_seconds(time.stopwatch_duration(comet.timer))
 
         e : sdl2.Event
         for (sdl2.PollEvent(&e)) {
@@ -193,7 +194,6 @@ win_thread_proc :: proc(t: ^thread.Thread) {
                 &dst_rect_no_debug,
             )
 
-            
         }
         sdl2.RenderPresent(comet.win.renderer)
         sdl2.DestroyTexture(comet.win.gpu_buf_texture)
@@ -241,16 +241,16 @@ render :: proc(ctx: ^mu.Context, renderer: ^sdl2.Renderer, jbm: ^ttf.Font) {
             }
 
             text_cstr := strings.clone_to_cstring(cmd.str)
-            defer delete(text_cstr)
             text_surface := ttf.RenderText(jbm, text_cstr, {cmd.color.r, cmd.color.g, cmd.color.b, cmd.color.a}, {0,0,0,255})
             dst := sdl2.Rect{cmd.pos.x, cmd.pos.y, text_surface.w, text_surface.h}
             src := sdl2.Rect{0, 0, text_surface.w, text_surface.h}
             texture := sdl2.CreateTextureFromSurface(renderer,text_surface)
             sdl2.SetTextureBlendMode(texture, .ADD)
             sdl2.RenderCopy(renderer, texture, &src, &dst)
+
             sdl2.FreeSurface(text_surface)
             sdl2.DestroyTexture(texture)
-            
+            delete(text_cstr)
 
         case ^mu.Command_Rect:
             sdl2.SetRenderDrawColor(renderer, cmd.color.r, cmd.color.g, cmd.color.b, cmd.color.a)
@@ -304,46 +304,39 @@ all_windows :: proc(ctx: ^mu.Context) {
 		mu.layout_row(ctx, {600}, 0)
 		ctx.style.padding = 3
 
-		text := fmt.aprintf(
+		mu.text(ctx, fmt.tprintf(
             "pc: 0x%16x  st: 0x%16x  sp: 0x%16x  fp: 0x%16x",
             comet.cpu.registers[pc], comet.cpu.registers[st], comet.cpu.registers[sp], comet.cpu.registers[fp],
-        )
-		mu.text(ctx, text)
-        delete(text)
+        ))
 
-        text = fmt.aprintf(
+		mu.text(ctx, fmt.tprintf(
             "ra: 0x%16x  rb: 0x%16x  rc: 0x%16x  rd: 0x%16x",
             comet.cpu.registers[ra], comet.cpu.registers[rb], comet.cpu.registers[rc], comet.cpu.registers[rd],
-        )
-		mu.text(ctx, text)
-        delete(text)
+        ))
 
-        text = fmt.aprintf(
+		mu.text(ctx, fmt.tprintf(
             "re: 0x%16x  rf: 0x%16x  rg: 0x%16x  rh: 0x%16x",
             comet.cpu.registers[re], comet.cpu.registers[rf], comet.cpu.registers[rg], comet.cpu.registers[rh],
-        )
-		mu.text(ctx, text)
-        delete(text)
-    
-        text = fmt.aprintf(
+        ))
+
+		mu.text(ctx, fmt.tprintf(
             "ri: 0x%16x  rj: 0x%16x  rk: 0x%16x",
             comet.cpu.registers[ri], comet.cpu.registers[rj], comet.cpu.registers[rk],
-        )
-		mu.text(ctx, text)
-		delete(text)
+        ))
 
 		//mu.layout_end_column(ctx)
 	}
-    if mu.window(ctx, "info", {0, 115, 600, 115}, {.NO_CLOSE, .NO_RESIZE, .EXPANDED, .NO_SCROLL}) {
+
+    if mu.window(ctx, "instruction info", {0, 116, 200, 50}, {.NO_CLOSE, .NO_RESIZE, .EXPANDED, .NO_SCROLL}) {
         using register_names
-		mu.layout_row(ctx, {600}, 0)
+		mu.layout_row(ctx, {200}, 0)
 		ctx.style.padding = 3
 
         //s : string
         s := print_asm(comet.cpu.ins_info)
 
 		text := fmt.aprintf(
-            "Instruction: %s", s,
+            "assembly: %s", s,
         )
 		mu.text(ctx, text)
         delete(s)
@@ -351,7 +344,18 @@ all_windows :: proc(ctx: ^mu.Context) {
 
 		//mu.layout_end_column(ctx)
 	}
-    
+
+    if mu.window(ctx, "controls", {201, 116, 400, 75}, {.NO_CLOSE, .NO_RESIZE, .EXPANDED, .NO_SCROLL}) {
+        using register_names
+		mu.layout_row(ctx, {100, 100, 150}, 40)
+		ctx.style.padding = 3
+
+        if .SUBMIT in mu.button(ctx, comet.cpu.paused ? "resume" : "pause") { comet.cpu.paused = !comet.cpu.paused }
+        if .SUBMIT in mu.button(ctx, "step clock") { comet.cpu.step = !comet.cpu.step }
+        if .SUBMIT in mu.button(ctx, comet.win.view_buffer_select ? "view display buffer" : "view draw buffer") { comet.win.view_buffer_select = !comet.win.view_buffer_select }
+		
+        //mu.layout_end_column(ctx)
+	}
 
     if mu.window(ctx, "gpu out", {601, 0, gpu_width, gpu_height}, mu.Options{.NO_CLOSE, .NO_RESIZE, .EXPANDED, .NO_FRAME}) {
         mu.layout_begin_column(ctx)

@@ -86,19 +86,14 @@ loop :: proc() {
 
     for comet.cpu.running {
 
-        comet.cpu.cycle += 1
+        if !comet.cpu.paused {
+
+            do_cpu_cycle()
         
-        comet.cpu.raw_ins = read_u32(comet.cpu.registers[pc])
-        
-        comet.cpu.registers[st] &= 0x00000000FFFFFFFF
-        comet.cpu.registers[st] |= u64(comet.cpu.raw_ins) << 32
-
-        comet.cpu.ins_info = raw_decode(comet.cpu.raw_ins)
-
-        //actually do the instruction
-        exec_instruction(&comet.cpu, comet.cpu.ins_info)
-
-        comet.cpu.registers[pc] += 4 * transmute(u64)(comet.cpu.increment_next)
+        } else if comet.cpu.step {
+            do_cpu_cycle()
+            comet.cpu.step = false
+        }
 
         comet.cpu.running = !(flag_cycle_limit != 0 && (comet.cpu.cycle >= flag_cycle_limit))
 
