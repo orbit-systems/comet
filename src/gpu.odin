@@ -24,6 +24,9 @@ gpu_state :: struct {
 gpu_thread_proc :: proc(t: ^thread.Thread) {
 
     main_loop: for {
+        if thread.is_done(comet.win_thread) {
+            return
+        }
         for did_acquire(&(comet.gpu.mutex)) {
              // change this at some point
             if len(comet.gpu.command_buffer) == 0 {
