@@ -333,14 +333,14 @@ all_windows :: proc(ctx: ^mu.Context) {
 		ctx.style.padding = 3
 
         //s : string
-        s := print_asm(comet.cpu.ins_info)
+        s := strings.concatenate({"assembly: ", print_asm(comet.cpu.ins_info)})
 
-		text := fmt.aprintf(
-            "assembly: %s", s,
-        )
-		mu.text(ctx, text)
+		// text := fmt.aprintf(
+        //     "assembly: %s", s,
+        // )
+		mu.text(ctx, s)
         delete(s)
-        delete(text)
+        //delete(text)
 
 		//mu.layout_end_column(ctx)
 	}
