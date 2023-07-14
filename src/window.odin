@@ -301,7 +301,7 @@ reset_log :: proc() {
 
 all_windows :: proc(ctx: ^mu.Context) {
 	
-	if mu.window(ctx, "registers", {0, 0, 600, 150}, {.NO_CLOSE, .NO_RESIZE, .EXPANDED, .NO_SCROLL}) {
+	if mu.window(ctx, "registers", {0, 0, 600, 115}, {.NO_CLOSE, .NO_RESIZE, .EXPANDED, .NO_SCROLL}) {
         using register_names
 		mu.layout_row(ctx, {600}, 0)
 		ctx.style.padding = 3
