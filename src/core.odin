@@ -48,17 +48,17 @@ main :: proc() {
         time.stopwatch_start(&comet.timer)
     }
 
-    comet.gpu_thread = thread.create(gpu_thread_proc)
-    comet.gpu_thread.id = 1
-    comet.gpu_thread.init_context = context
-    thread.start(comet.gpu_thread)
-    defer thread.destroy(comet.gpu_thread)
-
     comet.win_thread = thread.create(win_thread_proc)
     comet.win_thread.id = 2
     comet.win_thread.init_context = context
     thread.start(comet.win_thread)
     defer thread.destroy(comet.win_thread)
+
+    comet.gpu_thread = thread.create(gpu_thread_proc)
+    comet.gpu_thread.id = 1
+    comet.gpu_thread.init_context = context
+    thread.start(comet.gpu_thread)
+    defer thread.destroy(comet.gpu_thread)
 
     // fucking hilarious - translate slow dynamic map into hard array during initialization
     for key, value in dynamic_map_ins_formats {
