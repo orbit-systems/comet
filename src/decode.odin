@@ -62,7 +62,7 @@ print_asm :: proc(ins: instruction_info) -> (out: string) {
     name := ins_names[[2]u8{ins.opcode, ins.func}]
 
     //set_style(ANSI.Bold)
-    out = name
+    out = strings.clone(name)
     for i in 0..<(5-len(name)) {
         out = fmt.aprintf("%s ", out)
     }
