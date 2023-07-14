@@ -43,7 +43,6 @@ gpu_thread_proc :: proc(t: ^thread.Thread) {
         }
         thread.yield()
     }
-    
 }
 
 gpu_process_command :: proc(command: u64) {

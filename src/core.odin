@@ -119,7 +119,7 @@ loop :: proc() {
             thread.terminate(comet.gpu_thread, 0)
             thread.destroy(comet.gpu_thread)
             thread.destroy(comet.win_thread)
-            comet.cpu.running = false
+            return
         }
     }
 

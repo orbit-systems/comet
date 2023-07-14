@@ -9,6 +9,9 @@ import "core:intrinsics"
 import "core:strings"
 import "core:os"
 
+// TODO use sdl2.UpdateTexture instead of create and destroy texture
+
+
 state := struct {
     mu_ctx: mu.Context,
     log_buf:         [1<<16]byte,
@@ -90,9 +93,10 @@ win_thread_proc :: proc(t: ^thread.Thread) {
     ctx.text_height = mu.default_atlas_text_height
     
     jbm : ^ttf.Font = nil
-    jbm = ttf.OpenFont("src/assets/JetBrainsMono.ttf", 12)
+    jbm = ttf.OpenFont("src/assets/JetBrainsMono.ttf", 10)
     if jbm == nil {
         fmt.println("font cannot be loaded")
+        return
     }
     defer ttf.CloseFont(jbm)
 
@@ -100,7 +104,6 @@ win_thread_proc :: proc(t: ^thread.Thread) {
     main_loop: for {
         e : sdl2.Event
         for (sdl2.PollEvent(&e)) {
-            //fmt.printf("%v\n", event.type)
             #partial switch e.type {
             case .QUIT: 
                 break main_loop
@@ -153,12 +156,8 @@ win_thread_proc :: proc(t: ^thread.Thread) {
             //     thread.yield()
             // }
 
-            // repopulate surface and textures
+            // repopulate surface
             comet.win.gpu_buf_surface = surface_from_display_buffer()
-            comet.win.gpu_buf_texture = sdl2.CreateTextureFromSurface(
-                comet.win.renderer,
-                comet.win.gpu_buf_surface,
-            )
 
             // window updated
             // * a little more unsafe but whatever
@@ -166,6 +165,11 @@ win_thread_proc :: proc(t: ^thread.Thread) {
             // return mutex
             // comet.gpu.mutex = false
         }
+
+        comet.win.gpu_buf_texture = sdl2.CreateTextureFromSurface(
+            comet.win.renderer,
+            comet.win.gpu_buf_surface,
+        )
 
         if flag_debug {
             mu.begin(ctx)
@@ -183,15 +187,18 @@ win_thread_proc :: proc(t: ^thread.Thread) {
                 &src_rect_no_debug,
                 &dst_rect_no_debug,
             )
+
+            
         }
         sdl2.RenderPresent(comet.win.renderer)
+        sdl2.DestroyTexture(comet.win.gpu_buf_texture)
         thread.yield()
         
     }
 }
 
 render :: proc(ctx: ^mu.Context, renderer: ^sdl2.Renderer, jbm: ^ttf.Font) {
-    
+
     render_texture :: proc(renderer: ^sdl2.Renderer, dst: ^sdl2.Rect, src: mu.Rect, color: mu.Color) {
         dst.w = src.w
         dst.h = src.h
@@ -214,11 +221,8 @@ render :: proc(ctx: ^mu.Context, renderer: ^sdl2.Renderer, jbm: ^ttf.Font) {
         case ^mu.Command_Text:
             
             if cmd.str == "\uf00d" {
-                @static src_rect := sdl2.Rect{0, 0, gpu_width, gpu_height}
-                @static dst_rect := sdl2.Rect{}
-
-                // jank
-                dst_rect = sdl2.Rect{cmd.pos.x-2, cmd.pos.y-3, gpu_width, gpu_height}
+                src_rect := sdl2.Rect{0, 0, gpu_width, gpu_height}
+                dst_rect := sdl2.Rect{cmd.pos.x-2, cmd.pos.y-3, gpu_width, gpu_height}
 
                 sdl2.RenderCopy(
                     comet.win.renderer,
@@ -238,7 +242,8 @@ render :: proc(ctx: ^mu.Context, renderer: ^sdl2.Renderer, jbm: ^ttf.Font) {
             //     dst1.x += dst1.w
             // }
 
-            text_cstr := strings.clone_to_cstring(cmd.str, context.temp_allocator)
+            text_cstr := strings.clone_to_cstring(cmd.str)
+            defer delete(text_cstr)
             text_surface := ttf.RenderText(jbm, text_cstr, {cmd.color.r, cmd.color.g, cmd.color.b, cmd.color.a}, {0,0,0,255})
             dst := sdl2.Rect{cmd.pos.x, cmd.pos.y, text_surface.w, text_surface.h}
             src := sdl2.Rect{0, 0, text_surface.w, text_surface.h}
@@ -246,6 +251,7 @@ render :: proc(ctx: ^mu.Context, renderer: ^sdl2.Renderer, jbm: ^ttf.Font) {
             sdl2.SetTextureBlendMode(texture, .ADD)
             sdl2.RenderCopy(renderer, texture, &src, &dst)
             sdl2.FreeSurface(text_surface)
+            sdl2.DestroyTexture(texture)
             
 
         case ^mu.Command_Rect:
@@ -295,23 +301,45 @@ reset_log :: proc() {
 
 all_windows :: proc(ctx: ^mu.Context) {
 	
-	if mu.window(ctx, "cpu", {0, 0, 500, 300}, {.NO_CLOSE, .NO_RESIZE, .EXPANDED}) {
+	if mu.window(ctx, "registers", {0, 0, 600, 300}, {.NO_CLOSE, .NO_RESIZE, .EXPANDED, .NO_SCROLL}) {
         using register_names
-		mu.layout_begin_column(ctx)
+		mu.layout_row(ctx, {600}, 0)
 		ctx.style.padding = 3
-		text := fmt.aprintf("pc -> 0x%16x", comet.cpu.registers[pc])
 
+		text := fmt.aprintf(
+            "pc: 0x%16x  st: 0x%16x  sp: 0x%16x  fp: 0x%16x",
+            comet.cpu.registers[pc], comet.cpu.registers[st], comet.cpu.registers[sp], comet.cpu.registers[fp],
+        )
 		mu.text(ctx, text)
+
+        text = fmt.aprintf(
+            "ra: 0x%16x  rb: 0x%16x  rc: 0x%16x  rd: 0x%16x",
+            comet.cpu.registers[ra], comet.cpu.registers[rb], comet.cpu.registers[rc], comet.cpu.registers[rd],
+        )
+		mu.text(ctx, text)
+
+        text = fmt.aprintf(
+            "re: 0x%16x  rf: 0x%16x  rg: 0x%16x  rh: 0x%16x",
+            comet.cpu.registers[re], comet.cpu.registers[rf], comet.cpu.registers[rg], comet.cpu.registers[rh],
+        )
+		mu.text(ctx, text)
+
+        text = fmt.aprintf(
+            "ri: 0x%16x  rj: 0x%16x  rk: 0x%16x",
+            comet.cpu.registers[ri], comet.cpu.registers[rj], comet.cpu.registers[rk],
+        )
+		mu.text(ctx, text)
+
 		delete(text)
-		mu.layout_end_column(ctx)
+		//mu.layout_end_column(ctx)
 	}
     
 
-    if mu.window(ctx, "gpu out", {502, 0, gpu_width, gpu_height}, mu.Options{.NO_CLOSE, .NO_RESIZE, .EXPANDED, .NO_FRAME}) {
+    if mu.window(ctx, "gpu out", {602, 0, gpu_width, gpu_height}, mu.Options{.NO_CLOSE, .NO_RESIZE, .EXPANDED, .NO_FRAME}) {
         mu.layout_begin_column(ctx)
 
-        @static text := "\uf00d"
-		mu.text(ctx, text)
+        // * jank that tells the render function to copy the buffer here
+		mu.text(ctx, "\uf00d")
 		//delete(text)
 		mu.layout_end_column(ctx)
 	}
