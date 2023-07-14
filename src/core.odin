@@ -25,6 +25,8 @@ emulator_state :: struct {
     
     gpu_thread : ^thread.Thread,
     win_thread : ^thread.Thread,
+
+    timer : time.Stopwatch,
 }
 
 comet : emulator_state
@@ -42,9 +44,8 @@ main :: proc() {
 
     append(&memory, ..file[:])
 
-    overall_timer : time.Stopwatch
     if flag_benchmark {
-        time.stopwatch_start(&overall_timer)
+        time.stopwatch_start(&comet.timer)
     }
 
     comet.gpu_thread = thread.create(gpu_thread_proc)
@@ -67,9 +68,9 @@ main :: proc() {
 
     loop()
     if flag_benchmark {
-        time.stopwatch_stop(&overall_timer)
-        duration_s := time.duration_seconds(time.stopwatch_duration(overall_timer))
-        duration_ms := time.duration_milliseconds(time.stopwatch_duration(overall_timer))
+        time.stopwatch_stop(&comet.timer)
+        duration_s := time.duration_seconds(time.stopwatch_duration(comet.timer))
+        duration_ms := time.duration_milliseconds(time.stopwatch_duration(comet.timer))
         cycles_per_sec := f64(comet.cpu.cycle) / duration_s
         fmt.printf("overall time : %fs (%fms)\n", duration_s, duration_ms)
         fmt.printf("total cycles : %d\n", comet.cpu.cycle)
@@ -87,30 +88,15 @@ loop :: proc() {
 
         comet.cpu.cycle += 1
         
-        @static raw_ins : u32 = 0
-        raw_ins = read_u32(comet.cpu.registers[pc])
+        comet.cpu.raw_ins = read_u32(comet.cpu.registers[pc])
         
         comet.cpu.registers[st] &= 0x00000000FFFFFFFF
-        comet.cpu.registers[st] |= u64(raw_ins) << 32
+        comet.cpu.registers[st] |= u64(comet.cpu.raw_ins) << 32
 
-        ins_info := raw_decode(raw_ins)
-
-        //dbg(1, "current memory len 0x%X ", len(memory))
-        // dbg(1, "cycle %d ", comet.cpu.cycle)
-
-        // if flag_dbg_verbosity >= 1 {
-        //     set_style(ANSI.FG_Yellow)
-        //     fmt.printf("@ %4x ", comet.cpu.registers[register_names.pc])
-        //     set_style(ANSI.FG_Default)
-        //     print_asm(ins_info)
-        // }
+        comet.cpu.ins_info = raw_decode(comet.cpu.raw_ins)
 
         //actually do the instruction
-        exec_instruction(&comet.cpu, ins_info)
-
-        // if flag_dbg_verbosity >= 2 {
-        //     print_registers(&comet.cpu)
-        // }
+        exec_instruction(&comet.cpu, comet.cpu.ins_info)
 
         comet.cpu.registers[pc] += 4 * transmute(u64)(comet.cpu.increment_next)
 

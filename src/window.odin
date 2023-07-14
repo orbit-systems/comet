@@ -8,6 +8,7 @@ import "core:thread"
 import "core:intrinsics"
 import "core:strings"
 import "core:os"
+import "core:time"
 
 // TODO use sdl2.UpdateTexture instead of create and destroy texture
 
@@ -102,6 +103,10 @@ win_thread_proc :: proc(t: ^thread.Thread) {
 
 
     main_loop: for {
+
+        // cycle_snapshot = comet.cpu.cycle
+        // time_snapshot = time.duration_seconds(time.stopwatch_duration(comet.timer))
+
         e : sdl2.Event
         for (sdl2.PollEvent(&e)) {
             #partial switch e.type {
@@ -219,7 +224,8 @@ render :: proc(ctx: ^mu.Context, renderer: ^sdl2.Renderer, jbm: ^ttf.Font) {
     for variant in mu.next_command_iterator(ctx, &command_backing) {
         switch cmd in variant {
         case ^mu.Command_Text:
-            
+
+            // * jank that tells the render function to copy the buffer here
             if cmd.str == "\uf00d" {
                 src_rect := sdl2.Rect{0, 0, gpu_width, gpu_height}
                 dst_rect := sdl2.Rect{cmd.pos.x-2, cmd.pos.y-3, gpu_width, gpu_height}
@@ -233,14 +239,6 @@ render :: proc(ctx: ^mu.Context, renderer: ^sdl2.Renderer, jbm: ^ttf.Font) {
 
                 continue
             }
-            
-            // dst1 := sdl2.Rect{cmd.pos.x, cmd.pos.y, 0, 0}
-            // for ch in cmd.str do if ch&0xc0 != 0x80 {
-            //     r := min(int(ch), 127)
-            //     src := mu.default_atlas[mu.DEFAULT_ATLAS_FONT + r]
-            //     render_texture(renderer, &dst1, src, cmd.color)
-            //     dst1.x += dst1.w
-            // }
 
             text_cstr := strings.clone_to_cstring(cmd.str)
             defer delete(text_cstr)
@@ -286,9 +284,9 @@ u8_slider :: proc(ctx: ^mu.Context, val: ^u8, lo, hi: u8) -> (res: mu.Result_Set
 }
 
 write_log :: proc(str: string) {
-    // state.log_buf_len += copy(state.log_buf[state.log_buf_len:], str)
-    // state.log_buf_len += copy(state.log_buf[state.log_buf_len:], "\n")
-    // state.log_buf_updated = true
+    state.log_buf_len += copy(state.log_buf[state.log_buf_len:], str)
+    state.log_buf_len += copy(state.log_buf[state.log_buf_len:], "\n")
+    state.log_buf_updated = true
 }
 
 read_log :: proc() -> string {
@@ -311,36 +309,55 @@ all_windows :: proc(ctx: ^mu.Context) {
             comet.cpu.registers[pc], comet.cpu.registers[st], comet.cpu.registers[sp], comet.cpu.registers[fp],
         )
 		mu.text(ctx, text)
+        delete(text)
 
         text = fmt.aprintf(
             "ra: 0x%16x  rb: 0x%16x  rc: 0x%16x  rd: 0x%16x",
             comet.cpu.registers[ra], comet.cpu.registers[rb], comet.cpu.registers[rc], comet.cpu.registers[rd],
         )
 		mu.text(ctx, text)
+        delete(text)
 
         text = fmt.aprintf(
             "re: 0x%16x  rf: 0x%16x  rg: 0x%16x  rh: 0x%16x",
             comet.cpu.registers[re], comet.cpu.registers[rf], comet.cpu.registers[rg], comet.cpu.registers[rh],
         )
 		mu.text(ctx, text)
-
+        delete(text)
+    
         text = fmt.aprintf(
             "ri: 0x%16x  rj: 0x%16x  rk: 0x%16x",
             comet.cpu.registers[ri], comet.cpu.registers[rj], comet.cpu.registers[rk],
         )
 		mu.text(ctx, text)
-
 		delete(text)
+
+		//mu.layout_end_column(ctx)
+	}
+    if mu.window(ctx, "info", {0, 115, 600, 115}, {.NO_CLOSE, .NO_RESIZE, .EXPANDED, .NO_SCROLL}) {
+        using register_names
+		mu.layout_row(ctx, {600}, 0)
+		ctx.style.padding = 3
+
+        //s : string
+        s := print_asm(comet.cpu.ins_info)
+
+		text := fmt.aprintf(
+            "Instruction: %s", s,
+        )
+		mu.text(ctx, text)
+        delete(s)
+        delete(text)
+
 		//mu.layout_end_column(ctx)
 	}
     
 
-    if mu.window(ctx, "gpu out", {602, 0, gpu_width, gpu_height}, mu.Options{.NO_CLOSE, .NO_RESIZE, .EXPANDED, .NO_FRAME}) {
+    if mu.window(ctx, "gpu out", {601, 0, gpu_width, gpu_height}, mu.Options{.NO_CLOSE, .NO_RESIZE, .EXPANDED, .NO_FRAME}) {
         mu.layout_begin_column(ctx)
 
         // * jank that tells the render function to copy the buffer here
 		mu.text(ctx, "\uf00d")
-		//delete(text)
 		mu.layout_end_column(ctx)
 	}
 }

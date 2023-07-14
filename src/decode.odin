@@ -1,6 +1,7 @@
 package comet
 
 import "core:fmt"
+import "core:strings"
 
 ins_fmt :: enum {
     R, M, F, J, B,
@@ -51,47 +52,43 @@ sign_extend_to_u64 :: proc(val:u64, bitsize: u8) -> u64 {
 }
 
 // for debug output
-print_asm :: proc(ins: instruction_info) {
+print_asm :: proc(ins: instruction_info) -> (out: string) {
 
     if !([2]u8{ins.opcode, ins.func} in ins_names) {
-        set_style(ANSI.Bold)
-        set_style(ANSI.FG_Red)
-        fmt.print("INVALID\n")
-        set_style(ANSI.Reset)
+        out = "INVALID"
         return
     }
 
     name := ins_names[[2]u8{ins.opcode, ins.func}]
 
-    set_style(ANSI.Bold)
-    fmt.print(name)
+    //set_style(ANSI.Bold)
+    out = name
     for i in 0..<(5-len(name)) {
-        fmt.print(" ")
+        out = fmt.aprintf("%s ", out)
     }
-    set_style(ANSI.Reset)
+    //set_style(ANSI.Reset)
     delete(name)
 
     for x in ins_op_to_field[{ins.opcode, ins.func}] {
-        set_style(ANSI.FG_Blue)
+        //set_style(ANSI.FG_Blue)
         switch x {
         case iff.RDE:
-            fmt.printf(" %s", register_names(ins.rde))
+            out = fmt.aprintf("%s %s", out, register_names(ins.rde))
         case iff.RS1:
-            fmt.printf(" %s", register_names(ins.rs1))
+            out = fmt.aprintf("%s %s", out, register_names(ins.rs1))
         case iff.RS2:
-            fmt.printf(" %s", register_names(ins.rs2))
+            out = fmt.aprintf("%s %s", out, register_names(ins.rs2))
         case iff.IMM:
-            set_style(ANSI.Reset)
+            //set_style(ANSI.Reset)
             switch ins.opcode {
             case 0x63..=0x65:
-                fmt.printf(" 0x%x", i64(sign_extend_to_u64(ins.imm, 20))*4)
+                out = fmt.aprintf("%s 0x%x", out, i64(sign_extend_to_u64(ins.imm, 20))*4)
             case:
-                fmt.printf(" 0x%x", i64(sign_extend_to_u64(ins.imm, 16)))
+                out = fmt.aprintf("%s 0x%x", out, i64(sign_extend_to_u64(ins.imm, 16)))
             }
         }
     }
-    set_style(ANSI.Reset)
-    fmt.print("\n")
+    //set_style(ANSI.Reset)
 
     return
 }
