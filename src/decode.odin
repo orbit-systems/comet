@@ -62,12 +62,12 @@ print_asm :: proc(ins: instruction_info) -> (out: string) {
     name := ins_names[[2]u8{ins.opcode, ins.func}]
 
     //set_style(ANSI.Bold)
-    out = strings.clone(name)
+    out = name
     for i in 0..<(5-len(name)) {
         out = fmt.aprintf("%s ", out)
     }
     //set_style(ANSI.Reset)
-    delete(name)
+    //delete(name)
 
     for x in ins_op_to_field[{ins.opcode, ins.func}] {
         //set_style(ANSI.FG_Blue)
