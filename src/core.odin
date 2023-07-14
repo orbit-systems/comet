@@ -18,10 +18,16 @@ import "core:strconv"
 import "core:thread"
 import "core:intrinsics"
 
-// init aphelion cpu state
-cpu_state := aphelion_cpu_state{}
-gpu := gpu_state{}
-gpu_thread : ^thread.Thread
+emulator_state :: struct {
+    cpu : aphelion_cpu_state,
+    gpu : gpu_state,
+    win : out_window_state,
+    
+    gpu_thread : ^thread.Thread,
+    win_thread : ^thread.Thread,
+}
+
+comet : emulator_state
 
 main :: proc() {
 
@@ -41,10 +47,15 @@ main :: proc() {
         time.stopwatch_start(&overall_timer)
     }
 
-    gpu_thread = thread.create(gpu_thread_loop)
-    gpu_thread.data = &gpu
-    gpu_thread.id = 1
-    thread.start(gpu_thread)
+    comet.gpu_thread = thread.create(gpu_thread_proc)
+    comet.gpu_thread.id = 1
+    comet.gpu_thread.init_context = context
+    thread.start(comet.gpu_thread)
+
+    comet.win_thread = thread.create(win_thread_proc)
+    comet.win_thread.id = 2
+    comet.win_thread.init_context = context
+    thread.start(comet.win_thread)
 
     // fucking hilarious - translate slow dynamic map into hard array during initialization
     for key, value in dynamic_map_ins_formats {
@@ -57,9 +68,9 @@ main :: proc() {
         time.stopwatch_stop(&overall_timer)
         duration_s := time.duration_seconds(time.stopwatch_duration(overall_timer))
         duration_ms := time.duration_milliseconds(time.stopwatch_duration(overall_timer))
-        cycles_per_sec := f64(cpu_state.cycle) / duration_s
+        cycles_per_sec := f64(comet.cpu.cycle) / duration_s
         fmt.printf("overall time : %fs (%fms)\n", duration_s, duration_ms)
-        fmt.printf("total cycles : %d\n", cpu_state.cycle)
+        fmt.printf("total cycles : %d\n", comet.cpu.cycle)
         fmt.printf("cycles/sec   : %f\n", cycles_per_sec)
     }
 }
@@ -67,57 +78,49 @@ main :: proc() {
 loop :: proc() {
     using register_names
     
-    cpu_state.registers[pc] = 0xA00 // start at beginning of ram
-    cpu_state.running = true
+    comet.cpu.registers[pc] = 0xA00 // start at beginning of ram
+    comet.cpu.running = true
 
-    for cpu_state.running {
+    for comet.cpu.running {
 
-        if gpu.global_pause {
-            //fmt.print("GLOBAL_PAUSE\n")
-            thread.yield()
-            continue
-        }
-        //fmt.printf("%v\n", gpu.global_pause)
-
-        cpu_state.cycle += 1
+        comet.cpu.cycle += 1
         
-        raw_ins := read_u32(cpu_state.registers[pc])
+        @static raw_ins : u32 = 0
+        raw_ins = read_u32(comet.cpu.registers[pc])
         
-        cpu_state.registers[st] &= 0x00000000FFFFFFFF
-        cpu_state.registers[st] |= u64(raw_ins) << 32
+        comet.cpu.registers[st] &= 0x00000000FFFFFFFF
+        comet.cpu.registers[st] |= u64(raw_ins) << 32
 
         ins_info := raw_decode(raw_ins)
 
         //dbg(1, "current memory len 0x%X ", len(memory))
-        dbg(1, "cycle %d ", cpu_state.cycle)
+        dbg(1, "cycle %d ", comet.cpu.cycle)
 
         if flag_dbg_verbosity >= 1 {
             set_style(ANSI.FG_Yellow)
-            fmt.printf("@ %4x ", cpu_state.registers[register_names.pc])
+            fmt.printf("@ %4x ", comet.cpu.registers[register_names.pc])
             set_style(ANSI.FG_Default)
             print_asm(ins_info)
         }
 
         //actually do the instruction
-        exec_instruction(&cpu_state, ins_info)
+        exec_instruction(&comet.cpu, ins_info)
 
         if flag_dbg_verbosity >= 2 {
-            print_registers(&cpu_state)
+            print_registers(&comet.cpu)
         }
 
-        if cpu_state.increment_next {
-            cpu_state.registers[pc] += 4
-        }
+        comet.cpu.registers[pc] += 4 * transmute(u64)(comet.cpu.increment_next)
 
-        if flag_cycle_limit != 0 && (cpu_state.cycle >= flag_cycle_limit) {
-            cpu_state.running = false
-        }
+        comet.cpu.running = !(flag_cycle_limit != 0 && (comet.cpu.cycle >= flag_cycle_limit))
 
-        if thread.is_done(gpu_thread) {
+        if thread.is_done(comet.gpu_thread) || thread.is_done(comet.win_thread) {
             //fmt.println("MAIN: DESTROY GPU THREAD")
-            thread.terminate(gpu_thread, 0)
-            thread.destroy(gpu_thread)
-            cpu_state.running = false
+            thread.terminate(comet.gpu_thread, 0)
+            thread.destroy(comet.gpu_thread)
+            thread.terminate(comet.win_thread, 0)
+            thread.destroy(comet.win_thread)
+            comet.cpu.running = false
         }
     }
 

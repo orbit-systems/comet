@@ -292,7 +292,7 @@ aphelion_cpu_state :: struct {
     registers       : [16]u64,
     running         : bool,
     cycle           : u64,
-    increment_next  : bool,
+    increment_next  : b64,
 }
 
 register_names :: enum u8 {

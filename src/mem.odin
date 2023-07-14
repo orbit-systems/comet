@@ -46,11 +46,11 @@ write_u64 :: proc(address: u64, value: u64) {
     //fmt.printf("write_u64: 0x%x\n", address)
     if address == 0x810 {
         //gpu_process_command(gpu, value)
-        for !did_acquire(&(gpu.command_mutex)) {
+        for !did_acquire(&(comet.gpu.mutex)) {
             thread.yield() // sit back and relax
         }
-        append(&(gpu.command_buffer), value)
-        gpu.command_mutex = false
+        append(&(comet.gpu.command_buffer), value)
+        comet.gpu.mutex = false
         return
     }
 
