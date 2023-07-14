@@ -25,7 +25,7 @@ gpu_thread_proc :: proc(t: ^thread.Thread) {
 
     main_loop: for {
         if thread.is_done(comet.win_thread) {
-            return
+            break main_loop
         }
         for did_acquire(&(comet.gpu.mutex)) {
              // change this at some point

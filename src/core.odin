@@ -51,11 +51,13 @@ main :: proc() {
     comet.gpu_thread.id = 1
     comet.gpu_thread.init_context = context
     thread.start(comet.gpu_thread)
+    defer thread.destroy(comet.gpu_thread)
 
     comet.win_thread = thread.create(win_thread_proc)
     comet.win_thread.id = 2
     comet.win_thread.init_context = context
     thread.start(comet.win_thread)
+    defer thread.destroy(comet.win_thread)
 
     // fucking hilarious - translate slow dynamic map into hard array during initialization
     for key, value in dynamic_map_ins_formats {
@@ -116,9 +118,6 @@ loop :: proc() {
 
         if thread.is_done(comet.gpu_thread) || thread.is_done(comet.win_thread) {
             //fmt.println("MAIN: DESTROY GPU THREAD")
-            thread.terminate(comet.gpu_thread, 0)
-            thread.destroy(comet.gpu_thread)
-            thread.destroy(comet.win_thread)
             return
         }
     }
