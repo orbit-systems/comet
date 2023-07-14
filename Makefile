@@ -11,3 +11,6 @@ BUILD_FLAGS = -o:speed -out:$(BUILD_OUTPATH) -no-bounds-check
 
 build:
 	@odin build $(BUILD_INPATH) $(BUILD_FLAGS)
+
+debug:
+	@odin build $(BUILD_INPATH) -out:$(BUILD_OUTPATH) -no-bounds-check -debug -o:none

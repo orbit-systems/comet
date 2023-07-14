@@ -3,5 +3,5 @@
 *.ps1
 *.bin
 
-aas
 comet
+.vscode

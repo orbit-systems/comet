@@ -46,7 +46,6 @@ main :: proc() {
     gpu_thread.id = 1
     thread.start(gpu_thread)
 
-
     // fucking hilarious - translate slow dynamic map into hard array during initialization
     for key, value in dynamic_map_ins_formats {
         ins_formats[key] = value

@@ -11,6 +11,7 @@ gpu_height :: 480
 gpu_state :: struct {
     window          : ^sdl2.Window,
     render          : ^sdl2.Renderer,
+    gl_context      : sdl2.GLContext,
     cpos            : [2]u16,
     ccolor          : [3]u8,
     command_buffer  : [dynamic]u64,
@@ -25,6 +26,10 @@ gpu_thread_loop :: proc(t: ^thread.Thread) {
 
     intgpu.window = sdl2.CreateWindow("comet", sdl2.WINDOWPOS_CENTERED, sdl2.WINDOWPOS_CENTERED, gpu_width, gpu_height, sdl2.WINDOW_SHOWN)
     intgpu.render = sdl2.CreateRenderer(intgpu.window, -1, sdl2.RENDERER_SOFTWARE)
+    
+    // intgpu.gl_context = sdl2.GL_CreateContext(intgpu.window)
+    // sdl2.GL_MakeCurrent(intgpu.window, intgpu.gl_context)
+
     icon := sdl2.LoadBMP("src/img/comet.bmp")
     sdl2.SetWindowIcon(intgpu.window, icon)
 
