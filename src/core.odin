@@ -65,8 +65,10 @@ main :: proc() {
         ins_formats[key] = value
     }
 
+    comet.cpu.paused = true
 
     loop()
+    
     if flag_benchmark {
         time.stopwatch_stop(&comet.timer)
         duration_s := time.duration_seconds(time.stopwatch_duration(comet.timer))
