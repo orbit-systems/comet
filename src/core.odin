@@ -65,7 +65,7 @@ main :: proc() {
         ins_formats[key] = value
     }
 
-    comet.cpu.paused = true
+    comet.cpu.paused = flag_debug
 
     loop()
     
