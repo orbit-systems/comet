@@ -7,8 +7,6 @@ package comet
 
 // using aphelion v0.2.2
 
-// TODO - IO slows the emulator down - multithread!!!!!!!!
-
 import sdl2 "vendor:sdl2"
 import "core:fmt"
 import "core:os"
