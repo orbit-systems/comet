@@ -34,12 +34,12 @@ main :: proc() {
     // load arguments
     load_arguments()
 
-    readstatus := os.exists(inpath)
-    if (!readstatus) {
-        die("failed to find file: %s\n", inpath)
+    ram_image, readstatus := os.open(inpath)
+    if readstatus != os.ERROR_NONE {
+        die("Error while opening file \"%s\": %s\n", inpath, readstatus)
     }
 
-    //append(&memory, ..file[:])
+    os.close(ram_image)
 
     if flag_benchmark {
         time.stopwatch_start(&comet.timer)
