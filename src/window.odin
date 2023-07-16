@@ -16,15 +16,10 @@ import "core:time"
 
 state := struct {
     mu_ctx: mu.Context,
-    log_buf:         [1<<16]byte,
-    log_buf_len:     int,
-    log_buf_updated: bool,
     bg: mu.Color,
     
     atlas_texture: ^sdl2.Texture,
-}{
-    bg = {10, 10, 10, 255},
-}
+}{}
 
 out_window_state :: struct {
     window          : ^sdl2.Window,
@@ -34,6 +29,10 @@ out_window_state :: struct {
     gpu_buf_texture : ^sdl2.Texture,
 
     view_buffer_select : bool,
+
+    log_buf         : [1<<16]byte,
+    log_buf_len     : int,
+    log_buf_updated : bool,
 }
 
 surface_from_display_buffer :: #force_inline proc() -> ^sdl2.Surface {
@@ -284,17 +283,17 @@ u8_slider :: proc(ctx: ^mu.Context, val: ^u8, lo, hi: u8) -> (res: mu.Result_Set
 }
 
 write_log :: proc(str: string) {
-    state.log_buf_len += copy(state.log_buf[state.log_buf_len:], str)
-    state.log_buf_len += copy(state.log_buf[state.log_buf_len:], "\n")
-    state.log_buf_updated = true
+    comet.win.log_buf_len += copy(comet.win.log_buf[comet.win.log_buf_len:], str)
+    comet.win.log_buf_len += copy(comet.win.log_buf[comet.win.log_buf_len:], "\n")
+    comet.win.log_buf_updated = true
 }
 
 read_log :: proc() -> string {
-    return string(state.log_buf[:state.log_buf_len])
+    return string(comet.win.log_buf[:comet.win.log_buf_len])
 }
 reset_log :: proc() {
-    state.log_buf_updated = true
-    state.log_buf_len = 0
+    comet.win.log_buf_updated = true
+    comet.win.log_buf_len = 0
 }
 
 all_windows :: proc(ctx: ^mu.Context) {

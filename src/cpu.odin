@@ -59,9 +59,7 @@ exec_instruction :: proc(cpu: ^aphelion_cpu_state, ins: instruction_info) {
     case 0x25: // sb
         write_u8(cpu.registers[ins.rs1] + sign_extend_to_u64(ins.imm, 16), u8(cpu.registers[ins.rde]))
     case 0x26: // swp
-        temp := cpu.registers[ins.rde]
-        cpu.registers[ins.rde] = cpu.registers[ins.rs1]
-        cpu.registers[ins.rs1] = temp
+        cpu.registers[ins.rs1], cpu.registers[ins.rde] = cpu.registers[ins.rde], cpu.registers[ins.rs1]
     case 0x27: // mov
         cpu.registers[ins.rde] = cpu.registers[ins.rs1]
     case 0x28: // cmpr
@@ -384,62 +382,6 @@ set_flags_cmpr :: proc(cpu: ^aphelion_cpu_state, ins: instruction_info) {
     set_st_flag(cpu, st_flag.greater_unsigned, cpu.registers[ins.rs1] > cpu.registers[ins.rs2])
     set_st_flag(cpu, st_flag.less_unsigned,    cpu.registers[ins.rs1] < cpu.registers[ins.rs2])
 }
-
-// set_flags_arithmetic_reg :: proc(cpu: ^aphelion_cpu_state, ins: instruction_info) {
-//     set_st_flag(cpu, st_flag.sign,   cpu.registers[ins.rde] < 0)
-//     set_st_flag(cpu, st_flag.zero,   cpu.registers[ins.rde] == 0)
-//     set_st_flag(cpu, st_flag.parity, cpu.registers[ins.rde] % 2 == 0)
-//     set_st_flag(cpu, st_flag.carry,  i64(cpu.registers[ins.rde]) < i64(cpu.registers[ins.rs1]) || i64(cpu.registers[ins.rde]) < i64(cpu.registers[ins.rs2]))
-//     set_st_flag(cpu, st_flag.borrow, i64(cpu.registers[ins.rde]) > i64(cpu.registers[ins.rs1]) || i64(cpu.registers[ins.rde]) > i64(cpu.registers[ins.rs1]))
-//     set_st_flag(cpu, st_flag.carry_unsigned,  cpu.registers[ins.rde] < cpu.registers[ins.rs1] || cpu.registers[ins.rde] < cpu.registers[ins.rs2])
-//     set_st_flag(cpu, st_flag.borrow_unsigned, cpu.registers[ins.rde] > cpu.registers[ins.rs1] || cpu.registers[ins.rde] > cpu.registers[ins.rs1])
-
-//     set_st_flag(cpu, st_flag.equal,   cpu.registers[ins.rs1] == cpu.registers[ins.rs2])
-//     set_st_flag(cpu, st_flag.greater, i64(cpu.registers[ins.rs1]) > i64(cpu.registers[ins.rs2]))
-//     set_st_flag(cpu, st_flag.less,    i64(cpu.registers[ins.rs1]) < i64(cpu.registers[ins.rs2]))
-//     set_st_flag(cpu, st_flag.greater_unsigned, cpu.registers[ins.rs1] > cpu.registers[ins.rs2])
-//     set_st_flag(cpu, st_flag.less_unsigned,    cpu.registers[ins.rs1] < cpu.registers[ins.rs2])
-// }
-
-// set_flags_arithmetic_imm :: proc(cpu: ^aphelion_cpu_state, ins: instruction_info) {
-//     set_st_flag(cpu, st_flag.sign,   cpu.registers[ins.rde] < 0)
-//     set_st_flag(cpu, st_flag.zero,   cpu.registers[ins.rde] == 0)
-//     set_st_flag(cpu, st_flag.parity, cpu.registers[ins.rde] % 2 == 0)
-//     set_st_flag(cpu, st_flag.carry,  i64(cpu.registers[ins.rde]) < i64(cpu.registers[ins.rs1]) || i64(cpu.registers[ins.rde]) < i64(ins.imm))
-//     set_st_flag(cpu, st_flag.borrow, i64(cpu.registers[ins.rde]) > i64(cpu.registers[ins.rs1]) || i64(cpu.registers[ins.rde]) > i64(ins.imm))
-//     set_st_flag(cpu, st_flag.carry_unsigned,  cpu.registers[ins.rde] < ins.imm || cpu.registers[ins.rde] < ins.imm)
-//     set_st_flag(cpu, st_flag.borrow_unsigned, cpu.registers[ins.rde] > ins.imm || cpu.registers[ins.rde] > ins.imm)
-
-//     set_st_flag(cpu, st_flag.equal,   cpu.registers[ins.rs1] == ins.imm)
-//     set_st_flag(cpu, st_flag.greater, i64(cpu.registers[ins.rs1]) > i64(ins.imm))
-//     set_st_flag(cpu, st_flag.less,    i64(cpu.registers[ins.rs1]) < i64(ins.imm))
-//     set_st_flag(cpu, st_flag.greater_unsigned, cpu.registers[ins.rs1] > ins.imm)
-//     set_st_flag(cpu, st_flag.less_unsigned,    cpu.registers[ins.rs1] < ins.imm)
-// }
-
-// set_flags_logical_reg :: proc(cpu: ^aphelion_cpu_state, ins: instruction_info) {
-//     set_st_flag(cpu, st_flag.sign,   cpu.registers[ins.rde] < 0)
-//     set_st_flag(cpu, st_flag.zero,   cpu.registers[ins.rde] == 0)
-//     set_st_flag(cpu, st_flag.parity, cpu.registers[ins.rde] % 2 == 0)
-
-//     set_st_flag(cpu, st_flag.equal,   cpu.registers[ins.rs1] == cpu.registers[ins.rs2])
-//     set_st_flag(cpu, st_flag.greater, i64(cpu.registers[ins.rs1]) > i64(cpu.registers[ins.rs2]))
-//     set_st_flag(cpu, st_flag.less,    i64(cpu.registers[ins.rs1]) < i64(cpu.registers[ins.rs2]))
-//     set_st_flag(cpu, st_flag.greater_unsigned, cpu.registers[ins.rs1] > cpu.registers[ins.rs2])
-//     set_st_flag(cpu, st_flag.less_unsigned,    cpu.registers[ins.rs1] < cpu.registers[ins.rs2])
-// }
-
-// set_flags_logical_imm :: proc(cpu: ^aphelion_cpu_state, ins: instruction_info) {
-//     set_st_flag(cpu, st_flag.sign,   cpu.registers[ins.rde] < 0)
-//     set_st_flag(cpu, st_flag.zero,   cpu.registers[ins.rde] == 0)
-//     set_st_flag(cpu, st_flag.parity, cpu.registers[ins.rde] % 2 == 0)
-
-//     set_st_flag(cpu, st_flag.equal,   cpu.registers[ins.rs1] == ins.imm)
-//     set_st_flag(cpu, st_flag.greater, i64(cpu.registers[ins.rs1]) > i64(ins.imm))
-//     set_st_flag(cpu, st_flag.less,    i64(cpu.registers[ins.rs1]) < i64(ins.imm))
-//     set_st_flag(cpu, st_flag.greater_unsigned, cpu.registers[ins.rs1] > ins.imm)
-//     set_st_flag(cpu, st_flag.less_unsigned,    cpu.registers[ins.rs1] < ins.imm)
-// }
 
 get_st_flag :: proc{get_st_flag_fl, get_st_flag_u8}
 set_st_flag :: proc{set_st_flag_fl, set_st_flag_u8}
