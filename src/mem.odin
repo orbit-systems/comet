@@ -4,17 +4,52 @@ import "core:fmt"
 import "core:thread"
 import "core:intrinsics"
 
-// i think there is a more efficient way to store this later but i am not smart enough to implement this now
-//memory: [dynamic]u8
+/*
+
+writing this note so people (including me) understand this later.
+
+    (transmute(^[PAGE_SIZE/size_of(T)]T) &(page_map[page_index].data))[(address % PAGE_SIZE)/size_of(T)]
+
+this expression bytecasts a page's data array as an array of another datatype, allowing read/write functions to, 
+say, read a u64 from the data array without separating it into multiple read/write_u8 calls.
+
+let's break this down.
+
+    transmute( ^[ PAGE_SIZE/size_of(T) ]T )   &( page_map[page_index].data )
+
+T is the typeid of the value we are trying to get. each page's data has a size PAGE_SIZE. 
+'PAGE_SIZE/size_of(T)' returns the length that the array needs to have in order to keep the 
+array's overall size the same, so that the transmute() call works. 
+
+' &( page_map[page_index].data ) ' returns the pointer to the page's data array. it is a pointer
+so that Odin definitely uses the original page's data intead of creating a new one.
+
+    (address % PAGE_SIZE)/size_of(T)
+
+this returns the index for the transmuted array. 'address % PAGE_SIZE' translates the global address into an
+index for the page array. '/size_of(T)' divides the index by the size of the value we are trying to access so
+that we do not go outside the transmuted array's bounds.
+
+*/
+
 
 PAGE_SIZE :: 4096
 
 mem_page :: struct {
-    data : [PAGE_SIZE]byte,
-    base : u64,         // lowest address reachable by this page
+    data : [PAGE_SIZE]u8,
+    base : u64, // lowest address reachable by this page
 }
 
 page_map : [dynamic]^mem_page
+
+align_backwards :: proc(ptr, align: u64) -> u64 {
+    p := ptr - align + 1
+    mod := p & (align - 1)
+    if mod != 0 {
+        p += align - mod
+    }
+    return p
+}
 
 find_page :: proc(address: u64) -> int {
     for p, i in page_map {
@@ -26,47 +61,52 @@ find_page :: proc(address: u64) -> int {
     return -1
 }
 
-read :: proc($T: typeid, address: u64) -> T {
-    when T != u8 { // compile-time optimization - removes alignment check on byte accesses
+read :: proc($T: typeid, address: u64) -> T where PAGE_SIZE % size_of(T) == 0 {
+    when T != u8 { // remove extra logic that isnt needed for byte accesses
         if address % size_of(T) != 0 {
-        //page fault interrupt
-        }
-    }
-
-    page := find_page(address)
-    if page == -1 {
-        return 0
-    }
-    
-    when T != u8 {
-        return (transmute(^[PAGE_SIZE/size_of(T)]T) &(page_map[page].data))[(address % PAGE_SIZE)/size_of(T)]
-    } else {
-        return page_map[page].data[address % PAGE_SIZE]
-    }
-}
-
-write :: proc($T: typeid, address: u64, value: T) {
-    when T != u8 { // compile-time optimization - removes alignment check on byte accesses
-        if address % size_of(T) != 0 {
-        //page fault interrupt
+            // unaligned access interrupt
         }
     }
 
     page_index := find_page(address)
+    if page_index == -1 {
+        return 0
+    }
+    
+    #no_bounds_check {
+    when T != u8 { // remove extra logic that isnt needed for byte accesses
+        return (transmute(^[PAGE_SIZE/size_of(T)]T) &(page_map[page_index].data))[(address % PAGE_SIZE)/size_of(T)]
+    } else {
+        return page_map[page_index].data[address % PAGE_SIZE]
+    }
+    }
+}
+
+write :: proc($T: typeid, address: u64, value: T) where PAGE_SIZE % size_of(T) == 0 {
+    when T != u8 { // remove extra logic that isnt needed for byte accesses
+        if address % size_of(T) != 0 {
+            // unaligned access interrupt
+        }
+    }
+
+    page_index := find_page(address)
+    #no_bounds_check {
     if page_index == -1 {   // page not found - allocate and track new memory page
         newpage := new(mem_page)
+        newpage.base = align_backwards(address, PAGE_SIZE)
         append(&page_map, newpage)
-        when T != u8 {
+        when T != u8 { // remove extra logic that isnt needed for byte accesses
             (transmute(^[PAGE_SIZE/size_of(T)]T) &newpage.data)[(address % PAGE_SIZE)/size_of(T)] = value
         } else {
             newpage.data[address % PAGE_SIZE] = value
         }
-    } else {                // page found - use found page
-        when T != u8 {
+    } else { // page found - use found page
+        when T != u8 { // remove extra logic that isnt needed for byte accesses
             (transmute(^[PAGE_SIZE/size_of(T)]T) &(page_map[page_index].data))[(address % PAGE_SIZE)/size_of(T)] = value
         } else {
             page_map[page_index].data[address % PAGE_SIZE] = value
         }
+    }
     }
 }
 
