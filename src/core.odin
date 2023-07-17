@@ -36,7 +36,7 @@ main :: proc() {
 
     ram_image, readstatus := os.open(inpath)
     if readstatus != os.ERROR_NONE {
-        die("Error while opening file \"%s\": %s\n", inpath, readstatus)
+        die("Error while opening file \"%s\": OS Error %v\n", inpath, readstatus)
     }
     load_ram_image(ram_image)
     os.close(ram_image)

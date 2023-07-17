@@ -33,6 +33,7 @@ index for the we index the new array correctly. This also indirectly forces alig
 
 */
 
+// ask sandwichman for answers and clarification
 
 PAGE_SIZE :: 4096
 
