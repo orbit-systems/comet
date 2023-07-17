@@ -1,5 +1,7 @@
 package comet
 
+import "core:os"
+import "core:mem"
 import "core:fmt"
 import "core:thread"
 import "core:intrinsics"
@@ -27,8 +29,7 @@ so that Odin definitely uses the original page's data intead of creating a new o
     (address % PAGE_SIZE)/size_of(T)
 
 this returns the index for the transmuted array. 'address % PAGE_SIZE' translates the global address into an
-index for the page array. '/size_of(T)' divides the index by the size of the value we are trying to access so
-that we do not go outside the transmuted array's bounds.
+index for the we index the new array correctly. This also indirectly forces aligned access.
 
 */
 
@@ -74,11 +75,11 @@ read :: proc($T: typeid, address: u64) -> T where PAGE_SIZE % size_of(T) == 0 {
     }
     
     #no_bounds_check {
-    when T != u8 { // remove extra logic that isnt needed for byte accesses
-        return (transmute(^[PAGE_SIZE/size_of(T)]T) &(page_map[page_index].data))[(address % PAGE_SIZE)/size_of(T)]
-    } else {
-        return page_map[page_index].data[address % PAGE_SIZE]
-    }
+        when T != u8 { // remove extra logic that isnt needed for byte accesses
+            return (transmute(^[PAGE_SIZE/size_of(T)]T) &(page_map[page_index].data))[(address % PAGE_SIZE)/size_of(T)]
+        } else {
+            return page_map[page_index].data[address % PAGE_SIZE]
+        }
     }
 }
 
@@ -91,26 +92,46 @@ write :: proc($T: typeid, address: u64, value: T) where PAGE_SIZE % size_of(T) =
 
     page_index := find_page(address)
     #no_bounds_check {
-    if page_index == -1 {   // page not found - allocate and track new memory page
-        newpage := new(mem_page)
-        newpage.base = align_backwards(address, PAGE_SIZE)
-        append(&page_map, newpage)
-        when T != u8 { // remove extra logic that isnt needed for byte accesses
-            (transmute(^[PAGE_SIZE/size_of(T)]T) &newpage.data)[(address % PAGE_SIZE)/size_of(T)] = value
-        } else {
-            newpage.data[address % PAGE_SIZE] = value
+        if page_index == -1 { // page not found - allocate and track new memory page
+            newpage := new(mem_page)
+            newpage.base = align_backwards(address, PAGE_SIZE)
+            append(&page_map, newpage)
+            when T != u8 { // remove extra logic that isnt needed for byte accesses
+                (transmute(^[PAGE_SIZE/size_of(T)]T) &newpage.data)[(address % PAGE_SIZE)/size_of(T)] = value
+            } else {
+                newpage.data[address % PAGE_SIZE] = value
+            }
+        } else { // page found - use found page
+            when T != u8 { // remove extra logic that isnt needed for byte accesses
+                (transmute(^[PAGE_SIZE/size_of(T)]T) &(page_map[page_index].data))[(address % PAGE_SIZE)/size_of(T)] = value
+            } else {
+                page_map[page_index].data[address % PAGE_SIZE] = value
+            }
         }
-    } else { // page found - use found page
-        when T != u8 { // remove extra logic that isnt needed for byte accesses
-            (transmute(^[PAGE_SIZE/size_of(T)]T) &(page_map[page_index].data))[(address % PAGE_SIZE)/size_of(T)] = value
-        } else {
-            page_map[page_index].data[address % PAGE_SIZE] = value
-        }
-    }
     }
 }
 
-load_ram_image :: proc()
+load_ram_image :: proc(file: os.Handle) {
+    file_size, _ := os.file_size(file)
+    
+    // load pages in full blocks
+    i : u64 = 0
+    for ; file_size >= PAGE_SIZE; file_size -= PAGE_SIZE {
+        newpage := new(mem_page)
+        newpage.base = i
+        os.read(file, newpage.data[:])
+        append(&page_map, newpage)
+        i += 4096
+    }
+    // load remaining in partial block
+    if file_size > 0 {
+        newpage := new(mem_page)
+        newpage.base = i
+        os.read(file, newpage.data[:file_size])
+        append(&page_map, newpage)
+    }
+
+}
 
 // * here lies old non-polymorphic functions. im keeping these around if they're needed later for some reason
 

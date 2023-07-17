@@ -38,7 +38,7 @@ main :: proc() {
     if readstatus != os.ERROR_NONE {
         die("Error while opening file \"%s\": %s\n", inpath, readstatus)
     }
-
+    load_ram_image(ram_image)
     os.close(ram_image)
 
     if flag_benchmark {
