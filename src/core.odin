@@ -66,6 +66,13 @@ main :: proc() {
     comet.cpu.paused = flag_debug
 
     loop()
+
+    if !thread.is_done(comet.gpu_thread) {
+        thread.terminate(comet.gpu_thread, 0)
+    }
+    if !thread.is_done(comet.win_thread) {
+        thread.terminate(comet.win_thread, 0)
+    }
     
     if flag_benchmark {
         time.stopwatch_stop(&comet.timer)
