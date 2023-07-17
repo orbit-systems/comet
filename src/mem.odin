@@ -35,7 +35,7 @@ index for the we index the new array correctly. This also indirectly forces alig
 
 // ask sandwichman for answers and clarification
 
-PAGE_SIZE :: 4096
+PAGE_SIZE :: 0x1000 //4096
 
 mem_page :: struct {
     data : [PAGE_SIZE]u8,
@@ -61,6 +61,15 @@ find_page :: proc(address: u64) -> int {
         }
     }
     return -1
+}
+
+interrupt :: proc(number: u8) {
+    using register_names
+    if flag_halt_inv_op && number == 1 {
+        comet.cpu.running = false
+        return
+    }
+    comet.cpu.registers[pc] = read(u64, u64(number*8))
 }
 
 read :: proc($T: typeid, address: u64) -> T where PAGE_SIZE % size_of(T) == 0 {
