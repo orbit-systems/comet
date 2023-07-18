@@ -34,13 +34,12 @@ main :: proc() {
     // load arguments
     load_arguments()
 
-    file, readstatus := os.read_entire_file(inpath)
-    if (!readstatus) {
-        fmt.printf("failed to open file: {}\n", inpath)
-        return
+    ram_image, readstatus := os.open(inpath)
+    if readstatus != os.ERROR_NONE {
+        die("Error while opening file \"%s\": OS Error %v\n", inpath, readstatus)
     }
-
-    append(&memory, ..file[:])
+    load_ram_image(ram_image)
+    os.close(ram_image)
 
     if flag_benchmark {
         time.stopwatch_start(&comet.timer)
@@ -104,8 +103,7 @@ loop :: proc() {
 
         comet.cpu.running = !(flag_cycle_limit != 0 && (comet.cpu.cycle >= flag_cycle_limit))
 
-        if thread.is_done(comet.gpu_thread) || thread.is_done(comet.win_thread) {
-            //fmt.println("MAIN: DESTROY GPU THREAD")
+        if thread.is_done(comet.gpu_thread) {
             return
         }
     }
