@@ -103,8 +103,7 @@ loop :: proc() {
 
         comet.cpu.running = !(flag_cycle_limit != 0 && (comet.cpu.cycle >= flag_cycle_limit))
 
-        if thread.is_done(comet.gpu_thread) || thread.is_done(comet.win_thread) {
-            //fmt.println("MAIN: DESTROY GPU THREAD")
+        if thread.is_done(comet.gpu_thread) {
             return
         }
     }
