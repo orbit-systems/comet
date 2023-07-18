@@ -53,11 +53,28 @@ align_backwards :: proc(ptr, align: u64) -> u64 {
     return p
 }
 
-find_page :: proc(address: u64) -> int {
+linear_find_page :: proc(address: u64) -> int {
     for p, i in page_map {
         // check if address lies within page
         if p.base <= address && address < (p.base + PAGE_SIZE) {
             return i
+        }
+    }
+    return -1
+}
+
+binary_find_page :: proc(address: u64) -> int {
+    L := 0
+    R := len(page_map)-1
+    for L <= R {
+        m := (L + R) / 2
+        dist := address - page_map[m].base
+        if dist < 0 {
+            R = m - 1
+        } else if dist > PAGE_SIZE {
+            L = m + 1
+        } else {
+            return m
         }
     }
     return -1
@@ -73,13 +90,14 @@ interrupt :: proc(number: u8) {
 }
 
 read :: proc($T: typeid, address: u64) -> T where PAGE_SIZE % size_of(T) == 0 {
+
     when T != u8 { // remove extra logic that isnt needed for byte accesses
         if address % size_of(T) != 0 {
             // unaligned access interrupt
         }
     }
 
-    page_index := find_page(address)
+    page_index := binary_find_page(address)
     if page_index == -1 {
         return 0
     }
@@ -94,25 +112,39 @@ read :: proc($T: typeid, address: u64) -> T where PAGE_SIZE % size_of(T) == 0 {
 }
 
 write :: proc($T: typeid, address: u64, value: T) where PAGE_SIZE % size_of(T) == 0 {
+
+    // temporary IO shit
+    when T == u64 {
+        if address == 0x810 {
+            for !did_acquire(&(comet.gpu.mutex)) {
+                thread.yield() // sit back and relax
+            }
+            append(&(comet.gpu.command_buffer), value)
+            comet.gpu.mutex = false
+            return
+        }
+    }
+
     when T != u8 { // remove extra logic that isnt needed for byte accesses
         if address % size_of(T) != 0 {
             // unaligned access interrupt
         }
     }
 
-    page_index := find_page(address)
+    page_index := binary_find_page(address)
     #no_bounds_check {
         if page_index == -1 { // page not found
             // allocate new page
             newpage := new(mem_page)
             newpage.base = align_backwards(address, PAGE_SIZE)
-            // append and sort new page
+            // add and sort new page into index
             append(&page_map, newpage)
-            // {
-            //     #reverse for i in 0..=len(page_map) {
-
-            //     }
-            // }
+            #reverse for _, i in page_map {
+                if i == 0 || page_map[i].base >= page_map[i-1].base {
+                    break
+                }
+                page_map[i].base, page_map[i-1].base = page_map[i-1].base, page_map[i].base
+            }
             // index
             when T != u8 { // remove extra logic that isnt needed for byte accesses
                 (transmute(^[PAGE_SIZE/size_of(T)]T) &newpage.data)[(address % PAGE_SIZE)/size_of(T)] = value
