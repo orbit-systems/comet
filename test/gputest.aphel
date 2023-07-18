@@ -22,9 +22,9 @@ loop:
     bra     send_pixel
     send_pixel_end:
     add     ra, ra, 1
-    add     rc, rc, 5
-    add     rd, rd, 2
-    add     re, re, 3
+    add     rc, rc, 3
+    add     rd, rd, 1
+    add     re, re, 5
     bra     loop
 
 increment:

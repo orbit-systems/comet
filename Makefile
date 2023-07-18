@@ -14,6 +14,3 @@ build:
 
 debug:
 	@odin build $(BUILD_INPATH) -out:$(BUILD_OUTPATH) -no-bounds-check -debug -o:none
-
-test: build
-	@comet test/gputest.bin -debug
