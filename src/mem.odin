@@ -102,10 +102,18 @@ write :: proc($T: typeid, address: u64, value: T) where PAGE_SIZE % size_of(T) =
 
     page_index := find_page(address)
     #no_bounds_check {
-        if page_index == -1 { // page not found - allocate and track new memory page
+        if page_index == -1 { // page not found
+            // allocate new page
             newpage := new(mem_page)
             newpage.base = align_backwards(address, PAGE_SIZE)
+            // append and sort new page
             append(&page_map, newpage)
+            // {
+            //     #reverse for i in 0..=len(page_map) {
+
+            //     }
+            // }
+            // index
             when T != u8 { // remove extra logic that isnt needed for byte accesses
                 (transmute(^[PAGE_SIZE/size_of(T)]T) &newpage.data)[(address % PAGE_SIZE)/size_of(T)] = value
             } else {
