@@ -7,6 +7,8 @@ package comet
 
 // using aphelion v0.2.2
 
+// TODO - IO slows the emulator down - multithread!!!!!!!!
+
 import sdl2 "vendor:sdl2"
 import "core:fmt"
 import "core:os"
@@ -16,70 +18,48 @@ import "core:strconv"
 import "core:thread"
 import "core:intrinsics"
 
-emulator_state :: struct {
-    cpu : aphelion_cpu_state,
-    gpu : gpu_state,
-    win : out_window_state,
-    
-    gpu_thread : ^thread.Thread,
-    win_thread : ^thread.Thread,
-
-    timer : time.Stopwatch,
-}
-
-comet : emulator_state
+// init aphelion cpu state
+cpu_state := aphelion_cpu_state{}
+gpu := gpu_state{}
+gpu_thread : ^thread.Thread
 
 main :: proc() {
 
     // load arguments
     load_arguments()
 
-    ram_image, readstatus := os.open(inpath)
-    if readstatus != os.ERROR_NONE {
-        die("Error while opening file \"%s\": OS Error %v\n", inpath, readstatus)
+    file, readstatus := os.read_entire_file(inpath)
+    if (!readstatus) {
+        fmt.printf("failed to open file: {}\n", inpath)
+        return
     }
-    load_ram_image(ram_image)
-    os.close(ram_image)
 
+    append(&memory, ..file[:])
+
+    overall_timer : time.Stopwatch
     if flag_benchmark {
-        time.stopwatch_start(&comet.timer)
+        time.stopwatch_start(&overall_timer)
     }
 
-    comet.win_thread = thread.create(win_thread_proc)
-    comet.win_thread.id = 2
-    comet.win_thread.init_context = context
-    thread.start(comet.win_thread)
-    defer thread.destroy(comet.win_thread)
-
-    comet.gpu_thread = thread.create(gpu_thread_proc)
-    comet.gpu_thread.id = 1
-    comet.gpu_thread.init_context = context
-    thread.start(comet.gpu_thread)
-    defer thread.destroy(comet.gpu_thread)
+    gpu_thread = thread.create(gpu_thread_loop)
+    gpu_thread.data = &gpu
+    gpu_thread.id = 1
+    thread.start(gpu_thread)
 
     // fucking hilarious - translate slow dynamic map into hard array during initialization
     for key, value in dynamic_map_ins_formats {
         ins_formats[key] = value
     }
 
-    comet.cpu.paused = flag_debug
 
     loop()
-
-    if !thread.is_done(comet.gpu_thread) {
-        thread.terminate(comet.gpu_thread, 0)
-    }
-    if !thread.is_done(comet.win_thread) {
-        thread.terminate(comet.win_thread, 0)
-    }
-    
     if flag_benchmark {
-        time.stopwatch_stop(&comet.timer)
-        duration_s := time.duration_seconds(time.stopwatch_duration(comet.timer))
-        duration_ms := time.duration_milliseconds(time.stopwatch_duration(comet.timer))
-        cycles_per_sec := f64(comet.cpu.cycle) / duration_s
+        time.stopwatch_stop(&overall_timer)
+        duration_s := time.duration_seconds(time.stopwatch_duration(overall_timer))
+        duration_ms := time.duration_milliseconds(time.stopwatch_duration(overall_timer))
+        cycles_per_sec := f64(cpu_state.cycle) / duration_s
         fmt.printf("overall time : %fs (%fms)\n", duration_s, duration_ms)
-        fmt.printf("total cycles : %d\n", comet.cpu.cycle)
+        fmt.printf("total cycles : %d\n", cpu_state.cycle)
         fmt.printf("cycles/sec   : %f\n", cycles_per_sec)
     }
 }
@@ -87,24 +67,57 @@ main :: proc() {
 loop :: proc() {
     using register_names
     
-    comet.cpu.registers[pc] = 0xA00 // start at beginning of ram
-    comet.cpu.running = true
+    cpu_state.registers[pc] = 0xA00 // start at beginning of ram
+    cpu_state.running = true
 
-    for comet.cpu.running {
+    for cpu_state.running {
 
-        if !comet.cpu.paused {
+        if gpu.global_pause {
+            //fmt.print("GLOBAL_PAUSE\n")
+            thread.yield()
+            continue
+        }
+        //fmt.printf("%v\n", gpu.global_pause)
 
-            do_cpu_cycle()
+        cpu_state.cycle += 1
         
-        } else if comet.cpu.step {
-            do_cpu_cycle()
-            comet.cpu.step = false
+        raw_ins := read_u32(cpu_state.registers[pc])
+        
+        cpu_state.registers[st] &= 0x00000000FFFFFFFF
+        cpu_state.registers[st] |= u64(raw_ins) << 32
+
+        ins_info := raw_decode(raw_ins)
+
+        //dbg(1, "current memory len 0x%X ", len(memory))
+        dbg(1, "cycle %d ", cpu_state.cycle)
+
+        if flag_dbg_verbosity >= 1 {
+            set_style(ANSI.FG_Yellow)
+            fmt.printf("@ %4x ", cpu_state.registers[register_names.pc])
+            set_style(ANSI.FG_Default)
+            print_asm(ins_info)
         }
 
-        comet.cpu.running = !(flag_cycle_limit != 0 && (comet.cpu.cycle >= flag_cycle_limit))
+        //actually do the instruction
+        exec_instruction(&cpu_state, ins_info)
 
-        if thread.is_done(comet.gpu_thread) {
-            return
+        if flag_dbg_verbosity >= 2 {
+            print_registers(&cpu_state)
+        }
+
+        if cpu_state.increment_next {
+            cpu_state.registers[pc] += 4
+        }
+
+        if flag_cycle_limit != 0 && (cpu_state.cycle >= flag_cycle_limit) {
+            cpu_state.running = false
+        }
+
+        if thread.is_done(gpu_thread) {
+            //fmt.println("MAIN: DESTROY GPU THREAD")
+            thread.terminate(gpu_thread, 0)
+            thread.destroy(gpu_thread)
+            cpu_state.running = false
         }
     }
 
@@ -134,7 +147,11 @@ load_arguments :: proc() {
             print_help()
             os.exit(0)
         case "-debug":
-            flag_debug = true
+            ok := false
+            flag_dbg_verbosity, ok = strconv.parse_int(argument.val)
+            if !ok {
+                die("ERR: expected int, got \"%s\"\n", argument.val)
+            }
         case "-max-cycles":
             ok := false
             flag_cycle_limit, ok = strconv.parse_u64(argument.val)
@@ -157,7 +174,7 @@ load_arguments :: proc() {
     }
 }
 
-flag_debug          := false
+flag_dbg_verbosity  := -1
 flag_cycle_limit    : u64 = 0
 flag_no_color       := false
 flag_halt_inv_op    := false
