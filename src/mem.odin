@@ -55,7 +55,6 @@ align_backwards :: proc(ptr, align: u64) -> u64 {
 
 linear_find_page :: proc(address: u64) -> int {
     for p, i in page_map {
-        // check if address lies within page
         if p.base <= address && address < (p.base + PAGE_SIZE) {
             return i
         }
@@ -87,6 +86,7 @@ interrupt :: proc(number: u8) {
         return
     }
     comet.cpu.registers[pc] = read(u64, u64(number*8))
+    write_log(fmt.tprintf("[CPU] interrupt 0x%x triggered", number))
 }
 
 read :: proc($T: typeid, address: u64) -> T where PAGE_SIZE % size_of(T) == 0 {
@@ -139,6 +139,8 @@ write :: proc($T: typeid, address: u64, value: T) where PAGE_SIZE % size_of(T) =
             newpage.base = align_backwards(address, PAGE_SIZE)
             // add and sort new page into index
             append(&page_map, newpage)
+
+            write_log(fmt.tprintf("[MEM] new page alloc'd with base 0x%x", newpage.base))
             #reverse for _, i in page_map {
                 if i == 0 || page_map[i].base >= page_map[i-1].base {
                     break
@@ -163,6 +165,7 @@ write :: proc($T: typeid, address: u64, value: T) where PAGE_SIZE % size_of(T) =
 
 load_ram_image :: proc(file: os.Handle) {
     file_size, _ := os.file_size(file)
+    sz := file_size
     
     // load pages in full blocks
     i : u64 = 0
@@ -180,6 +183,7 @@ load_ram_image :: proc(file: os.Handle) {
         os.read(file, newpage.data[:file_size])
         append(&page_map, newpage)
     }
+    write_log(fmt.tprintf("[MEM] ram image loaded (%d bytes)", sz))
 
 }
 

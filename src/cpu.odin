@@ -12,11 +12,7 @@ exec_instruction :: proc(cpu: ^aphelion_cpu_state, ins: instruction_info) {
     switch ins.opcode {
     case 0x0A: // nop
     case 0x10: // int
-        cpu.registers[pc] = read(u64, 8 * ins.imm)
-        if flag_halt_inv_op && ins.imm == 1 {
-            cpu.running = false
-            return
-        }
+        interrupt(u8(ins.imm))
     case 0x11: // inv
         cpu.registers[pc] = read(u64, 0x28)
     case 0x12: // usr
@@ -272,12 +268,7 @@ exec_instruction :: proc(cpu: ^aphelion_cpu_state, ins: instruction_info) {
         cpu.registers[pc] += sign_extend_to_u64(ins.imm, 20)*4
         pc_modified = true
     case: // trigger invalid opcode interrupt
-        cpu.registers[pc] = read(u64, 8)
-        if flag_halt_inv_op {
-            cpu.running = false
-            return
-        }
-
+        interrupt(1)
     }
 
     cpu.registers[rz] = 0

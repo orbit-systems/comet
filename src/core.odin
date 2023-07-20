@@ -34,25 +34,20 @@ main :: proc() {
     // load arguments
     load_arguments()
 
-    ram_image, readstatus := os.open(inpath)
-    if readstatus != os.ERROR_NONE {
-        die("Error while opening file \"%s\": OS Error %v\n", inpath, readstatus)
-    }
-    load_ram_image(ram_image)
-    os.close(ram_image)
+    comet = emulator_state{}
 
     if flag_benchmark {
         time.stopwatch_start(&comet.timer)
     }
 
     comet.win_thread = thread.create(win_thread_proc)
-    comet.win_thread.id = 2
+    comet.win_thread.id = 1
     comet.win_thread.init_context = context
     thread.start(comet.win_thread)
     defer thread.destroy(comet.win_thread)
 
     comet.gpu_thread = thread.create(gpu_thread_proc)
-    comet.gpu_thread.id = 1
+    comet.gpu_thread.id = 2
     comet.gpu_thread.init_context = context
     thread.start(comet.gpu_thread)
     defer thread.destroy(comet.gpu_thread)
@@ -63,6 +58,15 @@ main :: proc() {
     }
 
     comet.cpu.paused = flag_debug
+
+    if inpath != "" {
+        ram_image, readstatus := os.open(inpath)
+        if readstatus != os.ERROR_NONE {
+            die("Error while opening file \"%s\": OS Error %v\n", inpath, readstatus)
+        }
+        load_ram_image(ram_image)
+        os.close(ram_image)
+    }
 
     loop()
 
@@ -106,7 +110,9 @@ loop :: proc() {
         if thread.is_done(comet.gpu_thread) {
             return
         }
+        //time.sleep(1000 * time.Microsecond)
     }
+    
 
 }
 
@@ -163,6 +169,8 @@ flag_no_color       := false
 flag_halt_inv_op    := false
 flag_benchmark      := false
 inpath              := ""
+
+flag_internal_restart := false
 
 cmd_arg :: struct {
     key : string,

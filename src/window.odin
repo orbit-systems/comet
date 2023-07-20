@@ -11,7 +11,7 @@ import "core:os"
 import "core:time"
 
 // TODO use sdl2.UpdateTexture instead of create and destroy texture
-// TODO this leaks very steadily - too bad!
+// TODO something in herer leaks memory very steadily - too bad!
 
 
 state := struct {
@@ -238,18 +238,22 @@ render :: proc(ctx: ^mu.Context, renderer: ^sdl2.Renderer, jbm: ^ttf.Font) {
 
                 continue
             }
-
-            text_cstr := strings.clone_to_cstring(cmd.str)
-            text_surface := ttf.RenderText(jbm, text_cstr, {cmd.color.r, cmd.color.g, cmd.color.b, cmd.color.a}, {0,0,0,255})
-            dst := sdl2.Rect{cmd.pos.x, cmd.pos.y, text_surface.w, text_surface.h}
-            src := sdl2.Rect{0, 0, text_surface.w, text_surface.h}
-            texture := sdl2.CreateTextureFromSurface(renderer,text_surface)
-            sdl2.SetTextureBlendMode(texture, .ADD)
-            sdl2.RenderCopy(renderer, texture, &src, &dst)
-
-            sdl2.FreeSurface(text_surface)
-            sdl2.DestroyTexture(texture)
-            delete(text_cstr)
+            str_split := strings.split_lines(cmd.str)
+            for _ , ln in str_split {
+                if str_split[ln] == "" do continue
+                text_cstr := strings.clone_to_cstring(str_split[ln])
+                //fmt.printf("%s %d\n", text_cstr, ln)
+                text_surface := ttf.RenderText(jbm, text_cstr, {cmd.color.r, cmd.color.g, cmd.color.b, cmd.color.a}, {0,0,0,255})
+                dst := sdl2.Rect{cmd.pos.x, cmd.pos.y+i32(10*ln), text_surface.w, text_surface.h}
+                src := sdl2.Rect{0, 0, text_surface.w, text_surface.h}
+                texture := sdl2.CreateTextureFromSurface(renderer,text_surface)
+                sdl2.SetTextureBlendMode(texture, .ADD)
+                sdl2.RenderCopy(renderer, texture, &src, &dst)
+                sdl2.FreeSurface(text_surface)
+                sdl2.DestroyTexture(texture)
+                delete(text_cstr)
+            }
+            delete(str_split)
 
         case ^mu.Command_Rect:
             sdl2.SetRenderDrawColor(renderer, cmd.color.r, cmd.color.g, cmd.color.b, cmd.color.a)
@@ -351,7 +355,10 @@ all_windows :: proc(ctx: ^mu.Context) {
 
         if .SUBMIT in mu.button(ctx, comet.cpu.paused ? "resume" : "pause") { comet.cpu.paused = !comet.cpu.paused }
         if .SUBMIT in mu.button(ctx, "step clock") { comet.cpu.step = !comet.cpu.step }
-        if .SUBMIT in mu.button(ctx, comet.win.view_buffer_select ? "view display buffer" : "view draw buffer") { comet.win.view_buffer_select = !comet.win.view_buffer_select }
+        if .SUBMIT in mu.button(ctx, comet.win.view_buffer_select ? "view display buffer" : "view draw buffer") {
+            comet.win.view_buffer_select = !comet.win.view_buffer_select
+            comet.gpu.dbuf_needs_updating = true
+        }
 		
         //mu.layout_end_column(ctx)
 	}
@@ -362,6 +369,19 @@ all_windows :: proc(ctx: ^mu.Context) {
         // * jank that tells the render function to copy the buffer here
 		mu.text(ctx, "\uf00d")
 		mu.layout_end_column(ctx)
+	}
+
+    if mu.window(ctx, "log", {350, 40, 300, 200}, {.NO_CLOSE, .EXPANDED}) {
+		mu.layout_row(ctx, {-1}, -1)
+		mu.begin_panel(ctx, "Log")
+		mu.layout_row(ctx, {-1}, -1)
+		mu.text(ctx, read_log())
+		if comet.win.log_buf_updated {
+			panel := mu.get_current_container(ctx)
+			panel.scroll.y = panel.content_size.y
+			comet.win.log_buf_updated = false
+		}
+		mu.end_panel(ctx)
 	}
 }
 
