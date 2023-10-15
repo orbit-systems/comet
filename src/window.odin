@@ -107,6 +107,8 @@ win_thread_proc :: proc(t: ^thread.Thread) {
 
     main_loop: for {
 
+        free_all(context.temp_allocator)
+
         e : sdl2.Event
         for (sdl2.PollEvent(&e)) {
             #partial switch e.type {
