@@ -141,7 +141,7 @@ write :: proc($T: typeid, address: u64, value: T) where PAGE_SIZE % size_of(T) =
             append(&page_map, newpage)
 
             write_log(fmt.tprintf("[MEM] new page alloc'd with base 0x%x", newpage.base))
-            #reverse for _, i in page_map {
+            #reverse for _, i in page_map { // TODO what tf was i thinking, make this better
                 if i == 0 || page_map[i].base >= page_map[i-1].base {
                     break
                 }
