@@ -17,3 +17,6 @@ debug:
 
 test: build
 	@comet test/gputest.bin -debug
+
+c_build:
+	@clang csrc/core.c -o cometc -O3

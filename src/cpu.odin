@@ -3,7 +3,7 @@ package comet
 import "core:fmt"
 import "core:intrinsics"
 
-exec_instruction :: proc(cpu: ^aphelion_cpu_state, ins: instruction_info) {
+exec_instruction :: proc(cpu: ^aphelion_cpu_state, ins: ^instruction_info) {
     using register_names
 
     prev_pc := cpu.registers[pc]
@@ -288,7 +288,7 @@ do_cpu_cycle :: proc() {
     comet.cpu.ins_info = raw_decode(comet.cpu.raw_ins)
 
     //actually do the instruction
-    exec_instruction(&comet.cpu, comet.cpu.ins_info)
+    exec_instruction(&comet.cpu, &comet.cpu.ins_info)
 
     comet.cpu.registers[pc] += 4 * transmute(u64)(comet.cpu.increment_next)
 }
@@ -330,27 +330,27 @@ st_flag :: enum u8 {
     borrow_unsigned,
 }
 
-set_flags_addi :: proc(cpu: ^aphelion_cpu_state, ins: instruction_info) {
+set_flags_addi :: proc(cpu: ^aphelion_cpu_state, ins: ^instruction_info) {
     set_st_flag(cpu, st_flag.carry,  i64(cpu.registers[ins.rde]) < i64(cpu.registers[ins.rs1]) || i64(cpu.registers[ins.rde]) < i64(ins.imm))
     set_st_flag(cpu, st_flag.carry_unsigned,  cpu.registers[ins.rde] < ins.imm || cpu.registers[ins.rde] < ins.imm)
 }
 
-set_flags_addr :: proc(cpu: ^aphelion_cpu_state, ins: instruction_info) {
+set_flags_addr :: proc(cpu: ^aphelion_cpu_state, ins: ^instruction_info) {
     set_st_flag(cpu, st_flag.carry,  i64(cpu.registers[ins.rde]) < i64(cpu.registers[ins.rs1]) || i64(cpu.registers[ins.rde]) < i64(cpu.registers[ins.rs2]))
     set_st_flag(cpu, st_flag.carry_unsigned,  cpu.registers[ins.rde] < cpu.registers[ins.rs1] || cpu.registers[ins.rde] < cpu.registers[ins.rs2])
 }
 
-set_flags_subi :: proc(cpu: ^aphelion_cpu_state, ins: instruction_info) {
+set_flags_subi :: proc(cpu: ^aphelion_cpu_state, ins: ^instruction_info) {
     set_st_flag(cpu, st_flag.borrow, i64(cpu.registers[ins.rde]) > i64(cpu.registers[ins.rs1]) || i64(cpu.registers[ins.rde]) > i64(ins.imm))
     set_st_flag(cpu, st_flag.borrow_unsigned, cpu.registers[ins.rde] > ins.imm || cpu.registers[ins.rde] > ins.imm)
 }
 
-set_flags_subr :: proc(cpu: ^aphelion_cpu_state, ins: instruction_info) {
+set_flags_subr :: proc(cpu: ^aphelion_cpu_state, ins: ^instruction_info) {
     set_st_flag(cpu, st_flag.borrow, i64(cpu.registers[ins.rde]) > i64(cpu.registers[ins.rs1]) || i64(cpu.registers[ins.rde]) > i64(cpu.registers[ins.rs1]))
     set_st_flag(cpu, st_flag.borrow_unsigned, cpu.registers[ins.rde] > cpu.registers[ins.rs1] || cpu.registers[ins.rde] > cpu.registers[ins.rs1])
 }
 
-set_flags_cmpi :: proc(cpu: ^aphelion_cpu_state, ins: instruction_info) {
+set_flags_cmpi :: proc(cpu: ^aphelion_cpu_state, ins: ^instruction_info) {
     set_st_flag(cpu, st_flag.sign,   cpu.registers[ins.rs1] < 0)
     set_st_flag(cpu, st_flag.zero,   cpu.registers[ins.rs1] == 0)
     set_st_flag(cpu, st_flag.parity, intrinsics.count_ones(cpu.registers[ins.rs1]) % 2 == 0)
@@ -362,7 +362,7 @@ set_flags_cmpi :: proc(cpu: ^aphelion_cpu_state, ins: instruction_info) {
     set_st_flag(cpu, st_flag.less_unsigned,    cpu.registers[ins.rs1] < ins.imm)
 }
 
-set_flags_cmpr :: proc(cpu: ^aphelion_cpu_state, ins: instruction_info) {
+set_flags_cmpr :: proc(cpu: ^aphelion_cpu_state, ins: ^instruction_info) {
     set_st_flag(cpu, st_flag.sign,   cpu.registers[ins.rs1] < 0)
     set_st_flag(cpu, st_flag.zero,   cpu.registers[ins.rs1] == 0)
     set_st_flag(cpu, st_flag.parity, intrinsics.count_ones(cpu.registers[ins.rs1]) % 2 == 0)
