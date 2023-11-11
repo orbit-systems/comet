@@ -100,7 +100,7 @@ void write_u64(u64 addr, u64 val);
 u64 align_backwards(u64 ptr, u64 align);
 
 void init_page_map(size_t capacity);
-void new_page(u64 base);
+void free_page_map();
 
 u64 sign_extend(u64 val, u8 bitsize);
 
@@ -120,6 +120,6 @@ u64  flag_cycle_limit = 0;
 bool flag_no_color = false;
 bool flag_halt_inv_op = false;
 bool flag_benchmark = false;
-char* inpath = "";
+char* flag_bin_path = "";
 
 bool flag_internal_restart = 0;

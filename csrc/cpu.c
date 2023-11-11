@@ -334,7 +334,7 @@ void exec_instruction(aphelion_cpu_state* cpu, instruction_info* ins) {
 
     default:
         interrupt(cpu, 1);
-        printf("log: unrecognized opcode 0x%x\n", ins->opcode);
+        //printf("log: unrecognized opcode 0x%x\n", ins->opcode);
         break;
     }
 

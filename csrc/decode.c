@@ -82,22 +82,26 @@ void raw_decode(u32 ins, instruction_info* info) {
         info->rs1  = (u8)  (ins >> 24 & 0xF);
         info->rs2  = (u8)  (ins >> 20 & 0xF);
         info->imm  = (u64) (ins >> 8  & 0xFFF);
+        break;
     case fmt_M:
         info->rde  = (u8)  (ins >> 28 & 0xF);
         info->rs1  = (u8)  (ins >> 24 & 0xF);
         info->imm  = (u64) (ins >> 8  & 0xFFFF);
+        break;
     case fmt_F:
         info->rde  = (u8)  (ins >> 28 & 0xF);
         info->func = (u8)  (ins >> 24 & 0xF);
         info->imm  = (u64) (ins >> 8  & 0xFFFF);
+        break;
     case fmt_J:
         info->rde  = (u8)  (ins >> 28 & 0xF);
         info->imm  = (u64) (ins >> 8  & 0xFFFFF);
+        break;
     case fmt_B:
         info->func = (u8)  (ins >> 28 & 0xF);
         info->imm  = (u64) (ins >> 8  & 0xFFFFF);
+        break;
     }
-    return;
 }
 
 #define i(op, f) [op*0x10 + f]

@@ -141,7 +141,7 @@ write :: proc($T: typeid, address: u64, value: T) where PAGE_SIZE % size_of(T) =
             append(&page_map, newpage)
 
             write_log(fmt.tprintf("[MEM] new page alloc'd with base 0x%x", newpage.base))
-            #reverse for _, i in page_map {
+            #reverse for _, i in page_map { // TODO wtf theres def a better way to do this
                 if i == 0 || page_map[i].base >= page_map[i-1].base {
                     break
                 }
@@ -189,117 +189,122 @@ load_ram_image :: proc(file: os.Handle) {
 
 // * here lies old non-polymorphic functions. im keeping these around if they're needed later for some reason
 
-// read_u8 :: proc(address: u64) -> u8 {
-//     page := find_page(address)
+/*
+
+read_u8 :: proc(address: u64) -> u8 {
+    page := find_page(address)
     
-//     if page == -1 {
-//         return 0
-//     }
+    if page == -1 {
+        return 0
+    }
     
-//     return page_map[page].data[address % PAGE_SIZE]
-// }
+    return page_map[page].data[address % PAGE_SIZE]
+}
 
-// read_u16 :: proc(address: u64) -> u16 {
-//     if address % size_of(u16) != 0 {
-//         // page fault interrupt
-//     }
+read_u16 :: proc(address: u64) -> u16 {
+    if address % size_of(u16) != 0 {
+        // page fault interrupt
+    }
 
-//     page := find_page(address)
+    page := find_page(address)
     
-//     if page == -1 {
-//         return 0
-//     }
+    if page == -1 {
+        return 0
+    }
     
-//     return (transmute(^[PAGE_SIZE/size_of(u16)]u16) &(page_map[page].data))[(address % PAGE_SIZE)/size_of(u16)]
-// }
+    return (transmute(^[PAGE_SIZE/size_of(u16)]u16) &(page_map[page].data))[(address % PAGE_SIZE)/size_of(u16)]
+}
 
-// read_u32 :: proc(address: u64) -> u32 {
-//     if address % 4 != size_of(u32) {
-//         //page fault interrupt
-//     }
+read_u32 :: proc(address: u64) -> u32 {
+    if address % 4 != size_of(u32) {
+        //page fault interrupt
+    }
 
-//     page := find_page(address)
+    page := find_page(address)
     
-//     if page == -1 {
-//         return 0
-//     }
+    if page == -1 {
+        return 0
+    }
 
-//     return (transmute(^[PAGE_SIZE/size_of(u32)]u32) &(page_map[page].data))[(address % PAGE_SIZE)/size_of(u32)]
-// }
+    return (transmute(^[PAGE_SIZE/size_of(u32)]u32) &(page_map[page].data))[(address % PAGE_SIZE)/size_of(u32)]
+}
 
-// read_u64 :: proc(address: u64) -> u64 {
-//     if address % size_of(u64) != 0 {
-//         //page fault interrupt
-//     }
+read_u64 :: proc(address: u64) -> u64 {
+    if address % size_of(u64) != 0 {
+        //page fault interrupt
+    }
 
-//     page := find_page(address)
+    page := find_page(address)
     
-//     if page == -1 {
-//         return 0
-//     }
+    if page == -1 {
+        return 0
+    }
 
-//     return (transmute(^[PAGE_SIZE/size_of(u64)]u64) &(page_map[page].data))[(address % PAGE_SIZE)/size_of(u64)]
-// }
+    return (transmute(^[PAGE_SIZE/size_of(u64)]u64) &(page_map[page].data))[(address % PAGE_SIZE)/size_of(u64)]
+}
 
-// write_u8 :: proc(address: u64, value: u8) {
-//     page_index := find_page(address)
 
-//     if page_index == -1 {   // page not found - allocate and track new memory page
-//         newpage := new(mem_page)
-//         append(&page_map, newpage)
-//         newpage.data[address % PAGE_SIZE] = value
-//     } else {                // page found - use found page
-//         page_map[page_index].data[address % PAGE_SIZE] = value
-//     }
-// }
+write_u8 :: proc(address: u64, value: u8) {
+    page_index := find_page(address)
 
-// write_u16 :: proc(address: u64, value: u16) {
-//     if address % size_of(u16) != 0 {
-//         //page fault interrupt
-//     }
+    if page_index == -1 {   // page not found - allocate and track new memory page
+        newpage := new(mem_page)
+        append(&page_map, newpage)
+        newpage.data[address % PAGE_SIZE] = value
+    } else {                // page found - use found page
+        page_map[page_index].data[address % PAGE_SIZE] = value
+    }
+}
 
-//     page_index := find_page(address)
+write_u16 :: proc(address: u64, value: u16) {
+    if address % size_of(u16) != 0 {
+        //page fault interrupt
+    }
 
-//     if page_index == -1 {   // page not found - allocate and track new memory page
-//         newpage := new(mem_page)
-//         append(&page_map, newpage)
-//         (transmute(^[PAGE_SIZE/size_of(u16)]u16) &newpage.data)[(address % PAGE_SIZE)/size_of(u16)] = value
-//     } else {                // page found - use found page
-//         (transmute(^[PAGE_SIZE/size_of(u16)]u16) &(page_map[page_index].data))[(address % PAGE_SIZE)/size_of(u16)] = value
+    page_index := find_page(address)
+
+    if page_index == -1 {   // page not found - allocate and track new memory page
+        newpage := new(mem_page)
+        append(&page_map, newpage)
+        (transmute(^[PAGE_SIZE/size_of(u16)]u16) &newpage.data)[(address % PAGE_SIZE)/size_of(u16)] = value
+    } else {                // page found - use found page
+        (transmute(^[PAGE_SIZE/size_of(u16)]u16) &(page_map[page_index].data))[(address % PAGE_SIZE)/size_of(u16)] = value
         
-//     }
-// }
+    }
+}
 
-// write_u32 :: proc(address: u64, value: u32) {
-//     if address % size_of(u32) != 0 {
-//         //page fault interrupt
-//     }
+write_u32 :: proc(address: u64, value: u32) {
+    if address % size_of(u32) != 0 {
+        //page fault interrupt
+    }
 
-//     page_index := find_page(address)
+    page_index := find_page(address)
 
-//     if page_index == -1 {   // page not found - allocate and track new memory page
-//         newpage := new(mem_page)
-//         append(&page_map, newpage)
-//         (transmute(^[PAGE_SIZE/size_of(u32)]u32) &newpage.data)[(address % PAGE_SIZE)/size_of(u32)] = value
-//     } else {                // page found - use found page
-//         (transmute(^[PAGE_SIZE/size_of(u32)]u32) &(page_map[page_index].data))[(address % PAGE_SIZE)/size_of(u32)] = value
+    if page_index == -1 {   // page not found - allocate and track new memory page
+        newpage := new(mem_page)
+        append(&page_map, newpage)
+        (transmute(^[PAGE_SIZE/size_of(u32)]u32) &newpage.data)[(address % PAGE_SIZE)/size_of(u32)] = value
+    } else {                // page found - use found page
+        (transmute(^[PAGE_SIZE/size_of(u32)]u32) &(page_map[page_index].data))[(address % PAGE_SIZE)/size_of(u32)] = value
         
-//     }
-// }
+    }
+}
 
-// write_u64 :: proc(address: u64, value: u64) {
-//     if address % 2 != size_of(u64) {
-//         //page fault interrupt
-//     }
+write_u64 :: proc(address: u64, value: u64) {
+    if address % 2 != size_of(u64) {
+        //page fault interrupt
+    }
 
-//     page_index := find_page(address)
+    page_index := find_page(address)
 
-//     if page_index == -1 {   // page not found - allocate and track new memory page
-//         newpage := new(mem_page)
-//         append(&page_map, newpage)
-//         (transmute(^[PAGE_SIZE/size_of(u64)]u64) &newpage.data)[(address % PAGE_SIZE)/size_of(u64)] = value
-//     } else {                // page found - use found page
-//         (transmute(^[PAGE_SIZE/size_of(u64)]u64) &(page_map[page_index].data))[(address % PAGE_SIZE)/size_of(u64)] = value
+    if page_index == -1 {   // page not found - allocate and track new memory page
+        newpage := new(mem_page)
+        append(&page_map, newpage)
+        (transmute(^[PAGE_SIZE/size_of(u64)]u64) &newpage.data)[(address % PAGE_SIZE)/size_of(u64)] = value
+    } else {                // page found - use found page
+        (transmute(^[PAGE_SIZE/size_of(u64)]u64) &(page_map[page_index].data))[(address % PAGE_SIZE)/size_of(u64)] = value
         
-//     }
-// }
+    }
+}
+
+*/

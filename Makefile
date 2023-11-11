@@ -20,3 +20,6 @@ test: build
 
 c_build:
 	@clang csrc/core.c -o cometc -O3
+
+c_test: build
+	@cometc.exe test/fib.bin

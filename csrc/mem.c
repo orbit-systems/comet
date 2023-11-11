@@ -25,7 +25,14 @@ void init_page_map(size_t capacity) {
     memory.pages = (mem_page**) malloc(sizeof(mem_page*) * capacity);
 }
 
-void new_page(u64 base) {
+void free_page_map() {
+    for (size_t i = 0; i < memory.len; i++)
+        free(memory.pages[i]);
+    
+    free(memory.pages);
+}
+
+mem_page* new_page(u64 base) {
     // allocate new page
     mem_page* page = (mem_page*) malloc(sizeof(mem_page));
     page->base = base;
@@ -39,26 +46,104 @@ void new_page(u64 base) {
     memory.pages[memory.len] = page;
     memory.len++;
 
-    // sort page into page map
+    // sort page into page map - probably a better way to do this
     for (size_t i = memory.len-1; i >= 0; i--) {
         if (i == 0 || memory.pages[i]->base > memory.pages[i-1]->base) {
             break;
         }
-        temp_page_ptr = 
+        mem_page* temp_page_ptr = memory.pages[i];
+        memory.pages[i] = memory.pages[i-1];
+        memory.pages[i-1] = temp_page_ptr;
     }
-    
+
+    return page;
+}
+
+int binary_find_page(u64 address) {
+    if (memory.len == 0) return -1;
+    size_t L = 0;
+    size_t R = memory.len - 1;
+    while (L <= R) {
+        size_t m = (L + R) / 2;
+        u64 dist = address - memory.pages[m]->base;
+        if (dist < 0) {
+            R = m - 1;
+        } else if (dist > MEM_PAGE_SIZE) {
+            L = m + 1;
+        } else return m;
+    }
+    return -1;
+}
+
+u8 read_u8 (u64 addr) {
+    int page = binary_find_page(addr);
+    if (page == -1) return 0;
+    return memory.pages[page]->data[addr % MEM_PAGE_SIZE];
+}
+
+u16 read_u16(u64 addr) {
+    if (addr % sizeof(u16) != 0) {/* page fault interrupt at some point*/}
+    int page = binary_find_page(addr);
+    if (page == -1) return 0;
+    return ((u16*)(memory.pages[page]->data)) [addr % MEM_PAGE_SIZE / sizeof(u16)];
+}
+
+u32 read_u32(u64 addr) {
+    if (addr % sizeof(u32) != 0) {/* page fault interrupt at some point*/}
+    int page = binary_find_page(addr);
+    if (page == -1) return 0;
+    return ((u32*)(memory.pages[page]->data)) [addr % MEM_PAGE_SIZE / sizeof(u32)];
+}
+
+u64 read_u64(u64 addr) {
+    if (addr % sizeof(u64) != 0) {/* page fault interrupt at some point*/}
+    int page = binary_find_page(addr);
+    if (page == -1) return 0;
+    return ((u64*)(memory.pages[page]->data)) [addr % MEM_PAGE_SIZE / sizeof(u64)];
+}
+
+void write_u8 (u64 addr, u8 val) {
+    int page = binary_find_page(addr);
+    if (page == -1) { // page not found - track new page
+        mem_page* p = new_page(align_backwards(addr, MEM_PAGE_SIZE));
+        p->data[addr % MEM_PAGE_SIZE] = val;
+    } else {
+        memory.pages[page]->data[addr % MEM_PAGE_SIZE] = val;
+    }
 
 }
 
-u8  read_u8 (u64 addr) {TODO("memory");return 0;}
-u16 read_u16(u64 addr) {TODO("memory");return 0;}
-u32 read_u32(u64 addr) {TODO("memory");return 0;}
-u64 read_u64(u64 addr) {TODO("memory");return 0;}
+void write_u16(u64 addr, u16 val) {
+    if (addr % sizeof(u16) != 0) {/* page fault interrupt at some point*/}
+    int page = binary_find_page(addr);
+    if (page == -1) { // page not found - track new page
+        mem_page* p = new_page(align_backwards(addr, MEM_PAGE_SIZE));
+        ((u16*)(p->data)) [addr % MEM_PAGE_SIZE / sizeof(u16)] = val;
+    } else {
+        ((u16*)(memory.pages[page]->data)) [addr % MEM_PAGE_SIZE / sizeof(u16)] = val;
+    }
+}
 
-void write_u8 (u64 addr, u8  val) {TODO("memory");}
-void write_u16(u64 addr, u16 val) {TODO("memory");}
-void write_u32(u64 addr, u32 val) {TODO("memory");}
-void write_u64(u64 addr, u64 val) {TODO("memory");}
+void write_u32(u64 addr, u32 val) {
+    if (addr % sizeof(u32) != 0) {/* page fault interrupt at some point*/}
+    int page = binary_find_page(addr);
+    if (page == -1) { // page not found - track new page
+        mem_page* p = new_page(align_backwards(addr, MEM_PAGE_SIZE));
+        ((u32*)(p->data)) [addr % MEM_PAGE_SIZE / sizeof(u32)] = val;
+    } else {
+        ((u32*)(memory.pages[page]->data)) [addr % MEM_PAGE_SIZE / sizeof(u32)] = val;
+    }
+}
+void write_u64(u64 addr, u64 val) {
+    if (addr % sizeof(u64) != 0) {/* page fault interrupt at some point*/}
+    int page = binary_find_page(addr);
+    if (page == -1) { // page not found - track new page
+        mem_page* p = new_page(align_backwards(addr, MEM_PAGE_SIZE));
+        ((u64*)(p->data)) [addr % MEM_PAGE_SIZE / sizeof(u64)] = val;
+    } else {
+        ((u64*)(memory.pages[page]->data)) [addr % MEM_PAGE_SIZE / sizeof(u64)] = val;
+    }
+}
 
 void interrupt(aphelion_cpu_state* cpu, u8 code) {
     if (flag_halt_inv_op && code == 1) {
