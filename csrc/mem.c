@@ -1,4 +1,5 @@
 #include <stdint.h>
+#include <stdio.h>
 #include "comet.h"
 #pragma once
 
@@ -35,6 +36,7 @@ void free_page_map() {
 mem_page* new_page(u64 base) {
     // allocate new page
     mem_page* page = (mem_page*) malloc(sizeof(mem_page));
+    memset(page->data, 0, MEM_PAGE_SIZE);
     page->base = base;
 
     // append page
@@ -160,4 +162,22 @@ u64 align_backwards(u64 ptr, u64 align) {
         p += align - mod;
     }
     return p;
+}
+
+void load_image(FILE* bin) {
+    fseek(bin, 0, SEEK_END);
+    long bin_size = ftell(bin);
+    fseek(bin, 0, SEEK_SET);
+
+    i64 cursor = 0;
+    // load pages in full blocks if possible
+    for (; bin_size >= MEM_PAGE_SIZE; bin_size -= MEM_PAGE_SIZE) {
+        mem_page* p = new_page(cursor);
+        fread(p->data, MEM_PAGE_SIZE, 1, bin);
+    }
+    // load remaining in partial block
+    if (bin_size > 0) {
+        mem_page* p = new_page(cursor);
+        fread(p->data, bin_size, 1, bin);
+    }
 }

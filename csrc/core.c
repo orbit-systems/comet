@@ -8,6 +8,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+#include <sys/time.h>
 
 #include "comet.h"
 #include "cpu.c"
@@ -59,7 +60,7 @@ void load_arguments(int argc, char* argv[]) {
         } else if (!strcmp(a.key, "-bench")) {
             flag_benchmark = true;
         } else if (!strcmp(a.key, "-max-cycles")) {
-            flag_cycle_limit = strtol(a.val, NULL, 0);
+            flag_cycle_limit = strtoll(a.val, NULL, 0);
             if (flag_cycle_limit == 0) {
                 printf("error: expected positive int, got \"%s\"\n", a.val);
                 exit(EXIT_FAILURE);
@@ -78,9 +79,7 @@ void load_arguments(int argc, char* argv[]) {
 int main(int argc, char *argv[]) {
 
     load_arguments(argc, argv);
-
     emulator_state comet = {};
-
     init_page_map(0);
 
     FILE* bin_file = fopen(flag_bin_path, "r");
@@ -89,12 +88,34 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
+    load_image(bin_file);
+    fclose(bin_file);
+
     comet.cpu.registers[r_pc] = 0xA00; // starting point
     comet.cpu.running = true;
 
-    while (comet.cpu.running) {
+    // timing
+    struct timeval begin, end;
+    gettimeofday(&begin, 0);
+
+    while (comet.cpu.running && flag_cycle_limit > comet.cpu.cycle) {
         do_cpu_cycle(&comet.cpu);
-        printf("ra %x\n", comet.cpu.registers[r_ra]);
+        // printf("ra %16llx, rb %16llx, rc %16llx\n", 
+        //     comet.cpu.registers[r_ra],
+        //     comet.cpu.registers[r_rb],
+        //     comet.cpu.registers[r_rc]
+        // );
+    }
+
+    gettimeofday(&end, 0);
+    if (flag_benchmark) {
+        long seconds = end.tv_sec - begin.tv_sec;
+        long microseconds = end.tv_usec - begin.tv_usec;
+        double elapsed = seconds + microseconds*1e-6;
+        double cycles_per_sec = comet.cpu.cycle / elapsed;
+        printf("overall time : %fs (%fms)\n", elapsed, elapsed*1000.0);
+        printf("total cycles : %d\n", comet.cpu.cycle);
+        printf("cycles/sec   : %f\n", cycles_per_sec);
     }
 
     return EXIT_SUCCESS;

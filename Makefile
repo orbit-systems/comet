@@ -19,7 +19,7 @@ test: build
 	@comet test/gputest.bin -debug
 
 c_build:
-	@clang csrc/core.c -o cometc -O3
+	@clang csrc/core.c -o cometc -O2
 
-c_test: build
-	@cometc.exe test/fib.bin
+c_test: c_build
+	@cometc.exe test/fib.bin -max-cycles:300000000 -bench

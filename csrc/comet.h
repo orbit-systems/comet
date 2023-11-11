@@ -101,6 +101,7 @@ u64 align_backwards(u64 ptr, u64 align);
 
 void init_page_map(size_t capacity);
 void free_page_map();
+void load_image(FILE* bin);
 
 u64 sign_extend(u64 val, u8 bitsize);
 
