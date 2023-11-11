@@ -114,7 +114,6 @@ exec_instruction :: proc(cpu: ^aphelion_cpu_state, ins: ^instruction_info) {
         cpu.registers[ins.rde] = cpu.registers[ins.rs1] | ins.imm
     case 0x44: // norr
         cpu.registers[ins.rde] = ~(cpu.registers[ins.rs1] | cpu.registers[ins.rs2])
-        
     case 0x45: // nori
         cpu.registers[ins.rde] = ~(cpu.registers[ins.rs1] | ins.imm)
     case 0x46: // xorr
@@ -140,7 +139,7 @@ exec_instruction :: proc(cpu: ^aphelion_cpu_state, ins: ^instruction_info) {
     case 0x51: // pushi
         cpu.registers[sp] -= 8
         write(u64, cpu.registers[sp], sign_extend_to_u64(ins.imm, 16))
-    case 0x52: 
+    case 0x52: // pushz
         cpu.registers[sp] -= 8
         write(u64, cpu.registers[sp], ins.imm)
     case 0x53: // pushc

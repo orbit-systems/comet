@@ -79,6 +79,10 @@ int countones(u64 x) {
     return __builtin_popcountll((unsigned long long) x );
 }
 
+void raw_decode(u32 ins, instruction_info* info);
+
+void do_cpu_cycle(aphelion_cpu_state* cpu);
+
 void interrupt(aphelion_cpu_state* cpu, u8 code);
 
 u8  read_u8 (u64 addr);
