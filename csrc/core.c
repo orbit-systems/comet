@@ -100,11 +100,6 @@ int main(int argc, char *argv[]) {
 
     while (comet.cpu.running && flag_cycle_limit > comet.cpu.cycle) {
         do_cpu_cycle(&comet.cpu);
-        // printf("ra %16llx, rb %16llx, rc %16llx\n", 
-        //     comet.cpu.registers[r_ra],
-        //     comet.cpu.registers[r_rb],
-        //     comet.cpu.registers[r_rc]
-        // );
     }
 
     gettimeofday(&end, 0);
@@ -117,6 +112,7 @@ int main(int argc, char *argv[]) {
         printf("total cycles : %d\n", comet.cpu.cycle);
         printf("cycles/sec   : %f\n", cycles_per_sec);
     }
+    free_page_map();
 
     return EXIT_SUCCESS;
 }
