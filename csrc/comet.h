@@ -97,6 +97,11 @@ void write_u16(u64 addr, u16 val);
 void write_u32(u64 addr, u32 val);
 void write_u64(u64 addr, u64 val);
 
+u64 align_backwards(u64 ptr, u64 align);
+
+void init_page_map(size_t capacity);
+void new_page(u64 base);
+
 u64 sign_extend(u64 val, u8 bitsize);
 
 void set_st_flag(aphelion_cpu_state* cpu, st_flag bit, bool value);

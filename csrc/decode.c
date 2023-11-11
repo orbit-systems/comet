@@ -187,8 +187,8 @@ const char* ins_names[] = {
 };
 #undef i
 
-#define instruction_name(opcode, func) ins_names[opcode*0x10 + func]
+// #define instruction_name(opcode, func) ins_names[opcode*0x10 + func]
 
-// const char* instruction_name(u8 opcode, u8 func) {
-//     return ins_names[opcode*0x10 + func];
-// }
+const char* instruction_name(u8 opcode, u8 func) {
+    return ins_names[opcode*0x10 + func];
+}
