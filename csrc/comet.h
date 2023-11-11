@@ -70,6 +70,7 @@ typedef u8 st_flag; enum {
     fl_borrow_unsigned,
 };
 
+
 void TODO(const char* msg) {
     printf("TODO: %s\n", msg);
     exit(EXIT_FAILURE);
@@ -80,6 +81,7 @@ int countones(u64 x) {
 }
 
 void raw_decode(u32 ins, instruction_info* info);
+const char* instruction_name(u8 opcode, u8 func);
 
 void do_cpu_cycle(aphelion_cpu_state* cpu);
 
