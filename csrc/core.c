@@ -1,8 +1,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+
 #include "comet.h"
 #include "cpu.c"
+#include "mem.c"
+#include "decode.c"
 
 // ╭───────╮
 // │ comet │ the Aphelion ISA reference emulator - rewritten in C!

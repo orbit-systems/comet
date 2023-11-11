@@ -323,12 +323,12 @@ void exec_instruction(aphelion_cpu_state* cpu, instruction_info* ins) {
     case 0x65: // jal
         cpu->registers[r_sp] -= 8;
         write_u64(cpu->registers[r_sp], cpu->registers[r_pc]+4);
-        cpu->registers[r_pc] += sign_extend_to_u64(ins->imm, 20)*4;
+        cpu->registers[r_pc] += sign_extend(ins->imm, 20)*4;
         pc_modified = true;
         break;
     case 0x66: // ljalr
         cpu->registers[ins->rde] = cpu->registers[r_pc]+4;
-        cpu->registers[r_pc] += sign_extend_to_u64(ins->imm, 20)*4;
+        cpu->registers[r_pc] += sign_extend(ins->imm, 20)*4;
         pc_modified = true;
         break;
 
