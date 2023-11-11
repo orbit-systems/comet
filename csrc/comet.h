@@ -2,11 +2,6 @@
 #include <stdlib.h>
 #pragma once
 
-void TODO(const char* msg) {
-    printf("TODO: %s", msg);
-    exit(EXIT_FAILURE);
-}
-
 // bullshit - yes i know about stdbool dw about it
 typedef uint64_t u64;
 typedef uint32_t u32;
@@ -75,7 +70,16 @@ typedef u8 st_flag; enum {
     fl_borrow_unsigned,
 };
 
-void interrupt(u8 i);
+void TODO(const char* msg) {
+    printf("TODO: %s\n", msg);
+    exit(EXIT_FAILURE);
+}
+
+int countones(u64 x) {
+    return __builtin_popcountll((unsigned long long) x );
+}
+
+void interrupt(aphelion_cpu_state* cpu, u8 code);
 
 u8  read_u8 (u64 addr);
 u16 read_u16(u64 addr);
@@ -89,6 +93,22 @@ void write_u64(u64 addr, u64 val);
 
 u64 sign_extend(u64 val, u8 bitsize);
 
-void set_st_flag(aphelion_cpu_state* cpu, u8 bit, bool value);
-bool get_st_flag(aphelion_cpu_state* cpu, u8 bit);
+void set_st_flag(aphelion_cpu_state* cpu, st_flag bit, bool value);
+bool get_st_flag(aphelion_cpu_state* cpu, st_flag bit);
 
+void cmpr_set_flags(aphelion_cpu_state* cpu, instruction_info* ins);
+void cmpi_set_flags(aphelion_cpu_state* cpu, instruction_info* ins);
+
+void addr_set_flags(aphelion_cpu_state* cpu, instruction_info* ins);
+void addi_set_flags(aphelion_cpu_state* cpu, instruction_info* ins);
+void subr_set_flags(aphelion_cpu_state* cpu, instruction_info* ins);
+void subi_set_flags(aphelion_cpu_state* cpu, instruction_info* ins);
+
+bool flag_debug = false;
+u64  flag_cycle_limit = 0;
+bool flag_no_color = false;
+bool flag_halt_inv_op = false;
+bool flag_benchmark = false;
+char* inpath = "";
+
+bool flag_internal_restart = 0;

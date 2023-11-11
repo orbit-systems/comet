@@ -1,5 +1,7 @@
 #include <stdio.h>
 #include "comet.h"
+#include "mem.c"
+#pragma once
 
 void exec_instruction(aphelion_cpu_state* cpu, instruction_info* ins) {
 
@@ -11,7 +13,7 @@ void exec_instruction(aphelion_cpu_state* cpu, instruction_info* ins) {
     case 0x0A: // nop
         break;
     case 0x10: // int
-        interrupt((u8) ins->imm);
+        interrupt(cpu, (u8) ins->imm);
         break;
     case 0x11: // inv
         cpu->registers[r_pc] = read_u64(0x28);
@@ -71,6 +73,7 @@ void exec_instruction(aphelion_cpu_state* cpu, instruction_info* ins) {
         break;
     
     case 0x26: // swp
+        ;
         u64 temp = cpu->registers[ins->rde];
         cpu->registers[ins->rde] = cpu->registers[ins->rs1];
         cpu->registers[ins->rs1] = temp;
@@ -81,27 +84,95 @@ void exec_instruction(aphelion_cpu_state* cpu, instruction_info* ins) {
         break;
 
     case 0x28: // cmpr
-        set_flags_cmpr(cpu, ins);
+        cmpr_set_flags(cpu, ins);
+        break;
+    
+    case 0x29: // cmpi
+        cmpi_set_flags(cpu, ins);
         break;
 
+    case 0x30: // addr
+        cpu->registers[ins->rde] = cpu->registers[ins->rs1] + cpu->registers[ins->rs2];
+        addr_set_flags(cpu, ins);
+        break;
+    
+    case 0x31: // addi
+        cpu->registers[ins->rde] = cpu->registers[ins->rs1] + sign_extend(ins->imm, 16);
+        addi_set_flags(cpu, ins);
+        break;
+    
+    case 0x32: // adcr
+        cpu->registers[ins->rde] = cpu->registers[ins->rs1] + cpu->registers[ins->rs2] + (u64)get_st_flag(cpu, fl_carry);
+        addr_set_flags(cpu, ins);
+        break;
+    
+    case 0x33: // adci
+        cpu->registers[ins->rde] = cpu->registers[ins->rs1] + sign_extend(ins->imm, 16) + (u64)get_st_flag(cpu, fl_carry);
+        addi_set_flags(cpu, ins);
+        break;
 
     default:
-        interrupt(1);
+        interrupt(cpu, 1);
         printf("log: invalid instruction 0x%x\n", ins->opcode);
         break;
     }
 
 }
 
+void cmpr_set_flags(aphelion_cpu_state* cpu, instruction_info* ins) {
+    set_st_flag(cpu, fl_sign,   cpu->registers[ins->rs1] < 0);
+    set_st_flag(cpu, fl_zero,   cpu->registers[ins->rs1] == 0);
+    set_st_flag(cpu, fl_parity, countones(cpu->registers[ins->rs1]) % 2 == 0);
+
+    set_st_flag(cpu, fl_equal,            cpu->registers[ins->rs1] == cpu->registers[ins->rs2]);
+    set_st_flag(cpu, fl_greater,          (i64) cpu->registers[ins->rs1] > (i64) cpu->registers[ins->rs2]);
+    set_st_flag(cpu, fl_less,             (i64) cpu->registers[ins->rs1] < (i64) cpu->registers[ins->rs2]);
+    set_st_flag(cpu, fl_greater_unsigned, cpu->registers[ins->rs1] > cpu->registers[ins->rs2]);
+    set_st_flag(cpu, fl_less_unsigned,    cpu->registers[ins->rs1] < cpu->registers[ins->rs2]);
+}
+
+void cmpi_set_flags(aphelion_cpu_state* cpu, instruction_info* ins) {
+    set_st_flag(cpu, fl_sign,   cpu->registers[ins->rs1] < 0);
+    set_st_flag(cpu, fl_zero,   cpu->registers[ins->rs1] == 0);
+    set_st_flag(cpu, fl_parity, countones(cpu->registers[ins->rs1]) % 2 == 0);
+
+    set_st_flag(cpu, fl_equal,            cpu->registers[ins->rs1] == ins->imm);
+    set_st_flag(cpu, fl_greater,          (i64) cpu->registers[ins->rs1] > (i64) ins->imm);
+    set_st_flag(cpu, fl_less,             (i64) cpu->registers[ins->rs1] < (i64) ins->imm);
+    set_st_flag(cpu, fl_greater_unsigned, cpu->registers[ins->rs1] > ins->imm);
+    set_st_flag(cpu, fl_less_unsigned,    cpu->registers[ins->rs1] < ins->imm);
+}
+
+void addi_set_flags(aphelion_cpu_state* cpu, instruction_info* ins) {
+    set_st_flag(cpu, fl_carry, (i64)(cpu->registers[ins->rde]) < (i64)(cpu->registers[ins->rs1]) || (i64)(cpu->registers[ins->rde]) < (i64)(ins->imm));
+    set_st_flag(cpu, fl_carry_unsigned, cpu->registers[ins->rde] < cpu->registers[ins->rs1] || cpu->registers[ins->rde] < ins->imm);
+}
+
+void addr_set_flags(aphelion_cpu_state* cpu, instruction_info* ins) {
+    set_st_flag(cpu, fl_carry, (i64)(cpu->registers[ins->rde]) < (i64)(cpu->registers[ins->rs1]) || (i64)(cpu->registers[ins->rde]) < (i64)(cpu->registers[ins->rs2]));
+    set_st_flag(cpu, fl_carry_unsigned, cpu->registers[ins->rde] < cpu->registers[ins->rs1] || cpu->registers[ins->rde] < cpu->registers[ins->rs2]);
+}
+
+void subi_set_flags(aphelion_cpu_state* cpu, instruction_info* ins) {
+    set_st_flag(cpu, fl_carry, (i64)(cpu->registers[ins->rde]) > (i64)(cpu->registers[ins->rs1]) || (i64)(cpu->registers[ins->rde]) > (i64)(ins->imm));
+    set_st_flag(cpu, fl_carry_unsigned, cpu->registers[ins->rde] > cpu->registers[ins->rs1] || cpu->registers[ins->rde] > ins->imm);
+}
+
+void subr_set_flags(aphelion_cpu_state* cpu, instruction_info* ins) {
+    set_st_flag(cpu, fl_carry, (i64)(cpu->registers[ins->rde]) > (i64)(cpu->registers[ins->rs1]) || (i64)(cpu->registers[ins->rde]) > (i64)(cpu->registers[ins->rs2]));
+    set_st_flag(cpu, fl_carry_unsigned, cpu->registers[ins->rde] > cpu->registers[ins->rs1] || cpu->registers[ins->rde] > cpu->registers[ins->rs2]);
+}
+
+
 u64 sign_extend(u64 val, u8 bitsize) {
     return (u64)((i64)(val << (64-bitsize)) >> (64-bitsize));
 }
 
-void set_st_flag(aphelion_cpu_state* cpu, u8 bit, bool value) {
+void set_st_flag(aphelion_cpu_state* cpu, st_flag bit, bool value) {
     cpu->registers[r_st] &= ~(1ull << bit);
     cpu->registers[r_st] |= (u64)(value) << bit;
 }
 
-bool get_st_flag(aphelion_cpu_state* cpu, u8 bit) {
+bool get_st_flag(aphelion_cpu_state* cpu, st_flag bit) {
     return (cpu->registers[r_st] & (1ull << bit)) >> bit == 1;
 }

@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdio.h>
 #include "comet.h"
+#include "cpu.c"
 
 // ╭───────╮
 // │ comet │ the Aphelion ISA reference emulator - rewritten in C!
@@ -10,16 +11,7 @@
 
 // using aphelion v0.2.2
 
-bool flag_debug = false;
-u64  flag_cycle_limit = 0;
-bool flag_no_color = false;
-bool flag_halt_inv_op = false;
-bool flag_benchmark = false;
-char* inpath = "";
-
-bool flag_internal_restart = 0;
-
-void printhelp() {
+void print_help() {
     printf("\nusage: comet (path) [flags]\n");
     printf("\n-debug               launch window with debug information");
     printf("\n-max-cycles:[int]    halt after cycle count has been reached");
