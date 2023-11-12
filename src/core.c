@@ -81,8 +81,6 @@ int main(int argc, char *argv[]) {
     load_image(bin_file);
     fclose(bin_file);
 
-    TODO("yuo're mom xd");
-
     comet.cpu.registers[r_pc] = 0xA00; // starting point
     comet.cpu.running = true;
 
