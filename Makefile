@@ -26,10 +26,10 @@ build/%.o: src/%.c
 	$(CC) -c -o $@ $< -O3 -MD
 
 build: $(OBJECTS)
-	@$(CC) $(OBJECTS) -o $(EXECUTABLE_NAME) -O3 -MD
+	$(CC) $(OBJECTS) -o $(EXECUTABLE_NAME) -O3 -MD
 
 test: build
-	@./$(EXECUTABLE_NAME) test/fib.bin -max-cycles:300000000 -bench
+	./$(EXECUTABLE_NAME) test/fib.bin -max-cycles:300000000 -bench
 
 debug:
 	$(DEBUGFLAGS) $(DONTBEAFUCKINGIDIOT)
@@ -40,5 +40,7 @@ test_gpu: build
 clean:
 	rm -f build/*.o
 	rm -f build/*.d
+
+cleanbuild: clean build
 
 -include $(OBJECTS:.o=.d)
