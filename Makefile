@@ -1,4 +1,4 @@
-SRCPATHS = csrc/*.c
+SRCPATHS = src/*.c
 CSRC = $(wildcard $(SRCPATHS))
 OBJECTS = $(CSRC:.c=.o)
 
