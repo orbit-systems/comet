@@ -1,6 +1,8 @@
 SRCPATHS = src/*.c
-CSRC = $(wildcard $(SRCPATHS))
-OBJECTS = $(CSRC:.c=.o)
+SRC = $(wildcard $(SRCPATHS))
+OBJECTS = $(SRC:src/%.c=build/%.o)
+
+
 
 EXECUTABLE_NAME = comet
 
@@ -20,7 +22,7 @@ DONTBEAFUCKINGIDIOT = -Werror -Wall -Wextra -pedantic -Wno-missing-field-initial
 #e.g if comet.h changes, it forces a rebuild
 #if core.c changes, it only rebuilds.
 
-%.o: %.c
+build/%.o: src/%.c
 	$(CC) -c -o $@ $< -O3 -MD
 
 build: $(OBJECTS)
@@ -36,6 +38,7 @@ test_gpu: build
 	@./$(EXECUTABLE_NAME) test/gputest.bin -debug
 
 clean:
-	rm -f csrc/*.o
+	rm -f build/*.o
+	rm -f build/*.d
 
 -include $(OBJECTS:.o=.d)
