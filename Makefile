@@ -1,25 +1,41 @@
-all: build
+SRCPATHS = csrc/*.c
+CSRC = $(wildcard $(SRCPATHS))
+OBJECTS = $(CSRC:.c=.o)
 
-BUILD_INPATH = src/
-BUILD_OUTPATH = comet
+EXECUTABLE_NAME = comet
 
 ifeq ($(OS),Windows_NT)
-	BUILD_OUTPATH = comet.exe
+	EXECUTABLE_NAME = comet.exe
 endif
 
-BUILD_FLAGS = -o:speed -out:$(BUILD_OUTPATH) -no-bounds-check
+CC = clang
 
-build:
-	@odin build $(BUILD_INPATH) $(BUILD_FLAGS)
+DEBUGFLAGS = -g -rdynamic -pg
+ASANFLAGS = -fsanitize=undefined -fsanitize=address
+DONTBEAFUCKINGIDIOT = -Werror -Wall -Wextra -pedantic -Wno-missing-field-initializers -Wno-unused-result
 
-debug:
-	@odin build $(BUILD_INPATH) -out:$(BUILD_OUTPATH) -no-bounds-check -debug -o:none
+
+#MD adds a dependency file, .d to the directory. the line at the bottom
+#forces make to rebuild, if any dependences need it.
+#e.g if comet.h changes, it forces a rebuild
+#if core.c changes, it only rebuilds.
+
+%.o: %.c
+	$(CC) -c -o $@ $< -O3 -MD
+
+build: $(OBJECTS)
+	@$(CC) $(OBJECTS) -o $(EXECUTABLE_NAME) -O3 -MD
 
 test: build
-	@comet test/gputest.bin -debug
+	@./$(EXECUTABLE_NAME) test/fib.bin -max-cycles:300000000 -bench
 
-c_build:
-	@clang csrc/core.c -o cometc -O3
+debug:
+	$(DEBUGFLAGS) $(DONTBEAFUCKINGIDIOT)
 
-c_test: c_build
-	@cometc.exe test/fib.bin -max-cycles:300000000 -bench
+test_gpu: build
+	@./$(EXECUTABLE_NAME) test/gputest.bin -debug
+
+clean:
+	rm -f csrc/*.o
+
+-include $(OBJECTS:.o=.d)

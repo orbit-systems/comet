@@ -5,21 +5,13 @@
 
 // using aphelion v0.2.2
 
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
-#include <sys/time.h>
-
 #include "comet.h"
-#include "cpu.c"
-#include "mem.c"
-#include "decode.c"
 
 void print_help() {
     printf("\nusage: comet (path) [flags]\n");
     printf("\n-debug               launch window with debug interface");
     printf("\n-max-cycles:[int]    halt after cycle count has been reached (will run forever if unset)");
-    printf("\n-halt-on-inv         halt on invalid opcode");
+    printf("\n-halt-on-inv         friendship ended with -halt-on-inv. now -max-cycles is my best friend");
     printf("\n-no-color            disable ANSI formatting");
     printf("\n-bench               output benchmark info after execution is halted");
     printf("\n-help                display this text\n\n");
@@ -41,7 +33,7 @@ cmd_arg make_argument(char* s) {
     return (cmd_arg){s, ""};
 }
 
-void load_arguments(int argc, char* argv[]) {
+void load_arguments(int argc, char* argv[], emulator_state* comet) {
     if (argc < 2) {
         print_help();
         exit(EXIT_SUCCESS);
@@ -52,22 +44,20 @@ void load_arguments(int argc, char* argv[]) {
             print_help();
             exit(EXIT_SUCCESS);
         } else if (!strcmp(a.key, "-debug")) {
-            flag_debug = true;
+            comet->flag_debug = true;
         } else if (!strcmp(a.key, "-no-color")) {
-            flag_no_color = true;
-        } else if (!strcmp(a.key, "-halt-on-inv")) {
-            flag_halt_inv_op = true;
+            comet->flag_no_color = true;
         } else if (!strcmp(a.key, "-bench")) {
-            flag_benchmark = true;
+            comet->flag_benchmark = true;
         } else if (!strcmp(a.key, "-max-cycles")) {
-            flag_cycle_limit = strtoll(a.val, NULL, 0);
-            if (flag_cycle_limit == 0) {
+            comet->flag_cycle_limit = strtoll(a.val, NULL, 0);
+            if (comet->flag_cycle_limit == 0) {
                 printf("error: expected positive int, got \"%s\"\n", a.val);
                 exit(EXIT_FAILURE);
             }
         } else {
             if (i == 1 && a.key[0] != '-') {
-                flag_bin_path = a.key;
+                comet->flag_bin_path = a.key;
             } else {
                 printf("error: unrecognized option \"%s\"\n", a.key);
                 exit(EXIT_FAILURE);
@@ -78,18 +68,20 @@ void load_arguments(int argc, char* argv[]) {
 
 int main(int argc, char *argv[]) {
 
-    load_arguments(argc, argv);
-    emulator_state comet = {};
+    emulator_state comet = {(aphelion_cpu_state){}, false, 0, false, false, "", 0};
+    load_arguments(argc, argv, &comet);
     init_page_map(0);
 
-    FILE* bin_file = fopen(flag_bin_path, "r");
+    FILE* bin_file = fopen(comet.flag_bin_path, "r");
     if (bin_file == NULL) {
-        printf("error: could not open file \"%s\"\n", flag_bin_path);
+        printf("error: could not open file \"%s\"\n", comet.flag_bin_path);
         exit(EXIT_FAILURE);
     }
 
     load_image(bin_file);
     fclose(bin_file);
+
+    TODO("yuo're mom xd");
 
     comet.cpu.registers[r_pc] = 0xA00; // starting point
     comet.cpu.running = true;
@@ -98,18 +90,18 @@ int main(int argc, char *argv[]) {
     struct timeval begin, end;
     gettimeofday(&begin, 0);
 
-    while (comet.cpu.running && flag_cycle_limit > comet.cpu.cycle) {
+    while (comet.cpu.running && comet.flag_cycle_limit > comet.cpu.cycle) {
         do_cpu_cycle(&comet.cpu);
     }
 
     gettimeofday(&end, 0);
-    if (flag_benchmark) {
+    if (comet.flag_benchmark) {
         long seconds = end.tv_sec - begin.tv_sec;
         long microseconds = end.tv_usec - begin.tv_usec;
         double elapsed = seconds + microseconds*1e-6;
         double cycles_per_sec = comet.cpu.cycle / elapsed;
         printf("overall time : %fs (%fms)\n", elapsed, elapsed*1000.0);
-        printf("total cycles : %d\n", comet.cpu.cycle);
+        printf("total cycles : %lu\n", comet.cpu.cycle);
         printf("cycles/sec   : %f\n", cycles_per_sec);
     }
     free_page_map();

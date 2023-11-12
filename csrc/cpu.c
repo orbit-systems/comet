@@ -1,7 +1,4 @@
-#include <stdio.h>
 #include "comet.h"
-#include "mem.c"
-#pragma once
 
 void exec_instruction(aphelion_cpu_state* cpu, instruction_info* ins) {
 

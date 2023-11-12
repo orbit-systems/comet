@@ -1,7 +1,4 @@
-#include <stdint.h>
-#include <stdio.h>
 #include "comet.h"
-#pragma once
 
 #define MEM_PAGE_SIZE 0x1000
 #define PAGE_MAP_GROWTH_FACTOR 2
@@ -149,10 +146,6 @@ void write_u64(u64 addr, u64 val) {
 }
 
 void interrupt(aphelion_cpu_state* cpu, u8 code) {
-    if (flag_halt_inv_op && code == 1) {
-        cpu->running = false;
-        return;
-    }
     cpu->registers[r_pc] = read_u64(code*8);
 }
 

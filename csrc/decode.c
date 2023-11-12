@@ -1,5 +1,4 @@
 #include "comet.h"
-#pragma once
 
 typedef u8 ins_fmt; enum {
     fmt_R,

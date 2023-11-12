@@ -1,7 +1,11 @@
-#include <stdint.h>
-#include <stdio.h>
-#include <stdlib.h>
 #pragma once
+#define COMET_H
+
+#include <stdlib.h>
+#include <stdint.h>
+#include <string.h>
+#include <stdio.h>
+#include <sys/time.h>
 
 // bullshit - yes i know about stdbool dw about it
 typedef uint64_t u64;
@@ -17,8 +21,8 @@ typedef uint32_t b32;
 typedef uint16_t b16;
 typedef uint8_t  b8;
 typedef uint8_t  bool;
-#define false 0
 #define true 1
+#define false 0
 
 typedef struct instruction_info {
     u8 opcode;
@@ -42,7 +46,13 @@ typedef struct aphelion_cpu_state {
 
 typedef struct emulator_state {
     aphelion_cpu_state cpu;
-    
+    bool flag_debug;
+    u64  flag_cycle_limit;
+    bool flag_no_color;
+    bool flag_benchmark;
+    char* flag_bin_path;
+
+    bool flag_internal_restart;
 } emulator_state;
 
 typedef u8 register_name; enum {
@@ -72,14 +82,11 @@ typedef u8 st_flag; enum {
 };
 
 
-void TODO(const char* msg) {
-    printf("TODO: %s\n", msg);
-    exit(EXIT_FAILURE);
-}
+#define TODO(msg) \
+    printf("TODO: \"%s\" at %s:%d\n", (msg), (__FILE__), (__LINE__)); \
+    exit(EXIT_FAILURE) \
 
-int countones(u64 x) {
-    return __builtin_popcountll((unsigned long long) x );
-}
+#define countones(x) __builtin_popcountll((unsigned long long) (x)) \
 
 void raw_decode(u32 ins, instruction_info* info);
 const char* instruction_name(u8 opcode, u8 func);
@@ -116,12 +123,3 @@ void addr_set_flags(aphelion_cpu_state* cpu, instruction_info* ins);
 void addi_set_flags(aphelion_cpu_state* cpu, instruction_info* ins);
 void subr_set_flags(aphelion_cpu_state* cpu, instruction_info* ins);
 void subi_set_flags(aphelion_cpu_state* cpu, instruction_info* ins);
-
-bool flag_debug = false;
-u64  flag_cycle_limit = 0;
-bool flag_no_color = false;
-bool flag_halt_inv_op = false;
-bool flag_benchmark = false;
-char* flag_bin_path = "";
-
-bool flag_internal_restart = 0;
