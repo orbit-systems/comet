@@ -4,6 +4,7 @@
 #pragma once
 
 #define MEM_PAGE_SIZE 0x1000
+#define PAGE_MAP_GROWTH_FACTOR 2
 
 typedef struct mem_page {
     u8 data[MEM_PAGE_SIZE];
@@ -42,7 +43,7 @@ mem_page* new_page(u64 base) {
     // append page
     if (memory.len == memory.cap) {
         // resize if needed
-        memory.cap *= 2;
+        memory.cap *= PAGE_MAP_GROWTH_FACTOR;
         memory.pages = (mem_page**) realloc(memory.pages, sizeof(mem_page*) * memory.cap);
     }
     memory.pages[memory.len] = page;
