@@ -41,6 +41,4 @@ clean:
 	rm -f build/*.o
 	rm -f build/*.d
 
-cleanbuild: clean build
-
 -include $(OBJECTS:.o=.d)
