@@ -1,16 +1,44 @@
-all: build
+SRCPATHS = src/*.c
+SRC = $(wildcard $(SRCPATHS))
+OBJECTS = $(SRC:src/%.c=build/%.o)
 
-BUILD_INPATH = src/
-BUILD_OUTPATH = comet
+
+
+EXECUTABLE_NAME = comet
 
 ifeq ($(OS),Windows_NT)
-	BUILD_OUTPATH = comet.exe
+	EXECUTABLE_NAME = comet.exe
 endif
 
-BUILD_FLAGS = -o:speed -out:$(BUILD_OUTPATH) -no-bounds-check
+CC = clang
 
-build:
-	@odin build $(BUILD_INPATH) $(BUILD_FLAGS)
+DEBUGFLAGS = -g -rdynamic -pg
+ASANFLAGS = -fsanitize=undefined -fsanitize=address
+DONTBEAFUCKINGIDIOT = -Werror -Wall -Wextra -pedantic -Wno-missing-field-initializers -Wno-unused-result
+
+
+#MD adds a dependency file, .d to the directory. the line at the bottom
+#forces make to rebuild, if any dependences need it.
+#e.g if comet.h changes, it forces a rebuild
+#if core.c changes, it only rebuilds.
+
+build/%.o: src/%.c
+	$(CC) -c -o $@ $< -O3 -MD
+
+build: $(OBJECTS)
+	@$(CC) $(OBJECTS) -o $(EXECUTABLE_NAME) -O3 -MD
+
+test: build
+	@./$(EXECUTABLE_NAME) test/fib.bin -max-cycles:300000000 -bench
 
 debug:
-	@odin build $(BUILD_INPATH) -out:$(BUILD_OUTPATH) -no-bounds-check -debug -o:none
+	$(DEBUGFLAGS) $(DONTBEAFUCKINGIDIOT)
+
+test_gpu: build
+	@./$(EXECUTABLE_NAME) test/gputest.bin -debug
+
+clean:
+	rm -f build/*.o
+	rm -f build/*.d
+
+-include $(OBJECTS:.o=.d)
