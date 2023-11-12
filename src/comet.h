@@ -7,7 +7,7 @@
 #include <stdio.h>
 #include <sys/time.h>
 
-// bullshit - yes i know about stdbool dw about it
+// not gonna use stdbool fuck you
 typedef uint64_t u64;
 typedef uint32_t u32;
 typedef uint16_t u16;

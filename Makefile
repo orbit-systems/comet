@@ -38,7 +38,6 @@ test_gpu: build
 	@./$(EXECUTABLE_NAME) test/gputest.bin -debug
 
 clean:
-	rm -f build/*.o
-	rm -f build/*.d
+	rm -f build/*
 
 -include $(OBJECTS:.o=.d)
