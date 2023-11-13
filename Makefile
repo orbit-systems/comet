@@ -15,7 +15,7 @@ CC = clang
 DEBUGFLAGS = -g -rdynamic -pg
 ASANFLAGS = -fsanitize=undefined -fsanitize=address
 DONTBEAFUCKINGIDIOT = -Werror -Wall -Wextra -pedantic -Wno-missing-field-initializers -Wno-unused-result
-
+CFLAGS = -O3
 
 #MD adds a dependency file, .d to the directory. the line at the bottom
 #forces make to rebuild, if any dependences need it.
@@ -23,10 +23,10 @@ DONTBEAFUCKINGIDIOT = -Werror -Wall -Wextra -pedantic -Wno-missing-field-initial
 #if core.c changes, it only rebuilds.
 
 build/%.o: src/%.c
-	$(CC) -c -o $@ $< -O3 -MD
+	$(CC) -c -o $@ $< $(CFLAGS) -MD
 
 build: $(OBJECTS)
-	$(CC) $(OBJECTS) -o $(EXECUTABLE_NAME) -O3 -MD
+	$(CC) $(OBJECTS) -o $(EXECUTABLE_NAME) $(CFLAGS) -MD
 
 test: build
 	./$(EXECUTABLE_NAME) test/fib.bin -max-cycles:300000000 -bench

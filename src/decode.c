@@ -1,197 +1,147 @@
 #include "comet.h"
 
+
+ // name, opcode, func, format
+#define INSTRUCTION_LIST \
+    INSTR("int",   0x01, 0, fmt_b) \
+    INSTR("usr",   0x01, 1, fmt_b) \
+    INSTR("fbf",   0x01, 2, fmt_b) \
+    \
+    INSTR("outr",  0x02, 0, fmt_m) \
+    INSTR("outi",  0x03, 0, fmt_f) \
+    INSTR("inr",   0x04, 0, fmt_m) \
+    INSTR("ini",   0x05, 0, fmt_f) \
+    \
+    INSTR("jal",   0x06, 0, fmt_m) \
+    INSTR("jalr",  0x07, 0, fmt_m) \
+    INSTR("ret",   0x08, 0, fmt_m) \
+    INSTR("retr",  0x09, 0, fmt_m) \
+    INSTR("bra",   0x0a, 0, fmt_b) \
+    INSTR("beq",   0x0a, 1, fmt_b) \
+    INSTR("bez",   0x0a, 2, fmt_b) \
+    INSTR("blt",   0x0a, 3, fmt_b) \
+    INSTR("ble",   0x0a, 4, fmt_b) \
+    INSTR("bltu",  0x0a, 5, fmt_b) \
+    INSTR("bleu",  0x0a, 6, fmt_b) \
+    \
+    INSTR("push",  0x0b, 0, fmt_m) \
+    INSTR("pop",   0x0c, 0, fmt_m) \
+    INSTR("enter", 0x0d, 0, fmt_b) \
+    INSTR("leave", 0x0e, 0, fmt_b) \
+    \
+    INSTR("lli",   0x10, 0, fmt_f) \
+    INSTR("llis",  0x10, 1, fmt_f) \
+    INSTR("lui",   0x10, 2, fmt_f) \
+    INSTR("luis",  0x10, 3, fmt_f) \
+    INSTR("lti",   0x10, 4, fmt_f) \
+    INSTR("ltis",  0x10, 5, fmt_f) \
+    INSTR("ltui",  0x10, 6, fmt_f) \
+    INSTR("ltuis", 0x10, 7, fmt_f) \
+    INSTR("lw",    0x11, 0, fmt_m) \
+    INSTR("lh",    0x12, 0, fmt_m) \
+    INSTR("lhs",   0x13, 0, fmt_m) \
+    INSTR("lq",    0x14, 0, fmt_m) \
+    INSTR("lqs",   0x15, 0, fmt_m) \
+    INSTR("lb",    0x16, 0, fmt_m) \
+    INSTR("lbs",   0x17, 0, fmt_m) \
+    INSTR("sw",    0x18, 0, fmt_m) \
+    INSTR("sh",    0x19, 0, fmt_m) \
+    INSTR("sq",    0x1a, 0, fmt_m) \
+    INSTR("sb",    0x1b, 0, fmt_m) \
+    INSTR("bswp",  0x1c, 0, fmt_m) \
+    INSTR("xch",   0x1d, 0, fmt_m) \
+    \
+    INSTR("cmpr",  0x1e, 0, fmt_r) \
+    INSTR("cmpi",  0x1f, 0, fmt_m) \
+    \
+    INSTR("addr",  0x20, 0, fmt_r) \
+    INSTR("addi",  0x21, 0, fmt_m) \
+    INSTR("subr",  0x22, 0, fmt_r) \
+    INSTR("subi",  0x23, 0, fmt_m) \
+    INSTR("imulr", 0x24, 0, fmt_r) \
+    INSTR("imuli", 0x25, 0, fmt_m) \
+    INSTR("idivr", 0x26, 0, fmt_r) \
+    INSTR("idivi", 0x27, 0, fmt_m) \
+    INSTR("umulr", 0x28, 0, fmt_r) \
+    INSTR("umuli", 0x29, 0, fmt_m) \
+    INSTR("udivr", 0x2a, 0, fmt_r) \
+    INSTR("udivi", 0x2b, 0, fmt_m) \
+    INSTR("remr",  0x2c, 0, fmt_r) \
+    INSTR("remi",  0x2d, 0, fmt_m) \
+    INSTR("modr",  0x2e, 0, fmt_r) \
+    INSTR("modi",  0x2f, 0, fmt_m) \
+    \
+    INSTR("andr",  0x30, 0, fmt_r) \
+    INSTR("andi",  0x31, 0, fmt_m) \
+    INSTR("orr",   0x32, 0, fmt_r) \
+    INSTR("ori",   0x33, 0, fmt_m) \
+    INSTR("norr",  0x34, 0, fmt_r) \
+    INSTR("nori",  0x35, 0, fmt_m) \
+    INSTR("xorr",  0x36, 0, fmt_r) \
+    INSTR("xori",  0x37, 0, fmt_m) \
+    INSTR("shlr",  0x38, 0, fmt_r) \
+    INSTR("shli",  0x39, 0, fmt_m) \
+    INSTR("asrr",  0x3a, 0, fmt_r) \
+    INSTR("asri",  0x3b, 0, fmt_m) \
+    INSTR("lsrr",  0x3c, 0, fmt_r) \
+    INSTR("lsri",  0x3d, 0, fmt_m) \
+    \
+    INSTR("pto",   0x40, 0, fmt_m) \
+    INSTR("pfrom", 0x41, 0, fmt_m) \
+    INSTR("pcmp",  0x42, 0, fmt_m) \
+    INSTR("pneg",  0x43, 0, fmt_m) \
+    INSTR("pabs",  0x44, 0, fmt_m) \
+    INSTR("padd",  0x45, 0, fmt_r) \
+    INSTR("psub",  0x46, 0, fmt_r) \
+    INSTR("pmul",  0x47, 0, fmt_r) \
+    INSTR("pdiv",  0x48, 0, fmt_r)
+
 typedef u8 ins_fmt; enum {
-    fmt_R,
-    fmt_M,
-    fmt_F,
-    fmt_J,
-    fmt_B
+    fmt_r,
+    fmt_m,
+    fmt_f,
+    fmt_j,
+    fmt_b
 };
 
 const ins_fmt ins_formats[256] = {
-    [0x0A] = fmt_B,
-    [0x10] = fmt_B,
-    [0x11] = fmt_M,
-    [0x12] = fmt_B,
+    #define INSTR(name, opcode, func, format) [opcode] = format,
+    INSTRUCTION_LIST
+    #undef INSTR
+};
 
-    [0x20] = fmt_F,
-    [0x21] = fmt_M,
-    [0x22] = fmt_M,
-    [0x23] = fmt_M,
-    [0x24] = fmt_M,
-    [0x25] = fmt_M,
-    [0x26] = fmt_M,
-    [0x27] = fmt_M,
-    [0x28] = fmt_R,
-    [0x29] = fmt_M,
-
-    [0x30] = fmt_R,
-    [0x31] = fmt_M,
-    [0x32] = fmt_R,
-    [0x33] = fmt_M,
-    [0x34] = fmt_R,
-    [0x35] = fmt_M,
-    [0x36] = fmt_R,
-    [0x37] = fmt_M,
-    [0x38] = fmt_R,
-    [0x39] = fmt_M,
-    [0x3a] = fmt_R,
-    [0x3b] = fmt_M,
-
-    [0x40] = fmt_R,
-    [0x41] = fmt_M,
-    [0x42] = fmt_R,
-    [0x43] = fmt_M,
-    [0x44] = fmt_R,
-    [0x45] = fmt_M,
-    [0x46] = fmt_R,
-    [0x47] = fmt_M,
-    [0x48] = fmt_R,
-    [0x49] = fmt_M,
-    [0x4a] = fmt_R,
-    [0x4b] = fmt_M,
-    [0x4c] = fmt_R,
-    [0x4d] = fmt_M,
-
-    [0x50] = fmt_M,
-    [0x51] = fmt_M,
-    [0x52] = fmt_M,
-    [0x53] = fmt_M,
-    [0x54] = fmt_M,
-    [0x55] = fmt_B,
-    [0x56] = fmt_B,
-    [0x57] = fmt_M,
-
-    [0x60] = fmt_M,
-    [0x61] = fmt_M,
-    [0x62] = fmt_M,
-    [0x64] = fmt_B,
-    [0x63] = fmt_M,
-    [0x65] = fmt_J,
-    [0x66] = fmt_J,
+const char* ins_names[] = {
+    #define INSTR(name, opcode, func, format) [(opcode) * 0x10 + (func)] = name,
+    INSTRUCTION_LIST
+    #undef INSTR
 };
 
 void raw_decode(u32 ins, instruction_info* info) {
     info->opcode = (u8) (ins & 0xFF);
-    ins_fmt current_fmt = ins_formats[info->opcode];
-
-    switch (current_fmt) {
-    case fmt_R:
+    switch (ins_formats[(ins & 0xFF)]) {
+    case fmt_r:
         info->rde  = (u8)  (ins >> 28 & 0xF);
         info->rs1  = (u8)  (ins >> 24 & 0xF);
         info->rs2  = (u8)  (ins >> 20 & 0xF);
         info->imm  = (u64) (ins >> 8  & 0xFFF);
         break;
-    case fmt_M:
+    case fmt_m:
         info->rde  = (u8)  (ins >> 28 & 0xF);
         info->rs1  = (u8)  (ins >> 24 & 0xF);
         info->imm  = (u64) (ins >> 8  & 0xFFFF);
         break;
-    case fmt_F:
+    case fmt_f:
         info->rde  = (u8)  (ins >> 28 & 0xF);
         info->func = (u8)  (ins >> 24 & 0xF);
         info->imm  = (u64) (ins >> 8  & 0xFFFF);
         break;
-    case fmt_J:
+    case fmt_j:
         info->rde  = (u8)  (ins >> 28 & 0xF);
         info->imm  = (u64) (ins >> 8  & 0xFFFFF);
         break;
-    case fmt_B:
+    case fmt_b:
         info->func = (u8)  (ins >> 28 & 0xF);
         info->imm  = (u64) (ins >> 8  & 0xFFFFF);
         break;
     }
-}
-
-#define i(op, f) [op*0x10 + f]
-const char* ins_names[] = {
-    i(0x0A, 0)   = "nop"  ,
-    i(0x10, 0)   = "int"  ,
-    i(0x11, 0)   = "inv"  ,
-    i(0x12, 0)   = "usr"  ,
-
-    i(0x20, 0)   = "lli"  ,
-    i(0x20, 1)   = "llis" ,
-    i(0x20, 2)   = "lui"  ,
-    i(0x20, 3)   = "luis" ,
-    i(0x20, 4)   = "lti"  ,
-    i(0x20, 5)   = "ltis" ,
-    i(0x20, 6)   = "ltui" ,
-    i(0x20, 7)   = "ltuis",
-    i(0x21, 0)   = "lw"   ,
-    i(0x22, 0)   = "lbs"  ,
-    i(0x23, 0)   = "lb"   ,
-    i(0x24, 0)   = "sw"   ,
-    i(0x25, 0)   = "sb"   ,
-    i(0x26, 0)   = "swp"  ,
-    i(0x27, 0)   = "mov"  ,
-    i(0x28, 0)   = "cmpr" ,
-    i(0x29, 0)   = "cmpi" ,
-
-    i(0x30, 0)   = "addr" ,
-    i(0x31, 0)   = "addi" ,
-    i(0x32, 0)   = "adcr" ,
-    i(0x33, 0)   = "adci" ,
-    i(0x34, 0)   = "subr" ,
-    i(0x35, 0)   = "subi" ,
-    i(0x36, 0)   = "sbbr" ,
-    i(0x37, 0)   = "sbbi" ,
-    i(0x38, 0)   = "mulr" ,
-    i(0x39, 0)   = "muli" ,
-    i(0x3a, 0)   = "divr" ,
-    i(0x3b, 0)   = "divi" ,
-
-    i(0x40, 0)   = "andr" ,
-    i(0x41, 0)   = "andi" ,
-    i(0x42, 0)   = "orr"  ,
-    i(0x43, 0)   = "ori"  ,
-    i(0x44, 0)   = "norr" ,
-    i(0x45, 0)   = "nori" ,
-    i(0x46, 0)   = "xorr" ,
-    i(0x47, 0)   = "xori" ,
-    i(0x48, 0)   = "shlr" ,
-    i(0x49, 0)   = "shli" ,
-    i(0x4a, 0)   = "asrr" ,
-    i(0x4b, 0)   = "asri" ,
-    i(0x4c, 0)   = "lsrr" ,
-    i(0x4d, 0)   = "lsri" ,
-
-    i(0x50, 0)   = "push" ,
-    i(0x51, 0)   = "pushi",
-    i(0x52, 0)   = "pushz",
-    i(0x53, 0)   = "pushc",
-    i(0x54, 0)   = "pop"  ,
-    i(0x55, 0)   = "enter",
-    i(0x56, 0)   = "leave",
-    i(0x57, 0)   = "reloc",
-
-    i(0x60, 0)   = "ljal" ,
-    i(0x61, 0)   = "ljalr",
-    i(0x62, 0)   = "ret"  ,
-    i(0x63, 0)   = "retr" ,
-    i(0x65, 0)   = "jal"  ,
-    i(0x66, 0)   = "jalr" ,
-
-    i(0x64, 0x0) = "bra"  ,
-    i(0x64, 0x1) = "beq"  ,
-    i(0x64, 0x2) = "bez"  ,
-    i(0x64, 0x3) = "blt"  ,
-    i(0x64, 0x4) = "ble"  ,
-    i(0x64, 0x5) = "bltu" ,
-    i(0x64, 0x6) = "bleu" ,
-    i(0x64, 0x7) = "bpe"  ,
-    i(0x64, 0x9) = "bne"  ,
-    i(0x64, 0xa) = "bnz"  ,
-    i(0x64, 0xb) = "bge"  ,
-    i(0x64, 0xc) = "bgt"  ,
-    i(0x64, 0xd) = "bgeu" ,
-    i(0x64, 0xe) = "bgtu" ,
-    i(0x64, 0xf) = "bpd"  ,
-};
-#undef i
-
-// #define instruction_name(opcode, func) ins_names[opcode*0x10 + func]
-
-const char* instruction_name(u8 opcode, u8 func) {
-    return ins_names[opcode*0x10 + func];
 }

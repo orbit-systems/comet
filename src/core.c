@@ -3,7 +3,7 @@
 // ╰───────╯
 // by kaylatheegg, spsandwichman
 
-// using aphelion v0.2.2
+// using aphelion v0.3
 
 #include "comet.h"
 
