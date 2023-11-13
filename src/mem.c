@@ -75,78 +75,84 @@ int binary_find_page(u64 address) {
     return -1;
 }
 
-u8 read_u8 (u64 addr) {
+bool read_u8 (u64 addr, u8* var) {
     int page = binary_find_page(addr);
-    if (page == -1) return 0;
-    return memory.pages[page]->data[addr % MEM_PAGE_SIZE];
+    if (page == -1) *var = 0;
+    *var = memory.pages[page]->data[addr % MEM_PAGE_SIZE];
+    return true;
 }
 
-u16 read_u16(u64 addr) {
-    if (addr % sizeof(u16) != 0) {/* page fault interrupt at some point*/}
+bool read_u16(u64 addr, u16* var) {
+    if (addr % sizeof(u16) == 0) return false;
     int page = binary_find_page(addr);
-    if (page == -1) return 0;
-    return ((u16*)(memory.pages[page]->data)) [addr % MEM_PAGE_SIZE / sizeof(u16)];
+    if (page == -1) *var = 0;
+    else *var = ((u16*)(memory.pages[page]->data)) [addr % MEM_PAGE_SIZE / sizeof(u16)];
+    return true;
+    
 }
 
-u32 read_u32(u64 addr) {
-    if (addr % sizeof(u32) != 0) {/* page fault interrupt at some point*/}
+bool read_u32(u64 addr, u32* var) {
+    if (addr % sizeof(u32) == 0) return false;
     int page = binary_find_page(addr);
-    if (page == -1) return 0;
-    return ((u32*)(memory.pages[page]->data)) [addr % MEM_PAGE_SIZE / sizeof(u32)];
+    if (page == -1) *var = 0;
+    else *var = ((u32*)(memory.pages[page]->data)) [addr % MEM_PAGE_SIZE / sizeof(u32)];
+    return true;
 }
 
-u64 read_u64(u64 addr) {
-    if (addr % sizeof(u64) != 0) {/* page fault interrupt at some point*/}
+bool read_u64(u64 addr, u64* var) {
+    if (addr % sizeof(u64) == 0) return false;
     int page = binary_find_page(addr);
-    if (page == -1) return 0;
-    return ((u64*)(memory.pages[page]->data)) [addr % MEM_PAGE_SIZE / sizeof(u64)];
+    if (page == -1) *var = 0;
+    else *var = ((u64*)(memory.pages[page]->data)) [addr % MEM_PAGE_SIZE / sizeof(u64)];
+    return true;
 }
 
-void write_u8 (u64 addr, u8 val) {
-    int page = binary_find_page(addr);
-    if (page == -1) { // page not found - track new page
-        mem_page* p = new_page(align_backwards(addr, MEM_PAGE_SIZE));
-        p->data[addr % MEM_PAGE_SIZE] = val;
-    } else {
-        memory.pages[page]->data[addr % MEM_PAGE_SIZE] = val;
-    }
-
-}
-
-void write_u16(u64 addr, u16 val) {
-    if (addr % sizeof(u16) != 0) {/* page fault interrupt at some point*/}
+bool write_u8(u64 addr, u8 value) {
     int page = binary_find_page(addr);
     if (page == -1) { // page not found - track new page
         mem_page* p = new_page(align_backwards(addr, MEM_PAGE_SIZE));
-        ((u16*)(p->data)) [addr % MEM_PAGE_SIZE / sizeof(u16)] = val;
+        p->data[addr % MEM_PAGE_SIZE] = value;
     } else {
-        ((u16*)(memory.pages[page]->data)) [addr % MEM_PAGE_SIZE / sizeof(u16)] = val;
+        memory.pages[page]->data[addr % MEM_PAGE_SIZE] = value;
     }
+    return true;
+
 }
 
-void write_u32(u64 addr, u32 val) {
-    if (addr % sizeof(u32) != 0) {/* page fault interrupt at some point*/}
+bool write_u16(u64 addr, u16 value) {
+    if (addr % sizeof(u16) != 0) return false;
     int page = binary_find_page(addr);
     if (page == -1) { // page not found - track new page
         mem_page* p = new_page(align_backwards(addr, MEM_PAGE_SIZE));
-        ((u32*)(p->data)) [addr % MEM_PAGE_SIZE / sizeof(u32)] = val;
-    } else {
-        ((u32*)(memory.pages[page]->data)) [addr % MEM_PAGE_SIZE / sizeof(u32)] = val;
-    }
+        ((u16*)(p->data)) [addr % MEM_PAGE_SIZE / sizeof(u16)] = value;
+    } else
+        ((u16*)(memory.pages[page]->data)) [addr % MEM_PAGE_SIZE / sizeof(u16)] = value;
+    return true;
 }
-void write_u64(u64 addr, u64 val) {
-    if (addr % sizeof(u64) != 0) {/* page fault interrupt at some point*/}
+
+bool write_u32(u64 addr, u32 value) {
+    if (addr % sizeof(u32) != 0) return false;
     int page = binary_find_page(addr);
     if (page == -1) { // page not found - track new page
         mem_page* p = new_page(align_backwards(addr, MEM_PAGE_SIZE));
-        ((u64*)(p->data)) [addr % MEM_PAGE_SIZE / sizeof(u64)] = val;
-    } else {
-        ((u64*)(memory.pages[page]->data)) [addr % MEM_PAGE_SIZE / sizeof(u64)] = val;
-    }
+        ((u32*)(p->data)) [addr % MEM_PAGE_SIZE / sizeof(u32)] = value;
+    } else
+        ((u32*)(memory.pages[page]->data)) [addr % MEM_PAGE_SIZE / sizeof(u32)] = value;
+    return true;
+}
+bool write_u64(u64 addr, u64 value) {
+    if (addr % sizeof(u64) != 0) return false; // unaligned access
+    int page = binary_find_page(addr);
+    if (page == -1) { // page not found - track new page
+        mem_page* p = new_page(align_backwards(addr, MEM_PAGE_SIZE));
+        ((u64*)(p->data)) [addr % MEM_PAGE_SIZE / sizeof(u64)] = value;
+    } else
+        ((u64*)(memory.pages[page]->data)) [addr % MEM_PAGE_SIZE / sizeof(u64)] = value;
+    return true;
 }
 
-void interrupt(aphelion_cpu_state* cpu, u8 code) {
-    cpu->registers[r_pc] = read_u64(code*8);
+bool interrupt(aphelion_cpu_state* cpu, u8 code) {
+    return read_u64(code*8, &cpu->registers[r_pc]);
 }
 
 u64 align_backwards(u64 ptr, u64 align) {

@@ -93,17 +93,17 @@ const char* instruction_name(u8 opcode, u8 func);
 
 void do_cpu_cycle(aphelion_cpu_state* cpu);
 
-void interrupt(aphelion_cpu_state* cpu, u8 code);
+bool interrupt(aphelion_cpu_state* cpu, u8 code);
 
-u8  read_u8 (u64 addr);
-u16 read_u16(u64 addr);
-u32 read_u32(u64 addr);
-u64 read_u64(u64 addr);
+bool read_u8 (u64 addr, u8*  var);
+bool read_u16(u64 addr, u16* var);
+bool read_u32(u64 addr, u32* var);
+bool read_u64(u64 addr, u64* var);
 
-void write_u8 (u64 addr, u8  val);
-void write_u16(u64 addr, u16 val);
-void write_u32(u64 addr, u32 val);
-void write_u64(u64 addr, u64 val);
+bool write_u8 (u64 addr, u8  value);
+bool write_u16(u64 addr, u16 value);
+bool write_u32(u64 addr, u32 value);
+bool write_u64(u64 addr, u64 value);
 
 u64 align_backwards(u64 ptr, u64 align);
 

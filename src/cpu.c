@@ -1,5 +1,5 @@
 #include "comet.h"
-
+/*
 void exec_instruction(aphelion_cpu_state* cpu, instruction_info* ins) {
 
     u64 prev_pc = cpu->registers[r_pc];
@@ -339,14 +339,19 @@ void exec_instruction(aphelion_cpu_state* cpu, instruction_info* ins) {
     cpu->increment_next = (prev_pc == cpu->registers[r_pc]) && !pc_modified;
 
 }
-
+*/
 void do_cpu_cycle(aphelion_cpu_state* cpu) {
+    TODO("finish this and also make the cpu core lmfao");
+
     cpu->cycle++;
 
-    cpu->raw_ins = read_u32(cpu->registers[r_pc]);
-    raw_decode(cpu->raw_ins, &cpu->ins_info);
+    u32 raw_ins = 0;
+    bool success = read_u32(cpu->registers[r_pc], &raw_ins);
+    TODO("finish this");
+
+    raw_decode(raw_ins, &cpu->ins_info);
     cpu->registers[r_st] &= 0x00000000FFFFFFFFull;
-    cpu->registers[r_st] |= (u64) cpu->raw_ins << 32;
+    cpu->registers[r_st] |= (u64) raw_ins << 32;
 
     exec_instruction(cpu, &cpu->ins_info);
 
