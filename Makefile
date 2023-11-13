@@ -14,8 +14,8 @@ CC = clang
 
 DEBUGFLAGS = -g -rdynamic -pg
 ASANFLAGS = -fsanitize=undefined -fsanitize=address
-DONTBEAFUCKINGIDIOT = -Werror -Wall -Wextra -pedantic -Wno-missing-field-initializers -Wno-unused-result
-CFLAGS = -O3
+DONTBEAFUCKINGIDIOT = -Werror -Wall -Wextra -pedantic -Wno-missing-field-initializers -Wno-unused-result -Winitializer-overrides
+CFLAGS = -O3 -w# shut the fuck up clang
 
 #MD adds a dependency file, .d to the directory. the line at the bottom
 #forces make to rebuild, if any dependences need it.
