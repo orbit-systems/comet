@@ -83,7 +83,7 @@ bool read_u8 (u64 addr, u8* var) {
 }
 
 bool read_u16(u64 addr, u16* var) {
-    if (addr % sizeof(u16) == 0) return false;
+    if (addr % sizeof(u16) != 0) return false;
     int page = binary_find_page(addr);
     if (page == -1) *var = 0;
     else *var = ((u16*)(memory.pages[page]->data)) [addr % MEM_PAGE_SIZE / sizeof(u16)];
@@ -92,7 +92,7 @@ bool read_u16(u64 addr, u16* var) {
 }
 
 bool read_u32(u64 addr, u32* var) {
-    if (addr % sizeof(u32) == 0) return false;
+    if (addr % sizeof(u32) != 0) return false;
     int page = binary_find_page(addr);
     if (page == -1) *var = 0;
     else *var = ((u32*)(memory.pages[page]->data)) [addr % MEM_PAGE_SIZE / sizeof(u32)];
@@ -100,7 +100,7 @@ bool read_u32(u64 addr, u32* var) {
 }
 
 bool read_u64(u64 addr, u64* var) {
-    if (addr % sizeof(u64) == 0) return false;
+    if (addr % sizeof(u64) != 0) return false;
     int page = binary_find_page(addr);
     if (page == -1) *var = 0;
     else *var = ((u64*)(memory.pages[page]->data)) [addr % MEM_PAGE_SIZE / sizeof(u64)];
@@ -149,10 +149,6 @@ bool write_u64(u64 addr, u64 value) {
     } else
         ((u64*)(memory.pages[page]->data)) [addr % MEM_PAGE_SIZE / sizeof(u64)] = value;
     return true;
-}
-
-bool interrupt(aphelion_cpu_state* cpu, u8 code) {
-    return read_u64(code*8, &cpu->registers[r_pc]);
 }
 
 u64 align_backwards(u64 ptr, u64 align) {

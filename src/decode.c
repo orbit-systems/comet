@@ -1,7 +1,14 @@
 #include "comet.h"
 
+typedef u8 ins_fmt; enum {
+    fmt_r,
+    fmt_m,
+    fmt_f,
+    fmt_j,
+    fmt_b
+};
 
- // name, opcode, func, format
+// name, opcode, func, format
 #define INSTRUCTION_LIST \
     INSTR("int",   0x01, 0, fmt_b) \
     INSTR("usr",   0x01, 1, fmt_b) \
@@ -85,24 +92,17 @@
     INSTR("asri",  0x3b, 0, fmt_m) \
     INSTR("lsrr",  0x3c, 0, fmt_r) \
     INSTR("lsri",  0x3d, 0, fmt_m) \
+    INSTR("bitr",  0x3e, 0, fmt_r) \
+    INSTR("biti",  0x3f, 0, fmt_m) \
     \
     INSTR("pto",   0x40, 0, fmt_m) \
     INSTR("pfrom", 0x41, 0, fmt_m) \
-    INSTR("pcmp",  0x42, 0, fmt_m) \
-    INSTR("pneg",  0x43, 0, fmt_m) \
-    INSTR("pabs",  0x44, 0, fmt_m) \
-    INSTR("padd",  0x45, 0, fmt_r) \
-    INSTR("psub",  0x46, 0, fmt_r) \
-    INSTR("pmul",  0x47, 0, fmt_r) \
-    INSTR("pdiv",  0x48, 0, fmt_r)
-
-typedef u8 ins_fmt; enum {
-    fmt_r,
-    fmt_m,
-    fmt_f,
-    fmt_j,
-    fmt_b
-};
+    INSTR("pneg",  0x42, 0, fmt_m) \
+    INSTR("pabs",  0x43, 0, fmt_m) \
+    INSTR("padd",  0x44, 0, fmt_r) \
+    INSTR("psub",  0x45, 0, fmt_r) \
+    INSTR("pmul",  0x46, 0, fmt_r) \
+    INSTR("pdiv",  0x47, 0, fmt_r)
 
 const ins_fmt ins_formats[256] = {
     #define INSTR(name, opcode, func, format) [opcode] = format,
@@ -115,6 +115,10 @@ const char* ins_names[] = {
     INSTRUCTION_LIST
     #undef INSTR
 };
+
+char* get_ins_name(instruction_info* ins) {
+    return ins_names[ins->opcode * 0x10 + ins->func];
+}
 
 void raw_decode(u32 ins, instruction_info* info) {
     info->opcode = (u8) (ins & 0xFF);

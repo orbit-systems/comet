@@ -21,8 +21,8 @@ typedef uint32_t b32;
 typedef uint16_t b16;
 typedef uint8_t  b8;
 typedef uint8_t  bool;
-#define true 1
 #define false 0
+#define true 1
 
 typedef struct instruction_info {
     u8 opcode;
@@ -33,7 +33,7 @@ typedef struct instruction_info {
     u64 imm;
 } instruction_info;
 
-typedef struct aphelion_cpu_state {
+typedef struct cpu_state {
     u64 registers[16];
     bool running;
     bool paused;
@@ -42,10 +42,16 @@ typedef struct aphelion_cpu_state {
     bool increment_next;
     u32 raw_ins;
     instruction_info ins_info;
-} aphelion_cpu_state;
+} cpu_state;
+
+typedef struct ic_state {
+    u64 ivt_base_address;
+} ic_state;
 
 typedef struct emulator_state {
-    aphelion_cpu_state cpu;
+    cpu_state cpu;
+    ic_state ic; // interrupt controller
+
     bool flag_debug;
     u64  flag_cycle_limit;
     bool flag_no_color;
@@ -68,19 +74,22 @@ typedef u8 register_name; enum {
 typedef u8 st_flag; enum {
     fl_sign = 0,
     fl_zero,
-    fl_parity,
-    fl_carry,
-    fl_borrow,
+    fl_carry_borrow,
+    fl_carry_borrow_unsigned,
     fl_equal,
-    fl_greater,
     fl_less,
-    fl_greater_unsigned,
     fl_less_unsigned,
     fl_mode,
-    fl_carry_unsigned,
-    fl_borrow_unsigned,
 };
 
+typedef u8 interrupt_code; enum {
+    int_divide_by_zero = 0,
+    int_breakpoint,
+    int_invalid_instruction,
+    int_stack_underflow,
+    int_unaligned_access,
+    int_access_violation,
+};
 
 #define TODO(msg) \
     printf("TODO: \"%s\" at %s:%d\n", (msg), (__FILE__), (__LINE__)); \
@@ -91,9 +100,8 @@ typedef u8 st_flag; enum {
 void raw_decode(u32 ins, instruction_info* info);
 const char* instruction_name(u8 opcode, u8 func);
 
-void do_cpu_cycle(aphelion_cpu_state* cpu);
-
-bool interrupt(aphelion_cpu_state* cpu, u8 code);
+void do_cpu_cycle(emulator_state* comet);
+void exec_instruction(emulator_state* comet, instruction_info* ins);
 
 bool read_u8 (u64 addr, u8*  var);
 bool read_u16(u64 addr, u16* var);
@@ -113,13 +121,15 @@ void load_image(FILE* bin);
 
 u64 sign_extend(u64 val, u8 bitsize);
 
-void set_st_flag(aphelion_cpu_state* cpu, st_flag bit, bool value);
-bool get_st_flag(aphelion_cpu_state* cpu, st_flag bit);
+void set_st_flag(cpu_state* cpu, st_flag bit, bool value);
+bool get_st_flag(cpu_state* cpu, st_flag bit);
 
-void cmpr_set_flags(aphelion_cpu_state* cpu, instruction_info* ins);
-void cmpi_set_flags(aphelion_cpu_state* cpu, instruction_info* ins);
+void cmpr_set_flags(cpu_state* cpu, instruction_info* ins);
+void cmpi_set_flags(cpu_state* cpu, instruction_info* ins);
 
-void addr_set_flags(aphelion_cpu_state* cpu, instruction_info* ins);
-void addi_set_flags(aphelion_cpu_state* cpu, instruction_info* ins);
-void subr_set_flags(aphelion_cpu_state* cpu, instruction_info* ins);
-void subi_set_flags(aphelion_cpu_state* cpu, instruction_info* ins);
+void addr_set_flags(cpu_state* cpu, instruction_info* ins);
+void addi_set_flags(cpu_state* cpu, instruction_info* ins);
+void subr_set_flags(cpu_state* cpu, instruction_info* ins);
+void subi_set_flags(cpu_state* cpu, instruction_info* ins);
+
+char* get_ins_name(instruction_info* ins);

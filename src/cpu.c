@@ -1,6 +1,6 @@
 #include "comet.h"
 /*
-void exec_instruction(aphelion_cpu_state* cpu, instruction_info* ins) {
+void exec_instruction(cpu_state* cpu, instruction_info* ins) {
 
     u64 prev_pc = cpu->registers[r_pc];
     bool pc_modified = false;
@@ -339,14 +339,18 @@ void exec_instruction(aphelion_cpu_state* cpu, instruction_info* ins) {
     cpu->increment_next = (prev_pc == cpu->registers[r_pc]) && !pc_modified;
 
 }
-*/
-void do_cpu_cycle(aphelion_cpu_state* cpu) {
+
+void do_cpu_cycle(emulator_state* comet) {
     TODO("finish this and also make the cpu core lmfao");
 
+    cpu_state* cpu = &comet->cpu;
     cpu->cycle++;
 
     u32 raw_ins = 0;
     bool success = read_u32(cpu->registers[r_pc], &raw_ins);
+    if (!success) {
+        read_u32(comet->mmu.ivt_base_address + 8*int_unaligned_access, &raw_ins);
+    }
     TODO("finish this");
 
     raw_decode(raw_ins, &cpu->ins_info);
@@ -358,7 +362,7 @@ void do_cpu_cycle(aphelion_cpu_state* cpu) {
     cpu->registers[r_pc] += 4 * (u64) cpu->increment_next;
 }
 
-void cmpr_set_flags(aphelion_cpu_state* cpu, instruction_info* ins) {
+void cmpr_set_flags(cpu_state* cpu, instruction_info* ins) {
     set_st_flag(cpu, fl_sign,   cpu->registers[ins->rs1] < 0);
     set_st_flag(cpu, fl_zero,   cpu->registers[ins->rs1] == 0);
     set_st_flag(cpu, fl_parity, countones(cpu->registers[ins->rs1]) % 2 == 0);
@@ -370,7 +374,7 @@ void cmpr_set_flags(aphelion_cpu_state* cpu, instruction_info* ins) {
     set_st_flag(cpu, fl_less_unsigned,          cpu->registers[ins->rs1] <       cpu->registers[ins->rs2]);
 }
 
-void cmpi_set_flags(aphelion_cpu_state* cpu, instruction_info* ins) {
+void cmpi_set_flags(cpu_state* cpu, instruction_info* ins) {
     set_st_flag(cpu, fl_sign,   cpu->registers[ins->rs1] < 0);
     set_st_flag(cpu, fl_zero,   cpu->registers[ins->rs1] == 0);
     set_st_flag(cpu, fl_parity, countones(cpu->registers[ins->rs1]) % 2 == 0);
@@ -382,22 +386,22 @@ void cmpi_set_flags(aphelion_cpu_state* cpu, instruction_info* ins) {
     set_st_flag(cpu, fl_less_unsigned,          cpu->registers[ins->rs1] <       ins->imm);
 }
 
-void addi_set_flags(aphelion_cpu_state* cpu, instruction_info* ins) {
+void addi_set_flags(cpu_state* cpu, instruction_info* ins) {
     set_st_flag(cpu, fl_carry, (i64)(cpu->registers[ins->rde]) < (i64)(cpu->registers[ins->rs1]) || (i64)(cpu->registers[ins->rde]) < (i64)(ins->imm));
     set_st_flag(cpu, fl_carry_unsigned, cpu->registers[ins->rde] < cpu->registers[ins->rs1] || cpu->registers[ins->rde] < ins->imm);
 }
 
-void addr_set_flags(aphelion_cpu_state* cpu, instruction_info* ins) {
+void addr_set_flags(cpu_state* cpu, instruction_info* ins) {
     set_st_flag(cpu, fl_carry, (i64)(cpu->registers[ins->rde]) < (i64)(cpu->registers[ins->rs1]) || (i64)(cpu->registers[ins->rde]) < (i64)(cpu->registers[ins->rs2]));
     set_st_flag(cpu, fl_carry_unsigned, cpu->registers[ins->rde] < cpu->registers[ins->rs1] || cpu->registers[ins->rde] < cpu->registers[ins->rs2]);
 }
 
-void subi_set_flags(aphelion_cpu_state* cpu, instruction_info* ins) {
+void subi_set_flags(cpu_state* cpu, instruction_info* ins) {
     set_st_flag(cpu, fl_carry, (i64)(cpu->registers[ins->rde]) > (i64)(cpu->registers[ins->rs1]) || (i64)(cpu->registers[ins->rde]) > (i64)(ins->imm));
     set_st_flag(cpu, fl_carry_unsigned, cpu->registers[ins->rde] > cpu->registers[ins->rs1] || cpu->registers[ins->rde] > ins->imm);
 }
 
-void subr_set_flags(aphelion_cpu_state* cpu, instruction_info* ins) {
+void subr_set_flags(cpu_state* cpu, instruction_info* ins) {
     set_st_flag(cpu, fl_carry, (i64)(cpu->registers[ins->rde]) > (i64)(cpu->registers[ins->rs1]) || (i64)(cpu->registers[ins->rde]) > (i64)(cpu->registers[ins->rs2]));
     set_st_flag(cpu, fl_carry_unsigned, cpu->registers[ins->rde] > cpu->registers[ins->rs1] || cpu->registers[ins->rde] > cpu->registers[ins->rs2]);
 }
@@ -407,11 +411,11 @@ u64 sign_extend(u64 val, u8 bitsize) {
     return (u64)((i64)(val << (64-bitsize)) >> (64-bitsize));
 }
 
-void set_st_flag(aphelion_cpu_state* cpu, st_flag bit, bool value) {
+void set_st_flag(cpu_state* cpu, st_flag bit, bool value) {
     cpu->registers[r_st] &= ~(1ull << bit);
     cpu->registers[r_st] |= (u64)(value) << bit;
 }
 
-bool get_st_flag(aphelion_cpu_state* cpu, st_flag bit) {
+bool get_st_flag(cpu_state* cpu, st_flag bit) {
     return (cpu->registers[r_st] & (1ull << bit)) >> bit == 1;
-}
+}*/

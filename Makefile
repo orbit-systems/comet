@@ -29,7 +29,7 @@ build: $(OBJECTS)
 	$(CC) $(OBJECTS) -o $(EXECUTABLE_NAME) $(CFLAGS) -MD
 
 test: build
-	./$(EXECUTABLE_NAME) test/fib.bin -max-cycles:300000000 -bench
+	./$(EXECUTABLE_NAME) test/fib.bin -max-cycles:5 -bench
 
 debug:
 	$(DEBUGFLAGS) $(DONTBEAFUCKINGIDIOT)

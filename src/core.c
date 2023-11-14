@@ -68,7 +68,7 @@ void load_arguments(int argc, char* argv[], emulator_state* comet) {
 
 int main(int argc, char *argv[]) {
 
-    emulator_state comet = {(aphelion_cpu_state){}, false, 0, false, false, "", 0};
+    emulator_state comet = {(cpu_state){}, false, 0, false, false, "", 0};
     load_arguments(argc, argv, &comet);
     init_page_map(0);
 
@@ -81,12 +81,12 @@ int main(int argc, char *argv[]) {
     load_image(bin_file);
     fclose(bin_file);
 
-    comet.cpu.registers[r_pc] = 0xA00; // starting point
-    comet.cpu.running = true;
-
     // timing
     struct timeval begin, end;
     gettimeofday(&begin, 0);
+
+    comet.cpu.registers[r_pc] = 0x0A00; // starting point
+    comet.cpu.running = true;
 
     while (comet.cpu.running && comet.flag_cycle_limit > comet.cpu.cycle) {
         do_cpu_cycle(&comet.cpu);
