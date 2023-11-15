@@ -83,7 +83,7 @@ bool read_u8 (u64 addr, u8* var) {
 }
 
 bool read_u16(u64 addr, u16* var) {
-    if (addr % sizeof(u16) != 0) return false;
+    if (addr % sizeof(u16) != 0) return false; // unaligned access
     int page = binary_find_page(addr);
     if (page == -1) *var = 0;
     else *var = ((u16*)(memory.pages[page]->data)) [addr % MEM_PAGE_SIZE / sizeof(u16)];
@@ -92,7 +92,7 @@ bool read_u16(u64 addr, u16* var) {
 }
 
 bool read_u32(u64 addr, u32* var) {
-    if (addr % sizeof(u32) != 0) return false;
+    if (addr % sizeof(u32) != 0) return false; // unaligned access
     int page = binary_find_page(addr);
     if (page == -1) *var = 0;
     else *var = ((u32*)(memory.pages[page]->data)) [addr % MEM_PAGE_SIZE / sizeof(u32)];
@@ -100,7 +100,7 @@ bool read_u32(u64 addr, u32* var) {
 }
 
 bool read_u64(u64 addr, u64* var) {
-    if (addr % sizeof(u64) != 0) return false;
+    if (addr % sizeof(u64) != 0) return false; // unaligned access
     int page = binary_find_page(addr);
     if (page == -1) *var = 0;
     else *var = ((u64*)(memory.pages[page]->data)) [addr % MEM_PAGE_SIZE / sizeof(u64)];
@@ -108,7 +108,7 @@ bool read_u64(u64 addr, u64* var) {
 }
 
 bool write_u8(u64 addr, u8 value) {
-    int page = binary_find_page(addr);
+    int page = binary_find_page(addr); // unaligned access
     if (page == -1) { // page not found - track new page
         mem_page* p = new_page(align_backwards(addr, MEM_PAGE_SIZE));
         p->data[addr % MEM_PAGE_SIZE] = value;
@@ -118,9 +118,8 @@ bool write_u8(u64 addr, u8 value) {
     return true;
 
 }
-
 bool write_u16(u64 addr, u16 value) {
-    if (addr % sizeof(u16) != 0) return false;
+    if (addr % sizeof(u16) != 0) return false; // unaligned access
     int page = binary_find_page(addr);
     if (page == -1) { // page not found - track new page
         mem_page* p = new_page(align_backwards(addr, MEM_PAGE_SIZE));
@@ -131,7 +130,7 @@ bool write_u16(u64 addr, u16 value) {
 }
 
 bool write_u32(u64 addr, u32 value) {
-    if (addr % sizeof(u32) != 0) return false;
+    if (addr % sizeof(u32) != 0) return false; // unaligned access
     int page = binary_find_page(addr);
     if (page == -1) { // page not found - track new page
         mem_page* p = new_page(align_backwards(addr, MEM_PAGE_SIZE));

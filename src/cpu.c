@@ -23,7 +23,7 @@ void exec_instruction(emulator_state* comet, instruction_info* ins) {
         }
         break;
 
-
+    
     case 0x02: // outr
     case 0x03: // outi
     case 0x04: // inr
@@ -61,10 +61,21 @@ void exec_instruction(emulator_state* comet, instruction_info* ins) {
 
     case 0x1e: // bswp
     case 0x1f: // xch
+        {    
+        u64 temp = comet->cpu.registers[ins->rs1];
+        comet->cpu.registers[ins->rs1] = comet->cpu.registers[ins->rs2];
+        comet->cpu.registers[ins->rs2] = temp;
+        }
 
 
     case 0x20: // addr
+        comet->cpu.registers[ins->rde] = comet->cpu.registers[ins->rs1] + comet->cpu.registers[ins->rs2];
+        //TODO("addr flags");
+        break;
     case 0x21: // addi
+        comet->cpu.registers[ins->rde] = comet->cpu.registers[ins->rs1] + sign_extend(ins->imm, 16);
+        //TODO("addi flags");
+        break;
     case 0x22: // subr
     case 0x23: // subi
     case 0x24: // imulr
@@ -107,15 +118,19 @@ void exec_instruction(emulator_state* comet, instruction_info* ins) {
     case 0x45: // psub
     case 0x46: // pmul
     case 0x47: // pdiv
-        printf("unimplemented: \"%s\" opcode 0x%2x func 0x%1x\n", get_ins_name(ins), ins->opcode, ins->func);
-        read_u64(comet->ic.ivt_base_address + 8*int_invalid_instruction, &comet->cpu.registers[r_pc]);
-        break;
+        
 
 
     default:
         ;
-        bool success = read_u64(comet->ic.ivt_base_address + 8*int_invalid_instruction, &comet->cpu.registers[r_pc]);
+        char* name = get_ins_name(ins);
+        if (name != NULL) {
+            printf("unimplemented: \"%s\" opcode 0x%x func 0x%1x\n", name, ins->opcode, ins->func);
+            read_u64(comet->ic.ivt_base_address + 8*int_invalid_instruction, &comet->cpu.registers[r_pc]);
+            break;
+        }
         
+        bool success = read_u64(comet->ic.ivt_base_address + 8*int_invalid_instruction, &comet->cpu.registers[r_pc]);
         break;
     }
 

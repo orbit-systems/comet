@@ -68,7 +68,17 @@ void load_arguments(int argc, char* argv[], emulator_state* comet) {
 
 int main(int argc, char *argv[]) {
 
-    emulator_state comet = {(cpu_state){}, false, 0, false, false, "", 0};
+    emulator_state comet = {
+        (cpu_state){}, 
+        (ic_state){}, 
+        false, 
+        0, 
+        false, 
+        false, 
+        NULL, 
+        0
+    };
+
     load_arguments(argc, argv, &comet);
     init_page_map(0);
 

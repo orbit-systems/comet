@@ -149,3 +149,7 @@ void raw_decode(u32 ins, instruction_info* info) {
         break;
     }
 }
+
+u64 sign_extend(u64 val, u8 bitsize) {
+    return (u64)((i64)(val << (64-bitsize)) >> (64-bitsize));
+}
