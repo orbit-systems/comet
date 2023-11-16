@@ -18,9 +18,10 @@ page_map memory; // global page map
 
 // basically just a dynamic array
 void init_page_map(size_t capacity) {
-    if (capacity == 0) capacity = 1; // the resize wont work if its 0 because it's multiplication
+    if (capacity == 0) 
+        capacity = 1; // the resize wont work if its 0 because it uses multiplication
 
-    memory = (page_map) {0, capacity, NULL};
+    memory = (page_map){0, capacity, NULL};
     memory.pages = (mem_page**) malloc(sizeof(mem_page*) * capacity);
 }
 

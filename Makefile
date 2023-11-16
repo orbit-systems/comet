@@ -15,7 +15,8 @@ CC = clang
 DEBUGFLAGS = -g -rdynamic -pg
 ASANFLAGS = -fsanitize=undefined -fsanitize=address
 DONTBEAFUCKINGIDIOT = -Werror -Wall -Wextra -pedantic -Wno-missing-field-initializers -Wno-unused-result
-CFLAGS = -O3 -w # shut the fuck up clang
+CFLAGS = -O3 # shut the fuck up clang
+SHUTTHEFUCKUP = -Wno-incompatible-pointer-types-discards-qualifiers -Wno-initializer-overrides
 
 #MD adds a dependency file, .d to the directory. the line at the bottom
 #forces make to rebuild, if any dependences need it.
@@ -23,12 +24,13 @@ CFLAGS = -O3 -w # shut the fuck up clang
 #if core.c changes, it only rebuilds.
 
 build/%.o: src/%.c
-	$(CC) -c -o $@ $< $(CFLAGS) -MD
+	$(CC) -c -o $@ $< $(CFLAGS) -MD $(SHUTTHEFUCKUP)
 
 build: $(OBJECTS)
 	$(CC) $(OBJECTS) -o $(EXECUTABLE_NAME) $(CFLAGS) -MD
 
 test: build
+	@echo ""
 	./$(EXECUTABLE_NAME) test/fib.bin -max-cycles:700000000 -bench
 
 debug:

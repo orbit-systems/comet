@@ -99,7 +99,7 @@ int main(int argc, char *argv[]) {
     comet.cpu.running = true;
 
     while (comet.cpu.running && comet.flag_cycle_limit > comet.cpu.cycle) {
-        do_cpu_cycle(&comet.cpu);
+        do_cpu_cycle(&comet);
     }
 
     gettimeofday(&end, 0);
@@ -108,7 +108,7 @@ int main(int argc, char *argv[]) {
         long microseconds = end.tv_usec - begin.tv_usec;
         double elapsed = seconds + microseconds*1e-6;
         double cycles_per_sec = comet.cpu.cycle / elapsed;
-        printf("overall time : %fs (%fms)\n", elapsed, elapsed*1000.0);
+        printf("overall time : %fs\n", elapsed);
         printf("total cycles : %lu\n", comet.cpu.cycle);
         printf("cycles/sec   : %f\n", cycles_per_sec);
     }
