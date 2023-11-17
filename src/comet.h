@@ -95,8 +95,6 @@ typedef u8 interrupt_code; enum {
     printf("TODO: \"%s\" at %s:%d\n", (msg), (__FILE__), (__LINE__)); \
     exit(EXIT_FAILURE) \
 
-#define countones(x) __builtin_popcountll((unsigned long long) (x)) \
-
 void raw_decode(u32 ins, instruction_info* info);
 const char* instruction_name(u8 opcode, u8 func);
 

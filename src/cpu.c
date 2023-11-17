@@ -70,11 +70,11 @@ void exec_instruction(emulator_state* comet, instruction_info* ins) {
 
     case 0x20: // addr
         comet->cpu.registers[ins->rde] = comet->cpu.registers[ins->rs1] + comet->cpu.registers[ins->rs2];
-        //TODO("addr flags");
+        TODOO("addr flags");
         break;
     case 0x21: // addi
         comet->cpu.registers[ins->rde] = comet->cpu.registers[ins->rs1] + sign_extend(ins->imm, 16);
-        //TODO("addi flags");
+        TODO("addi flags");
         break;
 //    case 0x22: // subr
 //    case 0x23: // subi
@@ -94,31 +94,54 @@ void exec_instruction(emulator_state* comet, instruction_info* ins) {
 
 //    case 0x30: // andr
 //    case 0x31: // andi
-//    case 0x32: // orr
-//    case 0x33: // ori
-//    case 0x34: // norr
-//    case 0x35: // nori
-//    case 0x36: // xorr
-//    case 0x37: // xori
-//    case 0x38: // shlr
-//    case 0x39: // shli
-//    case 0x3a: // asrr
-//    case 0x3b: // asri
-//    case 0x3c: // lsrr
-//    case 0x3d: // lsri
-//    case 0x3e: // bitr
-//    case 0x3f: // biti
+    case 0x32: // orr
+        comet->cpu.registers[ins->rde] = comet->cpu.registers[ins->rs1] | comet->cpu.registers[ins->rs2];
+        break;
+    case 0x33: // ori
+        comet->cpu.registers[ins->rde] = comet->cpu.registers[ins->rs1] | ins->imm;
+        break;
+    case 0x34: // norr
+        comet->cpu.registers[ins->rde] = ~(comet->cpu.registers[ins->rs1] | comet->cpu.registers[ins->rs2]);
+        break;
+    case 0x35: // nori
+        comet->cpu.registers[ins->rde] = ~(comet->cpu.registers[ins->rs1] | ins->imm);
+        break;
+    case 0x36: // xorr
+        comet->cpu.registers[ins->rde] = comet->cpu.registers[ins->rs1] ^ comet->cpu.registers[ins->rs2];
+        break;
+    case 0x37: // xori
+        comet->cpu.registers[ins->rde] = comet->cpu.registers[ins->rs1] ^ ins->imm;
+        break;
+    case 0x38: // shlr
+        comet->cpu.registers[ins->rde] = comet->cpu.registers[ins->rs1] << comet->cpu.registers[ins->rs2];
+        break;
+    case 0x39: // shli
+        comet->cpu.registers[ins->rde] = comet->cpu.registers[ins->rs1] << ins->imm;
+        break;
+    case 0x3a: // asrr
+        comet->cpu.registers[ins->rde] = (u64)((i64)comet->cpu.registers[ins->rs1] >> comet->cpu.registers[ins->rs2]);
+        break;
+    case 0x3b: // asri
+        comet->cpu.registers[ins->rde] = (u64)((i64)comet->cpu.registers[ins->rs1] >> ins->imm);
+        break;
+    case 0x3c: // lsrr
+        comet->cpu.registers[ins->rde] = comet->cpu.registers[ins->rs1] >> comet->cpu.registers[ins->rs2];
+        break;
+    case 0x3d: // lsri
+        comet->cpu.registers[ins->rde] = comet->cpu.registers[ins->rs1] >> ins->imm;
+        break;
+//     case 0x3e: // bitr
+//     case 0x3f: // biti
 
 
-//    case 0x40: // pto
-//    case 0x41: // pfrom
-//    case 0x42: // pneg
-//    case 0x43: // pabs
-//    case 0x44: // padd
-//    case 0x45: // psub
-//    case 0x46: // pmul
-//    case 0x47: // pdiv
-        
+//     case 0x40: // pto
+//     case 0x41: // pfrom
+//     case 0x42: // pneg
+//     case 0x43: // pabs
+//     case 0x44: // padd
+//     case 0x45: // psub
+//     case 0x46: // pmul
+//     case 0x47: // pdiv  
 
 
     default:

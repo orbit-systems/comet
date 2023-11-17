@@ -15,7 +15,7 @@ CC = clang
 DEBUGFLAGS = -g -rdynamic -pg
 ASANFLAGS = -fsanitize=undefined -fsanitize=address
 DONTBEAFUCKINGIDIOT = -Werror -Wall -Wextra -pedantic -Wno-missing-field-initializers -Wno-unused-result
-CFLAGS = -O3 # shut the fuck up clang
+CFLAGS = -O3
 SHUTTHEFUCKUP = -Wno-incompatible-pointer-types-discards-qualifiers -Wno-initializer-overrides
 
 #MD adds a dependency file, .d to the directory. the line at the bottom

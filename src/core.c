@@ -69,14 +69,8 @@ void load_arguments(int argc, char* argv[], emulator_state* comet) {
 int main(int argc, char *argv[]) {
 
     emulator_state comet = {
-        (cpu_state){}, 
-        (ic_state){}, 
-        false, 
-        0, 
-        false, 
-        false, 
-        NULL, 
-        0
+        .cpu = (cpu_state){}, 
+        .ic = (ic_state){}, 
     };
 
     load_arguments(argc, argv, &comet);
@@ -95,7 +89,7 @@ int main(int argc, char *argv[]) {
     struct timeval begin, end;
     gettimeofday(&begin, 0);
 
-    comet.cpu.registers[r_pc] = 0x0A00; // starting point
+    comet.cpu.registers[r_pc] = 0x0000; // starting point
     comet.cpu.running = true;
 
     while (comet.cpu.running && comet.flag_cycle_limit > comet.cpu.cycle) {

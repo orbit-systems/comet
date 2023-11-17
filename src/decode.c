@@ -122,7 +122,7 @@ char* get_ins_name(instruction_info* ins) {
 
 void raw_decode(u32 ins, instruction_info* info) {
     info->opcode = (u8) (ins & 0xFF);
-    switch (ins_formats[(ins & 0xFF)]) {
+    switch (ins_formats[ins & 0xFF]) {
     case fmt_r:
         info->rde  = (u8)  (ins >> 28 & 0xF);
         info->rs1  = (u8)  (ins >> 24 & 0xF);
