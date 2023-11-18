@@ -1,13 +1,5 @@
 #include "comet.h"
 
-typedef u8 ins_fmt; enum {
-    fmt_r,
-    fmt_m,
-    fmt_f,
-    fmt_j,
-    fmt_b
-};
-
 // name, opcode, func, format
 #define INSTRUCTION_LIST \
     INSTR("int",   0x01, 0, fmt_b) \
@@ -139,10 +131,10 @@ void raw_decode(u32 ins, instruction_info* info) {
         info->func = (u8)  (ins >> 24 & 0xF);
         info->imm  = (u64) (ins >> 8  & 0xFFFF);
         break;
-    case fmt_j:
-        info->rde  = (u8)  (ins >> 28 & 0xF);
-        info->imm  = (u64) (ins >> 8  & 0xFFFFF);
-        break;
+//  case fmt_j:
+//      info->rde  = (u8)  (ins >> 28 & 0xF);
+//      info->imm  = (u64) (ins >> 8  & 0xFFFFF);
+//      break;
     case fmt_b:
         info->func = (u8)  (ins >> 28 & 0xF);
         info->imm  = (u64) (ins >> 8  & 0xFFFFF);

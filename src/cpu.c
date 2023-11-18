@@ -23,7 +23,7 @@ void exec_instruction(emulator_state* comet, instruction_info* ins) {
         }
         break;
 
-    
+
 //     case 0x02: // outr
 //     case 0x03: // outi
 //     case 0x04: // inr
@@ -37,7 +37,14 @@ void exec_instruction(emulator_state* comet, instruction_info* ins) {
 //     case 0x0a: // branch family
 
 
-//     case 0x0b: // push
+    case 0x0b: // push
+        {
+        comet->cpu.registers[r_sp] -= 8;
+        bool success = write_u64(comet->cpu.registers[r_sp], comet->cpu.registers[ins->rs1]);
+        if (!success)
+            read_u64(comet->ic.ivt_base_address + 8*int_unaligned_access, &comet->cpu.registers[r_pc]);
+        }
+        break;
 //     case 0x0c: // pop
 //     case 0x0d: // enter
 //     case 0x0e: // leave
@@ -107,8 +114,9 @@ void exec_instruction(emulator_state* comet, instruction_info* ins) {
         {
         comet->cpu.registers[ins->rde] = comet->cpu.registers[ins->rs1] - comet->cpu.registers[ins->rs2];
         
-        // this might be complete bullshit
-        bool borrow = -comet->cpu.registers[ins->rs2] < I64_MIN - comet->cpu.registers[ins->rs1];
+        // this MIGHT be complete bullshit
+        // TODO test that this actually works pls
+        bool borrow =          -comet->cpu.registers[ins->rs2] < I64_MIN - comet->cpu.registers[ins->rs1];
         bool borrow_unsigned = -comet->cpu.registers[ins->rs2] < U64_MIN - comet->cpu.registers[ins->rs1];
         
         set_st_flag(comet->cpu.registers, fl_carry_borrow,          borrow);
@@ -121,8 +129,9 @@ void exec_instruction(emulator_state* comet, instruction_info* ins) {
         {
         comet->cpu.registers[ins->rde] = comet->cpu.registers[ins->rs1] - comet->cpu.registers[ins->rs2];
         
-        // this might be complete bullshit
-        bool borrow = -comet->cpu.registers[ins->rs2] < I64_MIN - comet->cpu.registers[ins->rs1];
+        // this MIGHT be complete bullshit
+        // TODO test that this actually works pls
+        bool borrow =          -comet->cpu.registers[ins->rs2] < I64_MIN - comet->cpu.registers[ins->rs1];
         bool borrow_unsigned = -comet->cpu.registers[ins->rs2] < U64_MIN - comet->cpu.registers[ins->rs1];
         
         set_st_flag(comet->cpu.registers, fl_carry_borrow,          borrow);
@@ -175,11 +184,32 @@ void exec_instruction(emulator_state* comet, instruction_info* ins) {
             comet->cpu.registers[ins->rde] = (u64)comet->cpu.registers[ins->rs1] / (u64)ins->imm;
         break;
 
-//     case 0x2c: // remr
-//     case 0x2d: // remi
-//     case 0x2e: // modr
-//     case 0x2f: // modi
-
+    // this might also be bullshit?
+    // TODO test this too
+    case 0x2c: // remr
+        if (comet->cpu.registers[ins->rs2] == 0)
+            read_u64(comet->ic.ivt_base_address + 8*int_divide_by_zero, &comet->cpu.registers[r_pc]);
+        else
+            comet->cpu.registers[ins->rde] = (i64)comet->cpu.registers[ins->rs1] % (i64)comet->cpu.registers[ins->rs2];
+        break;
+    case 0x2d: // remi
+        if (ins->imm == 0)
+            read_u64(comet->ic.ivt_base_address + 8*int_divide_by_zero, &comet->cpu.registers[r_pc]);
+        else
+            comet->cpu.registers[ins->rde] = (i64)comet->cpu.registers[ins->rs1] % (i64)ins->imm;
+        break;
+    case 0x2e: // modr
+        if (comet->cpu.registers[ins->rs2] == 0)
+            read_u64(comet->ic.ivt_base_address + 8*int_divide_by_zero, &comet->cpu.registers[r_pc]);
+        else
+            comet->cpu.registers[ins->rde] = ((i64)comet->cpu.registers[ins->rs1] % (i64)comet->cpu.registers[ins->rs2]) * sign((i64)comet->cpu.registers[ins->rs2]);
+        break;
+    case 0x2f: // modi
+        if (ins->imm == 0)
+            read_u64(comet->ic.ivt_base_address + 8*int_divide_by_zero, &comet->cpu.registers[r_pc]);
+        else
+            comet->cpu.registers[ins->rde] = ((i64)comet->cpu.registers[ins->rs1] % (i64)ins->imm) * sign((i64)ins->imm);
+        break;
 
     case 0x30: // andr
         comet->cpu.registers[ins->rde] = comet->cpu.registers[ins->rs1] & comet->cpu.registers[ins->rs2];
@@ -240,7 +270,7 @@ void exec_instruction(emulator_state* comet, instruction_info* ins) {
     case 0x46: // pmul
     case 0x47: // pdiv
         {
-        printf("Aphelion Extension P \"Posit Operations\" is not currently supported by comet. go bother kayla about it /j\n");
+        printf("Aphelion Extension P \"Posit Operations\" is not currently supported by comet.\n");
         read_u64(comet->ic.ivt_base_address + 8*int_invalid_instruction, &comet->cpu.registers[r_pc]);
         }
         break;

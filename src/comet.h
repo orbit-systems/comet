@@ -5,6 +5,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <stdio.h>
+#include <math.h>
 #include <sys/time.h>
 
 // not gonna use stdbool fuck you
@@ -28,6 +29,12 @@ typedef uint8_t  bool;
 #define U64_MIN (i64)0
 #define I64_MAX (i64)0x7FFFFFFFFFFFFFFF
 #define I64_MIN (i64)0x8000000000000000
+
+#define TODO(msg) \
+    printf("TODO: \"%s\" at %s:%d\n", (msg), (__FILE__), (__LINE__)); \
+    exit(EXIT_FAILURE) \
+
+#define sign(x) ((x > 0) - (x < 0))
 
 typedef struct instruction_info {
     u8 opcode;
@@ -96,9 +103,13 @@ typedef u8 interrupt_code; enum {
     int_access_violation,
 };
 
-#define TODO(msg) \
-    printf("TODO: \"%s\" at %s:%d\n", (msg), (__FILE__), (__LINE__)); \
-    exit(EXIT_FAILURE) \
+typedef u8 ins_fmt; enum {
+    fmt_r,
+    fmt_m,
+    fmt_f,
+//  fmt_j,
+    fmt_b
+};
 
 void raw_decode(u32 ins, instruction_info* info);
 const char* instruction_name(u8 opcode, u8 func);
