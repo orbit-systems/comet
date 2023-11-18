@@ -1,5 +1,6 @@
 *.exe
 build/*
+build/
 *.out
 *.ps1
 *.bin

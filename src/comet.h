@@ -24,6 +24,11 @@ typedef uint8_t  bool;
 #define false 0
 #define true 1
 
+#define U64_MAX (i64)0xFFFFFFFFFFFFFFFF
+#define U64_MIN (i64)0
+#define I64_MAX (i64)0x7FFFFFFFFFFFFFFF
+#define I64_MIN (i64)0x8000000000000000
+
 typedef struct instruction_info {
     u8 opcode;
     u8 func;
@@ -119,15 +124,7 @@ void load_image(FILE* bin);
 
 u64 sign_extend(u64 val, u8 bitsize);
 
-void set_st_flag(cpu_state* cpu, st_flag bit, bool value);
-bool get_st_flag(cpu_state* cpu, st_flag bit);
-
-void cmpr_set_flags(cpu_state* cpu, instruction_info* ins);
-void cmpi_set_flags(cpu_state* cpu, instruction_info* ins);
-
-void addr_set_flags(cpu_state* cpu, instruction_info* ins);
-void addi_set_flags(cpu_state* cpu, instruction_info* ins);
-void subr_set_flags(cpu_state* cpu, instruction_info* ins);
-void subi_set_flags(cpu_state* cpu, instruction_info* ins);
+void set_st_flag(u64* register_bank, st_flag bit, bool value);
+bool get_st_flag(u64* register_bank, st_flag bit);
 
 char* get_ins_name(instruction_info* ins);
