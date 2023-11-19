@@ -3,6 +3,13 @@
 #define MEM_PAGE_SIZE 0x1000
 #define PAGE_MAP_GROWTH_FACTOR 2
 
+/* (sandwichman)
+lets face it there's probably a better way to do this
+I need to figure out an actual PHYSTOP value instead of treating the entire address space as fair game
+i wouldn't even need to do all this pagemap shit it could just be a contigious section of memory
+that would be lightning fast
+*/
+
 typedef struct mem_page {
     u8 data[MEM_PAGE_SIZE];
     u64 base;
