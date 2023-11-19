@@ -7,7 +7,9 @@
 lets face it there's probably a better way to do this
 I need to figure out an actual PHYSTOP value instead of treating the entire address space as fair game
 i wouldn't even need to do all this pagemap shit it could just be a contigious section of memory
-that would be lightning fast
+that would be lightning fast'
+
+shit's fast enough for now, and its flexible so im proud of it
 */
 
 typedef struct mem_page {
