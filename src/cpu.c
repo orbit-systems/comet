@@ -88,8 +88,9 @@ void exec_instruction(emulator_state* comet, instruction_info* ins) {
         {
         comet->cpu.registers[ins->rde] = comet->cpu.registers[ins->rs1] + comet->cpu.registers[ins->rs2];
         
-        bool carry = (comet->cpu.registers[ins->rs1] > 0 && comet->cpu.registers[ins->rs2] > I64_MAX - comet->cpu.registers[ins->rs1]);
-        bool carry_unsigned = (comet->cpu.registers[ins->rs2] > U64_MAX - comet->cpu.registers[ins->rs1]);
+        u64  scratch;
+        bool carry =          __builtin_saddll_overflow(comet->cpu.registers[ins->rs1], comet->cpu.registers[ins->rs2], (i64*)&scratch);
+        bool carry_unsigned = __builtin_uaddll_overflow(comet->cpu.registers[ins->rs1], comet->cpu.registers[ins->rs2], &scratch);
         
         set_st_flag(comet->cpu.registers, fl_carry_borrow, carry);
         set_st_flag(comet->cpu.registers, fl_carry_borrow_unsigned, carry_unsigned);
@@ -101,8 +102,9 @@ void exec_instruction(emulator_state* comet, instruction_info* ins) {
         ins->imm = sign_extend(ins->imm, 16);
         comet->cpu.registers[ins->rde] = comet->cpu.registers[ins->rs1] + ins->imm;
         
-        bool carry = (comet->cpu.registers[ins->rs1] > 0 && ins->imm > I64_MAX - comet->cpu.registers[ins->rs1]);
-        bool carry_unsigned = (ins->imm > U64_MAX - comet->cpu.registers[ins->rs1]);
+        u64  scratch;
+        bool carry =          __builtin_saddll_overflow(comet->cpu.registers[ins->rs1], ins->imm, (i64*)&scratch);
+        bool carry_unsigned = __builtin_uaddll_overflow(comet->cpu.registers[ins->rs1], ins->imm, &scratch);
         
         set_st_flag(comet->cpu.registers, fl_carry_borrow,          carry);
         set_st_flag(comet->cpu.registers, fl_carry_borrow_unsigned, carry_unsigned);
@@ -114,10 +116,9 @@ void exec_instruction(emulator_state* comet, instruction_info* ins) {
         {
         comet->cpu.registers[ins->rde] = comet->cpu.registers[ins->rs1] - comet->cpu.registers[ins->rs2];
         
-        // this MIGHT be complete bullshit
-        // TODO test that this actually works pls
-        bool borrow =          -comet->cpu.registers[ins->rs2] < I64_MIN - comet->cpu.registers[ins->rs1];
-        bool borrow_unsigned = -comet->cpu.registers[ins->rs2] < U64_MIN - comet->cpu.registers[ins->rs1];
+        u64  scratch;
+        bool borrow =          __builtin_ssubll_overflow(comet->cpu.registers[ins->rs1], comet->cpu.registers[ins->rs2], (i64*)&scratch);
+        bool borrow_unsigned = __builtin_usubll_overflow(comet->cpu.registers[ins->rs1], comet->cpu.registers[ins->rs2], &scratch);
         
         set_st_flag(comet->cpu.registers, fl_carry_borrow,          borrow);
         set_st_flag(comet->cpu.registers, fl_carry_borrow_unsigned, borrow_unsigned);
@@ -127,12 +128,12 @@ void exec_instruction(emulator_state* comet, instruction_info* ins) {
 
     case 0x23: // subi
         {
-        comet->cpu.registers[ins->rde] = comet->cpu.registers[ins->rs1] - comet->cpu.registers[ins->rs2];
+        ins->imm = sign_extend(ins->imm, 16);
+        comet->cpu.registers[ins->rde] = comet->cpu.registers[ins->rs1] - ins->imm;
         
-        // this MIGHT be complete bullshit
-        // TODO test that this actually works pls
-        bool borrow =          -comet->cpu.registers[ins->rs2] < I64_MIN - comet->cpu.registers[ins->rs1];
-        bool borrow_unsigned = -comet->cpu.registers[ins->rs2] < U64_MIN - comet->cpu.registers[ins->rs1];
+        u64  scratch;
+        bool borrow =          __builtin_ssubll_overflow(comet->cpu.registers[ins->rs1], ins->imm, (i64*)&scratch);
+        bool borrow_unsigned = __builtin_usubll_overflow(comet->cpu.registers[ins->rs1], ins->imm, &scratch);
         
         set_st_flag(comet->cpu.registers, fl_carry_borrow,          borrow);
         set_st_flag(comet->cpu.registers, fl_carry_borrow_unsigned, borrow_unsigned);
@@ -145,7 +146,7 @@ void exec_instruction(emulator_state* comet, instruction_info* ins) {
         break;
 
     case 0x25: // imuli
-        comet->cpu.registers[ins->rde] = (i64)comet->cpu.registers[ins->rs1] * (i64)ins->imm;
+        comet->cpu.registers[ins->rde] = (i64)comet->cpu.registers[ins->rs1] * (i64)sign_extend(ins->imm, 16);
         break;
 
     case 0x26: // idivr
@@ -159,7 +160,7 @@ void exec_instruction(emulator_state* comet, instruction_info* ins) {
         if (ins->imm == 0)
             read_u64(comet->ic.ivt_base_address + 8*int_divide_by_zero, &comet->cpu.registers[r_pc]);
         else
-            comet->cpu.registers[ins->rde] = (i64)comet->cpu.registers[ins->rs1] / (i64)ins->imm;
+            comet->cpu.registers[ins->rde] = (i64)comet->cpu.registers[ins->rs1] / (i64)sign_extend(ins->imm, 16);
         break;
 
     case 0x28: // umulr
