@@ -89,12 +89,13 @@
     \
     INSTR("pto",   0x40, 0, fmt_m) \
     INSTR("pfrom", 0x41, 0, fmt_m) \
-    INSTR("pneg",  0x42, 0, fmt_m) \
-    INSTR("pabs",  0x43, 0, fmt_m) \
-    INSTR("padd",  0x44, 0, fmt_r) \
-    INSTR("psub",  0x45, 0, fmt_r) \
-    INSTR("pmul",  0x46, 0, fmt_r) \
-    INSTR("pdiv",  0x47, 0, fmt_r)
+    INSTR("pcmp",  0x42, 0, fmt_m) \
+    INSTR("pneg",  0x43, 0, fmt_m) \
+    INSTR("pabs",  0x44, 0, fmt_m) \
+    INSTR("padd",  0x45, 0, fmt_r) \
+    INSTR("psub",  0x46, 0, fmt_r) \
+    INSTR("pmul",  0x47, 0, fmt_r) \
+    INSTR("pdiv",  0x48, 0, fmt_r)
 
 const ins_fmt ins_formats[256] = {
     #define INSTR(name, opcode, func, format) [opcode] = format,
