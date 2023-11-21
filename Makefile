@@ -16,7 +16,7 @@ DEBUGFLAGS = -g -rdynamic -pg
 ASANFLAGS = -fsanitize=undefined -fsanitize=address
 DONTBEAFUCKINGIDIOT = -Werror -Wall -Wextra -pedantic -Wno-missing-field-initializers -Wno-unused-result
 CFLAGS = -O3
-SHUTTHEFUCKUP = -Wno-incompatible-pointer-types-discards-qualifiers -Wno-initializer-overrides
+SHUTTHEFUCKUP = -Wno-unknown-warning-option -Wno-incompatible-pointer-types-discards-qualifiers -Wno-initializer-overrides -Wno-discarded-qualifiers
 
 #MD adds a dependency file, .d to the directory. the line at the bottom
 #forces make to rebuild, if any dependences need it.

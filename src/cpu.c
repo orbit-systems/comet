@@ -24,10 +24,13 @@ void exec_instruction(emulator_state* comet, instruction_info* ins) {
         break;
 
 
-//     case 0x02: // outr
-//     case 0x03: // outi
-//     case 0x04: // inr
-//     case 0x05: // ini
+    case 0x02: // outr
+    case 0x03: // outi
+    case 0x04: // inr
+    case 0x05: // ini
+        printf("[ERROR] IO hasn't been implemented yet! go bother sandwichman about it\n");
+        read_u64(comet->ic.ivt_base_address + 8*int_invalid_instruction, &comet->cpu.registers[r_pc]);
+        break;
 
 
 //     case 0x06: // jal
