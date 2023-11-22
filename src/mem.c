@@ -1,6 +1,6 @@
 #include "comet.h"
 
-#define MEM_PAGE_SIZE 0x1000
+#define MEM_PAGE_SIZE 0x4000 // 16KiB pages
 #define PAGE_MAP_GROWTH_FACTOR 2
 
 /* (sandwichman)
