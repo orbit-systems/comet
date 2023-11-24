@@ -478,5 +478,5 @@ void set_st_flag(u64* register_bank, st_flag bit, bool value) {
 }
 
 bool get_st_flag(u64* register_bank, st_flag bit) {
-    return (register_bank[r_st] & (1ull << bit)) >> bit == 1;
+    return (register_bank[r_st] & (1ull << bit)) != 0;
 }
