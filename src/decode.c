@@ -108,11 +108,11 @@ const char* ins_names[] = {
     #undef INSTR
 };
 
-char* get_ins_name(instruction_info* ins) {
+char* get_ins_name(instruction_info* restrict ins) {
     return ins_names[ins->opcode * 0x10 + ins->func];
 }
 
-void raw_decode(u32 ins, instruction_info* info) {
+void raw_decode(u32 ins, instruction_info* restrict info) {
     info->opcode = (u8) (ins & 0xFF);
     switch (ins_formats[ins & 0xFF]) {
     case fmt_r:

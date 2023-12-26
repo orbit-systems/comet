@@ -85,14 +85,14 @@ int binary_find_page(u64 address) {
     return -1;
 }
 
-bool read_u8 (u64 addr, u8* var) {
+bool read_u8 (u64 addr, u8* restrict var) {
     int page = binary_find_page(addr);
     if (page == -1) *var = 0;
     *var = memory.pages[page]->data[addr % MEM_PAGE_SIZE];
     return true;
 }
 
-bool read_u16(u64 addr, u16* var) {
+bool read_u16(u64 addr, u16* restrict var) {
     if (addr % sizeof(u16) != 0) return false; // unaligned access
     int page = binary_find_page(addr);
     if (page == -1) *var = 0;
@@ -101,7 +101,7 @@ bool read_u16(u64 addr, u16* var) {
     
 }
 
-bool read_u32(u64 addr, u32* var) {
+bool read_u32(u64 addr, u32* restrict var) {
     if (addr % sizeof(u32) != 0) return false; // unaligned access
     int page = binary_find_page(addr);
     if (page == -1) *var = 0;
@@ -109,7 +109,7 @@ bool read_u32(u64 addr, u32* var) {
     return true;
 }
 
-bool read_u64(u64 addr, u64* var) {
+bool read_u64(u64 addr, u64* restrict var) {
     if (addr % sizeof(u64) != 0) return false; // unaligned access
     int page = binary_find_page(addr);
     if (page == -1) *var = 0;

@@ -1,6 +1,6 @@
 #include "comet.h"
 
-void exec_instruction(emulator_state* comet, instruction_info* ins) {
+void exec_instruction(emulator_state* restrict comet, instruction_info* restrict ins) {
 
     u64 prev_pc = comet->cpu.registers[r_pc];
     bool pc_modified = false;
