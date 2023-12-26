@@ -9,7 +9,7 @@ void exec_instruction(emulator_state* restrict comet, instruction_info* restrict
     case 0x01: // system control
         switch (ins->func) {
         case 0: // int
-            read_u64(comet->ic.ivt_base_address + 8*(ins->func % 256), &comet->cpu.registers[r_pc]);
+            phys_read_u64(comet->ic.ivt_base_address + 8*(ins->func % 256), &comet->cpu.registers[r_pc]);
             break;
         case 1:
             comet->cpu.registers[r_st] |= 1ull << fl_mode;
@@ -18,7 +18,7 @@ void exec_instruction(emulator_state* restrict comet, instruction_info* restrict
             comet->cpu.registers[r_st] ^= 0b1111111ull;
             break;
         default:
-            read_u64(comet->ic.ivt_base_address + 8*int_invalid_instruction, &comet->cpu.registers[r_pc]);
+            phys_read_u64(comet->ic.ivt_base_address + 8*int_invalid_instruction, &comet->cpu.registers[r_pc]);
             break;
         }
         break;
@@ -29,7 +29,7 @@ void exec_instruction(emulator_state* restrict comet, instruction_info* restrict
     case 0x04: // inr
     case 0x05: // ini
         printf("[ERROR] IO hasn't been implemented yet! go bother sandwichman about it\n");
-        read_u64(comet->ic.ivt_base_address + 8*int_invalid_instruction, &comet->cpu.registers[r_pc]);
+        phys_read_u64(comet->ic.ivt_base_address + 8*int_invalid_instruction, &comet->cpu.registers[r_pc]);
         break;
 
 
@@ -42,27 +42,27 @@ void exec_instruction(emulator_state* restrict comet, instruction_info* restrict
 
     case 0x0b: // push
         {
-        bool success = write_u64(comet->cpu.registers[r_sp] - 8, comet->cpu.registers[ins->rs1]);
+        bool success = phys_write_u64(comet->cpu.registers[r_sp] - 8, comet->cpu.registers[ins->rs1]);
         if (!success)
-            read_u64(comet->ic.ivt_base_address + 8*int_unaligned_access, &comet->cpu.registers[r_pc]);
+            phys_read_u64(comet->ic.ivt_base_address + 8*int_unaligned_access, &comet->cpu.registers[r_pc]);
         else
             comet->cpu.registers[r_sp] -= 8;
         break;
         }
     case 0x0c: // pop
         {
-        bool success = read_u64(comet->cpu.registers[r_sp], &comet->cpu.registers[ins->rde]);
+        bool success = phys_read_u64(comet->cpu.registers[r_sp], &comet->cpu.registers[ins->rde]);
         if (!success)
-            read_u64(comet->ic.ivt_base_address + 8*int_unaligned_access, &comet->cpu.registers[r_pc]);
+            phys_read_u64(comet->ic.ivt_base_address + 8*int_unaligned_access, &comet->cpu.registers[r_pc]);
         else
             comet->cpu.registers[r_sp] += 8;
         break;
         }
     case 0x0d: // enter
         {
-        bool success = write_u64(comet->cpu.registers[r_sp] - 8, comet->cpu.registers[r_fp]);
+        bool success = phys_write_u64(comet->cpu.registers[r_sp] - 8, comet->cpu.registers[r_fp]);
         if (!success)
-            read_u64(comet->ic.ivt_base_address + 8*int_unaligned_access, &comet->cpu.registers[r_pc]);
+            phys_read_u64(comet->ic.ivt_base_address + 8*int_unaligned_access, &comet->cpu.registers[r_pc]);
         else {
             comet->cpu.registers[r_sp] -= 8;
             comet->cpu.registers[r_fp] = comet->cpu.registers[r_sp];
@@ -72,9 +72,9 @@ void exec_instruction(emulator_state* restrict comet, instruction_info* restrict
     case 0x0e: // leave
         {
         u64 prev_fp = comet->cpu.registers[r_fp];
-        bool success = read_u64(prev_fp, &comet->cpu.registers[r_fp]);
+        bool success = phys_read_u64(prev_fp, &comet->cpu.registers[r_fp]);
         if (!success)
-            read_u64(comet->ic.ivt_base_address + 8*int_unaligned_access, &comet->cpu.registers[r_pc]);
+            phys_read_u64(comet->ic.ivt_base_address + 8*int_unaligned_access, &comet->cpu.registers[r_pc]);
         else {
             comet->cpu.registers[r_sp] = prev_fp;
             comet->cpu.registers[r_sp] += 8;
@@ -117,17 +117,17 @@ void exec_instruction(emulator_state* restrict comet, instruction_info* restrict
         break;
     case 0x11: // lw
         {
-        bool success = read_u64(comet->cpu.registers[ins->rs1] + sign_extend(ins->imm, 16), &comet->cpu.registers[ins->rde]);
+        bool success = phys_read_u64(comet->cpu.registers[ins->rs1] + sign_extend(ins->imm, 16), &comet->cpu.registers[ins->rde]);
         if (!success)
-            read_u64(comet->ic.ivt_base_address + 8*int_unaligned_access, &comet->cpu.registers[r_pc]);
+            phys_read_u64(comet->ic.ivt_base_address + 8*int_unaligned_access, &comet->cpu.registers[r_pc]);
         }
         break;
     case 0x12: // lh
         {
         u32 temp;
-        bool success = read_u32(comet->cpu.registers[ins->rs1] + sign_extend(ins->imm, 16), &temp);
+        bool success = phys_read_u32(comet->cpu.registers[ins->rs1] + sign_extend(ins->imm, 16), &temp);
         if (!success)
-            read_u64(comet->ic.ivt_base_address + 8*int_unaligned_access, &comet->cpu.registers[r_pc]);
+            phys_read_u64(comet->ic.ivt_base_address + 8*int_unaligned_access, &comet->cpu.registers[r_pc]);
         else {
             comet->cpu.registers[ins->rde] &= 0xFFFFFFFF00000000;
             comet->cpu.registers[ins->rde] |= temp;
@@ -137,9 +137,9 @@ void exec_instruction(emulator_state* restrict comet, instruction_info* restrict
     case 0x13: // lhs
         {
         u32 temp;
-        bool success = read_u32(comet->cpu.registers[ins->rs1] + sign_extend(ins->imm, 16), &temp);
+        bool success = phys_read_u32(comet->cpu.registers[ins->rs1] + sign_extend(ins->imm, 16), &temp);
         if (!success)
-            read_u64(comet->ic.ivt_base_address + 8*int_unaligned_access, &comet->cpu.registers[r_pc]);
+            phys_read_u64(comet->ic.ivt_base_address + 8*int_unaligned_access, &comet->cpu.registers[r_pc]);
         else
             comet->cpu.registers[ins->rde] = sign_extend(temp, 32);
         }
@@ -147,9 +147,9 @@ void exec_instruction(emulator_state* restrict comet, instruction_info* restrict
     case 0x14: // lq
         {
         u16 temp;
-        bool success = read_u16(comet->cpu.registers[ins->rs1] + sign_extend(ins->imm, 16), &temp);
+        bool success = phys_read_u16(comet->cpu.registers[ins->rs1] + sign_extend(ins->imm, 16), &temp);
         if (!success)
-            read_u64(comet->ic.ivt_base_address + 8*int_unaligned_access, &comet->cpu.registers[r_pc]);
+            phys_read_u64(comet->ic.ivt_base_address + 8*int_unaligned_access, &comet->cpu.registers[r_pc]);
         else {
             comet->cpu.registers[ins->rde] &= 0xFFFFFFFFFFFF0000;
             comet->cpu.registers[ins->rde] |= temp;
@@ -159,9 +159,9 @@ void exec_instruction(emulator_state* restrict comet, instruction_info* restrict
     case 0x15: // lqs
         {
         u16 temp;
-        bool success = read_u16(comet->cpu.registers[ins->rs1] + sign_extend(ins->imm, 16), &temp);
+        bool success = phys_read_u16(comet->cpu.registers[ins->rs1] + sign_extend(ins->imm, 16), &temp);
         if (!success)
-            read_u64(comet->ic.ivt_base_address + 8*int_unaligned_access, &comet->cpu.registers[r_pc]);
+            phys_read_u64(comet->ic.ivt_base_address + 8*int_unaligned_access, &comet->cpu.registers[r_pc]);
         else
             comet->cpu.registers[ins->rde] = sign_extend(temp, 16);
         }
@@ -169,9 +169,9 @@ void exec_instruction(emulator_state* restrict comet, instruction_info* restrict
     case 0x16: // lb
         {
         u8 temp;
-        bool success = read_u8(comet->cpu.registers[ins->rs1] + sign_extend(ins->imm, 16), &temp);
+        bool success = phys_read_u8(comet->cpu.registers[ins->rs1] + sign_extend(ins->imm, 16), &temp);
         if (!success)
-            read_u64(comet->ic.ivt_base_address + 8*int_unaligned_access, &comet->cpu.registers[r_pc]);
+            phys_read_u64(comet->ic.ivt_base_address + 8*int_unaligned_access, &comet->cpu.registers[r_pc]);
         else {
             comet->cpu.registers[ins->rde] &= 0xFFFFFFFFFFFFFF00;
             comet->cpu.registers[ins->rde] |= temp;
@@ -181,39 +181,39 @@ void exec_instruction(emulator_state* restrict comet, instruction_info* restrict
     case 0x17: // lbs
         {
         u8 temp;
-        bool success = read_u8(comet->cpu.registers[ins->rs1] + sign_extend(ins->imm, 16), &temp);
+        bool success = phys_read_u8(comet->cpu.registers[ins->rs1] + sign_extend(ins->imm, 16), &temp);
         if (!success)
-            read_u64(comet->ic.ivt_base_address + 8*int_unaligned_access, &comet->cpu.registers[r_pc]);
+            phys_read_u64(comet->ic.ivt_base_address + 8*int_unaligned_access, &comet->cpu.registers[r_pc]);
         else
             comet->cpu.registers[ins->rde] = sign_extend(temp, 8);
         }
         break;
     case 0x18: // sw
         {
-        bool success = write_u64(comet->cpu.registers[ins->rs1] + sign_extend(ins->imm, 16), comet->cpu.registers[ins->rde]);
+        bool success = phys_write_u64(comet->cpu.registers[ins->rs1] + sign_extend(ins->imm, 16), comet->cpu.registers[ins->rde]);
         if (!success)
-            read_u64(comet->ic.ivt_base_address + 8*int_unaligned_access, &comet->cpu.registers[r_pc]);
+            phys_read_u64(comet->ic.ivt_base_address + 8*int_unaligned_access, &comet->cpu.registers[r_pc]);
         }
         break;
     case 0x19: // sh
         {
-        bool success = write_u32(comet->cpu.registers[ins->rs1] + sign_extend(ins->imm, 16), comet->cpu.registers[ins->rde]);
+        bool success = phys_write_u32(comet->cpu.registers[ins->rs1] + sign_extend(ins->imm, 16), comet->cpu.registers[ins->rde]);
         if (!success)
-            read_u64(comet->ic.ivt_base_address + 8*int_unaligned_access, &comet->cpu.registers[r_pc]);
+            phys_read_u64(comet->ic.ivt_base_address + 8*int_unaligned_access, &comet->cpu.registers[r_pc]);
         }
         break;
     case 0x1a: // sq
         {
-        bool success = write_u16(comet->cpu.registers[ins->rs1] + sign_extend(ins->imm, 16), comet->cpu.registers[ins->rde]);
+        bool success = phys_write_u16(comet->cpu.registers[ins->rs1] + sign_extend(ins->imm, 16), comet->cpu.registers[ins->rde]);
         if (!success)
-            read_u64(comet->ic.ivt_base_address + 8*int_unaligned_access, &comet->cpu.registers[r_pc]);
+            phys_read_u64(comet->ic.ivt_base_address + 8*int_unaligned_access, &comet->cpu.registers[r_pc]);
         }
         break;
     case 0x1b: // sb
         {
-        bool success = write_u8(comet->cpu.registers[ins->rs1] + sign_extend(ins->imm, 16), comet->cpu.registers[ins->rde]);
+        bool success = phys_write_u8(comet->cpu.registers[ins->rs1] + sign_extend(ins->imm, 16), comet->cpu.registers[ins->rde]);
         if (!success)
-            read_u64(comet->ic.ivt_base_address + 8*int_unaligned_access, &comet->cpu.registers[r_pc]);
+            phys_read_u64(comet->ic.ivt_base_address + 8*int_unaligned_access, &comet->cpu.registers[r_pc]);
         }
         break;
 
@@ -305,14 +305,14 @@ void exec_instruction(emulator_state* restrict comet, instruction_info* restrict
 
     case 0x26: // idivr
         if (comet->cpu.registers[ins->rs2] == 0)
-            read_u64(comet->ic.ivt_base_address + 8*int_divide_by_zero, &comet->cpu.registers[r_pc]);
+            phys_read_u64(comet->ic.ivt_base_address + 8*int_divide_by_zero, &comet->cpu.registers[r_pc]);
         else
             comet->cpu.registers[ins->rde] = (i64)comet->cpu.registers[ins->rs1] / (i64)comet->cpu.registers[ins->rs2];
         break;
 
     case 0x27: // idivi
         if (ins->imm == 0)
-            read_u64(comet->ic.ivt_base_address + 8*int_divide_by_zero, &comet->cpu.registers[r_pc]);
+            phys_read_u64(comet->ic.ivt_base_address + 8*int_divide_by_zero, &comet->cpu.registers[r_pc]);
         else
             comet->cpu.registers[ins->rde] = (i64)comet->cpu.registers[ins->rs1] / (i64)sign_extend(ins->imm, 16);
         break;
@@ -327,14 +327,14 @@ void exec_instruction(emulator_state* restrict comet, instruction_info* restrict
 
     case 0x2a: // udivr
         if (comet->cpu.registers[ins->rs2] == 0)
-            read_u64(comet->ic.ivt_base_address + 8*int_divide_by_zero, &comet->cpu.registers[r_pc]);
+            phys_read_u64(comet->ic.ivt_base_address + 8*int_divide_by_zero, &comet->cpu.registers[r_pc]);
         else
             comet->cpu.registers[ins->rde] = (u64)comet->cpu.registers[ins->rs1] / (u64)comet->cpu.registers[ins->rs2];
         break;
 
     case 0x2b: // udivi
         if (ins->imm == 0)
-            read_u64(comet->ic.ivt_base_address + 8*int_divide_by_zero, &comet->cpu.registers[r_pc]);
+            phys_read_u64(comet->ic.ivt_base_address + 8*int_divide_by_zero, &comet->cpu.registers[r_pc]);
         else
             comet->cpu.registers[ins->rde] = (u64)comet->cpu.registers[ins->rs1] / (u64)ins->imm;
         break;
@@ -343,25 +343,25 @@ void exec_instruction(emulator_state* restrict comet, instruction_info* restrict
     // TODO test this too
     case 0x2c: // remr
         if (comet->cpu.registers[ins->rs2] == 0)
-            read_u64(comet->ic.ivt_base_address + 8*int_divide_by_zero, &comet->cpu.registers[r_pc]);
+            phys_read_u64(comet->ic.ivt_base_address + 8*int_divide_by_zero, &comet->cpu.registers[r_pc]);
         else
             comet->cpu.registers[ins->rde] = (i64)comet->cpu.registers[ins->rs1] % (i64)comet->cpu.registers[ins->rs2];
         break;
     case 0x2d: // remi
         if (ins->imm == 0)
-            read_u64(comet->ic.ivt_base_address + 8*int_divide_by_zero, &comet->cpu.registers[r_pc]);
+            phys_read_u64(comet->ic.ivt_base_address + 8*int_divide_by_zero, &comet->cpu.registers[r_pc]);
         else
             comet->cpu.registers[ins->rde] = (i64)comet->cpu.registers[ins->rs1] % (i64)ins->imm;
         break;
     case 0x2e: // modr
         if (comet->cpu.registers[ins->rs2] == 0)
-            read_u64(comet->ic.ivt_base_address + 8*int_divide_by_zero, &comet->cpu.registers[r_pc]);
+            phys_read_u64(comet->ic.ivt_base_address + 8*int_divide_by_zero, &comet->cpu.registers[r_pc]);
         else
             comet->cpu.registers[ins->rde] = ((i64)comet->cpu.registers[ins->rs1] % (i64)comet->cpu.registers[ins->rs2]) * sign((i64)comet->cpu.registers[ins->rs2]);
         break;
     case 0x2f: // modi
         if (ins->imm == 0)
-            read_u64(comet->ic.ivt_base_address + 8*int_divide_by_zero, &comet->cpu.registers[r_pc]);
+            phys_read_u64(comet->ic.ivt_base_address + 8*int_divide_by_zero, &comet->cpu.registers[r_pc]);
         else
             comet->cpu.registers[ins->rde] = ((i64)comet->cpu.registers[ins->rs1] % (i64)ins->imm) * sign((i64)ins->imm);
         break;
@@ -425,8 +425,8 @@ void exec_instruction(emulator_state* restrict comet, instruction_info* restrict
     case 0x46: // pmul
     case 0x47: // pdiv
         {
-        printf("Aphelion Extension P \"Posit Operations\" is not currently supported by comet.\n");
-        read_u64(comet->ic.ivt_base_address + 8*int_invalid_instruction, &comet->cpu.registers[r_pc]);
+        printf("\"Extension P - Posit Operations\" is not currently supported by comet.\n");
+        phys_read_u64(comet->ic.ivt_base_address + 8*int_invalid_instruction, &comet->cpu.registers[r_pc]);
         }
         break;
 
@@ -434,11 +434,11 @@ void exec_instruction(emulator_state* restrict comet, instruction_info* restrict
         char* name = get_ins_name(ins);
         if (name != NULL) {
             printf("unimplemented: \"%s\" opcode 0x%x func 0x%1x\n", name, ins->opcode, ins->func);
-            read_u64(comet->ic.ivt_base_address + 8*int_invalid_instruction, &comet->cpu.registers[r_pc]);
+            phys_read_u64(comet->ic.ivt_base_address + 8*int_invalid_instruction, &comet->cpu.registers[r_pc]);
             break;
         }
         
-        bool success = read_u64(comet->ic.ivt_base_address + 8*int_invalid_instruction, &comet->cpu.registers[r_pc]);
+        bool success = phys_read_u64(comet->ic.ivt_base_address + 8*int_invalid_instruction, &comet->cpu.registers[r_pc]);
         }
         break;
     }
@@ -448,19 +448,19 @@ void exec_instruction(emulator_state* restrict comet, instruction_info* restrict
 
 }
 
-void do_cpu_cycle(emulator_state* comet) {
+void do_cpu_cycle(emulator_state* restrict comet) {
 
     comet->cpu.cycle++;
 
     // attempt to read instruction
     
-    bool success = read_u32(comet->cpu.registers[r_pc], &comet->cpu.raw_ins);
+    bool success = phys_read_u32(comet->cpu.registers[r_pc], &comet->cpu.raw_ins);
     if (!success) { // if it did not work (unaligned access)
         // retrieve interrupt handler address
-        read_u64(comet->ic.ivt_base_address + 8*int_unaligned_access, &comet->cpu.registers[r_pc]);
+        phys_read_u64(comet->ic.ivt_base_address + 8*int_unaligned_access, &comet->cpu.registers[r_pc]);
         
         // read new instruction
-        read_u32(comet->cpu.registers[r_pc], &comet->cpu.raw_ins);
+        phys_read_u32(comet->cpu.registers[r_pc], &comet->cpu.raw_ins);
     }
 
     raw_decode(comet->cpu.raw_ins, &comet->cpu.ins_info);
@@ -472,11 +472,11 @@ void do_cpu_cycle(emulator_state* comet) {
     comet->cpu.registers[r_pc] += 4 * (u64) comet->cpu.increment_next;
 }
 
-void set_st_flag(u64* register_bank, st_flag bit, bool value) {
+void set_st_flag(u64* restrict register_bank, st_flag bit, bool value) {
     register_bank[r_st] &= ~(1ull << bit);
     register_bank[r_st] |= (u64)(value) << bit;
 }
 
-bool get_st_flag(u64* register_bank, st_flag bit) {
+bool get_st_flag(u64* restrict register_bank, st_flag bit) {
     return (register_bank[r_st] & (1ull << bit)) != 0;
 }

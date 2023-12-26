@@ -74,7 +74,11 @@ int main(int argc, char *argv[]) {
     };
 
     load_arguments(argc, argv, &comet);
-    init_page_map(0);
+    bool mem_init_success = init_memory();
+    if (!mem_init_success) {
+        printf("error: virtual memory space could not initialize (fuck! ask sandwichman about this)\n");
+        exit(EXIT_FAILURE);
+    }
 
     FILE* bin_file = fopen(comet.flag_bin_path, "r");
     if (bin_file == NULL) {
@@ -93,7 +97,26 @@ int main(int argc, char *argv[]) {
     comet.cpu.running = true;
 
     while (comet.cpu.running && comet.flag_cycle_limit > comet.cpu.cycle) {
-        do_cpu_cycle(&comet);
+        comet.cpu.cycle++;
+
+        // attempt to read instruction
+
+        bool success = phys_read_u32(comet.cpu.registers[r_pc], &comet.cpu.raw_ins);
+        if (!success) { // if it did not work (unaligned access)
+            // retrieve interrupt handler address
+            phys_read_u64(comet.ic.ivt_base_address + 8*int_unaligned_access, &comet.cpu.registers[r_pc]);
+
+            // read new instruction
+            phys_read_u32(comet.cpu.registers[r_pc], &comet.cpu.raw_ins);
+        }
+
+        raw_decode(comet.cpu.raw_ins, &comet.cpu.ins_info);
+        comet.cpu.registers[r_st] &= 0x00000000FFFFFFFFull;
+        comet.cpu.registers[r_st] |= (u64) comet.cpu.raw_ins << 32;
+
+        exec_instruction(&comet, &comet.cpu.ins_info);
+
+        comet.cpu.registers[r_pc] += 4 * (u64) comet.cpu.increment_next;
     }
 
     gettimeofday(&end, 0);
@@ -106,7 +129,7 @@ int main(int argc, char *argv[]) {
         printf("total cycles : %lu\n", comet.cpu.cycle);
         printf("cycles/sec   : %f\n", cycles_per_sec);
     }
-    free_page_map();
+    free_memory();
 
     return EXIT_SUCCESS;
 }
