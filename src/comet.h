@@ -23,7 +23,7 @@ typedef uint16_t b16;
 typedef uint8_t  b8;
 typedef uint8_t  bool;
 #define false 0
-#define true 1
+#define true (!false)
 
 #define U64_MAX (i64)0xFFFFFFFFFFFFFFFF
 #define U64_MIN (i64)0

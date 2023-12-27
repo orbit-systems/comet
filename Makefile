@@ -10,7 +10,7 @@ ifeq ($(OS),Windows_NT)
 	EXECUTABLE_NAME = comet.exe
 endif
 
-CC = clang
+CC = gcc
 
 DEBUGFLAGS = -g -rdynamic -pg
 ASANFLAGS = -fsanitize=undefined -fsanitize=address
