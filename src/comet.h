@@ -30,13 +30,17 @@ typedef uint8_t  bool;
 #define I64_MAX (i64)0x7FFFFFFFFFFFFFFF
 #define I64_MIN (i64)0x8000000000000000
 
+#define MEM_PAGE_SIZE 0x4000
+#define MEM_AMNT_PAGES 4096
+#define MEM_PHYS_MAX (MEM_PAGE_SIZE*MEM_AMNT_PAGES-1)
+
 #define TODO(msg) \
     printf("TODO: \"%s\" at %s:%d\n", (msg), (__FILE__), (__LINE__)); \
     exit(EXIT_FAILURE) \
 
 #define sign(x) ((x > 0) - (x < 0))
 
-typedef struct instruction_info {
+typedef struct instruction_info_s {
     u8 opcode;
     u8 func;
     u8 rde;
@@ -45,7 +49,7 @@ typedef struct instruction_info {
     u64 imm;
 } instruction_info;
 
-typedef struct cpu_state {
+typedef struct cpu_state_s {
     u64 registers[16];
     bool running;
     bool paused;
@@ -56,11 +60,11 @@ typedef struct cpu_state {
     instruction_info ins_info;
 } cpu_state;
 
-typedef struct ic_state {
+typedef struct ic_state_s {
     u64 ivt_base_address;
 } ic_state;
 
-typedef struct emulator_state {
+typedef struct emulator_state_s {
     cpu_state cpu;
     ic_state ic; // interrupt controller
 
@@ -111,31 +115,28 @@ typedef u8 ins_fmt; enum {
     fmt_b
 };
 
-void raw_decode(u32 ins, instruction_info* info);
-const char* instruction_name(u8 opcode, u8 func);
+void raw_decode(u32 ins, instruction_info* restrict info);
+char* get_ins_name(instruction_info* restrict ins);
+void exec_instruction(emulator_state* restrict comet, instruction_info* restrict ins);
 
-void do_cpu_cycle(emulator_state* comet);
-void exec_instruction(emulator_state* comet, instruction_info* ins);
+bool phys_read_u8 (u64 addr, u8*  restrict var);
+bool phys_read_u16(u64 addr, u16* restrict var);
+bool phys_read_u32(u64 addr, u32* restrict var);
+bool phys_read_u64(u64 addr, u64* restrict var);
 
-bool read_u8 (u64 addr, u8*  var);
-bool read_u16(u64 addr, u16* var);
-bool read_u32(u64 addr, u32* var);
-bool read_u64(u64 addr, u64* var);
-
-bool write_u8 (u64 addr, u8  value);
-bool write_u16(u64 addr, u16 value);
-bool write_u32(u64 addr, u32 value);
-bool write_u64(u64 addr, u64 value);
+bool phys_write_u8 (u64 addr, u8  value);
+bool phys_write_u16(u64 addr, u16 value);
+bool phys_write_u32(u64 addr, u32 value);
+bool phys_write_u64(u64 addr, u64 value);
 
 u64 align_backwards(u64 ptr, u64 align);
 
-void init_page_map(size_t capacity);
-void free_page_map();
+bool init_memory();
+void free_memory();
 void load_image(FILE* bin);
 
 u64 sign_extend(u64 val, u8 bitsize);
 
-void set_st_flag(u64* register_bank, st_flag bit, bool value);
-bool get_st_flag(u64* register_bank, st_flag bit);
+void set_st_flag(u64* restrict register_bank, st_flag bit, bool value);
+bool get_st_flag(u64* restrict register_bank, st_flag bit);
 
-char* get_ins_name(instruction_info* ins);
