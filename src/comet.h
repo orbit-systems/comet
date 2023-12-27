@@ -40,7 +40,7 @@ typedef uint8_t  bool;
 
 #define sign(x) ((x > 0) - (x < 0))
 
-typedef struct instruction_info {
+typedef struct instruction_info_s {
     u8 opcode;
     u8 func;
     u8 rde;
@@ -49,7 +49,7 @@ typedef struct instruction_info {
     u64 imm;
 } instruction_info;
 
-typedef struct cpu_state {
+typedef struct cpu_state_s {
     u64 registers[16];
     bool running;
     bool paused;
@@ -60,11 +60,11 @@ typedef struct cpu_state {
     instruction_info ins_info;
 } cpu_state;
 
-typedef struct ic_state {
+typedef struct ic_state_s {
     u64 ivt_base_address;
 } ic_state;
 
-typedef struct emulator_state {
+typedef struct emulator_state_s {
     cpu_state cpu;
     ic_state ic; // interrupt controller
 
@@ -116,9 +116,7 @@ typedef u8 ins_fmt; enum {
 };
 
 void raw_decode(u32 ins, instruction_info* restrict info);
-const char* instruction_name(u8 opcode, u8 func);
-
-void do_cpu_cycle(emulator_state* comet);
+char* get_ins_name(instruction_info* restrict ins);
 void exec_instruction(emulator_state* restrict comet, instruction_info* restrict ins);
 
 bool phys_read_u8 (u64 addr, u8*  restrict var);
@@ -142,4 +140,3 @@ u64 sign_extend(u64 val, u8 bitsize);
 void set_st_flag(u64* restrict register_bank, st_flag bit, bool value);
 bool get_st_flag(u64* restrict register_bank, st_flag bit);
 
-char* get_ins_name(instruction_info* restrict ins);

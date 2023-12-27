@@ -448,29 +448,6 @@ void exec_instruction(emulator_state* restrict comet, instruction_info* restrict
 
 }
 
-void do_cpu_cycle(emulator_state* restrict comet) {
-
-    comet->cpu.cycle++;
-
-    // attempt to read instruction
-    
-    bool success = phys_read_u32(comet->cpu.registers[r_pc], &comet->cpu.raw_ins);
-    if (!success) { // if it did not work (unaligned access)
-        // retrieve interrupt handler address
-        phys_read_u64(comet->ic.ivt_base_address + 8*int_unaligned_access, &comet->cpu.registers[r_pc]);
-        
-        // read new instruction
-        phys_read_u32(comet->cpu.registers[r_pc], &comet->cpu.raw_ins);
-    }
-
-    raw_decode(comet->cpu.raw_ins, &comet->cpu.ins_info);
-    comet->cpu.registers[r_st] &= 0x00000000FFFFFFFFull;
-    comet->cpu.registers[r_st] |= (u64) comet->cpu.raw_ins << 32;
-
-    exec_instruction(comet, &comet->cpu.ins_info);
-
-    comet->cpu.registers[r_pc] += 4 * (u64) comet->cpu.increment_next;
-}
 
 void set_st_flag(u64* restrict register_bank, st_flag bit, bool value) {
     register_bank[r_st] &= ~(1ull << bit);

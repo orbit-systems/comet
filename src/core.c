@@ -93,7 +93,7 @@ int main(int argc, char *argv[]) {
     struct timeval begin, end;
     gettimeofday(&begin, 0);
 
-    comet.cpu.registers[r_pc] = 0x0000; // starting point
+    comet.cpu.registers[r_pc] = 0;
     comet.cpu.running = true;
 
     while (comet.cpu.running && comet.flag_cycle_limit > comet.cpu.cycle) {

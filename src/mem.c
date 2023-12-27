@@ -12,9 +12,8 @@ void free_memory() {
 }
 
 bool phys_read_u8 (u64 addr, u8* restrict var) {
-    // out of bounds
     if (addr > MEM_PHYS_MAX) 
-        return false;
+        return false; // out of bounds
     *var = memory[addr];
     return true;
 }
