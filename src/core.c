@@ -66,6 +66,7 @@ void load_arguments(int argc, char* argv[], emulator_state* comet) {
     }
 };
 
+
 int main(int argc, char *argv[]) {
 
     emulator_state comet = {
@@ -76,7 +77,7 @@ int main(int argc, char *argv[]) {
     load_arguments(argc, argv, &comet);
     bool mem_init_success = init_memory();
     if (!mem_init_success) {
-        printf("error: virtual memory space could not initialize (fuck! ask sandwichman about this)\n");
+        printf("crash: virtual memory space could not initialize (ask sandwichman about this)\n");
         exit(EXIT_FAILURE);
     }
 
@@ -86,7 +87,13 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
-    load_image(bin_file);
+    bool load_img_success = load_image(bin_file);
+    if (!load_img_success) {
+        printf("crash: accessed but could not load file \"%s\" into memory (ask sandwichman about this)\n", comet.flag_bin_path);
+        fclose(bin_file);
+        exit(EXIT_FAILURE);
+    }
+
     fclose(bin_file);
 
     // timing

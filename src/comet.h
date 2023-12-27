@@ -133,7 +133,7 @@ u64 align_backwards(u64 ptr, u64 align);
 
 bool init_memory();
 void free_memory();
-void load_image(FILE* bin);
+bool load_image(FILE* bin);
 
 u64 sign_extend(u64 val, u8 bitsize);
 

@@ -74,10 +74,13 @@ u64 align_backwards(u64 ptr, u64 align) {
     return p;
 }
 
-void load_image(FILE* bin) {
+bool load_image(FILE* bin) {
     fseek(bin, 0, SEEK_END);
     long bin_size = ftell(bin);
     fseek(bin, 0, SEEK_SET);
 
-    fread(memory, bin_size, 1, bin);
+    const size_t ret_code = fread(memory, bin_size, 1, bin);
+
+    return !(ret_code != bin_size && ferror(bin));
+
 }
