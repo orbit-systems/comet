@@ -1,5 +1,7 @@
 #include "comet.h"
 
+// this is much more sensible
+
 u8* memory;
 
 bool init_memory() {
@@ -78,9 +80,6 @@ bool load_image(FILE* bin) {
     fseek(bin, 0, SEEK_END);
     long bin_size = ftell(bin);
     fseek(bin, 0, SEEK_SET);
-
-    const size_t ret_code = fread(memory, bin_size, 1, bin);
-
+    size_t ret_code = fread(memory, bin_size, 1, bin);
     return !(ret_code != bin_size && ferror(bin));
-
 }

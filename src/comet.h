@@ -111,7 +111,6 @@ typedef u8 ins_fmt; enum {
     fmt_r,
     fmt_m,
     fmt_f,
-//  fmt_j,
     fmt_b
 };
 
