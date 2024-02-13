@@ -25,10 +25,10 @@ typedef uint8_t  bool;
 #define false 0
 #define true (!false)
 
-#define U64_MAX (i64)0xFFFFFFFFFFFFFFFF
-#define U64_MIN (i64)0
-#define I64_MAX (i64)0x7FFFFFFFFFFFFFFF
-#define I64_MIN (i64)0x8000000000000000
+#define U64_MAX ((i64)0xFFFFFFFFFFFFFFFF)
+#define U64_MIN ((i64)0)
+#define I64_MAX ((i64)0x7FFFFFFFFFFFFFFF)
+#define I64_MIN ((i64)0x8000000000000000)
 
 #define MEM_PAGE_SIZE 0x4000
 #define MEM_AMNT_PAGES 4096
@@ -49,24 +49,32 @@ typedef struct instruction_info_s {
     u64 imm;
 } instruction_info;
 
-typedef struct cpu_state_s {
+typedef struct CPU_s {
     u64 registers[16];
+    u64 cycle;
+    u32 raw_ins;
+    instruction_info ins_info;
+    bool increment_next;
     bool running;
     bool paused;
     bool step;
-    u64 cycle;
-    bool increment_next;
-    u32 raw_ins;
-    instruction_info ins_info;
-} cpu_state;
 
-typedef struct ic_state_s {
+    bool user_mode;
+} CPU;
+
+typedef struct IC_s {
     u64 ivt_base_address;
-} ic_state;
+} IC;
 
-typedef struct emulator_state_s {
-    cpu_state cpu;
-    ic_state ic; // interrupt controller
+typedef struct MMU_s {
+    char* memory;
+    u64 page_table_base;
+} MMU;
+
+typedef struct emulator_s {
+    CPU cpu;
+    IC ic; // interrupt controller
+    MMU mmu; // memory management unit
 
     bool flag_debug;
     u64  flag_cycle_limit;
@@ -75,27 +83,29 @@ typedef struct emulator_state_s {
     char* flag_bin_path;
 
     bool flag_internal_restart;
-} emulator_state;
+} emulator;
 
 typedef u8 register_name; enum {
     r_rz,
     r_ra, r_rb, r_rc, r_rd,
     r_re, r_rf, r_rg, r_rh,
     r_ri, r_rj, r_rk,
-    r_pc,
+    r_ip,
     r_sp, r_fp,
     r_st,
 };
 
 typedef u8 st_flag; enum {
     fl_sign = 0,
-    fl_zero,
-    fl_carry_borrow,
-    fl_carry_borrow_unsigned,
-    fl_equal,
-    fl_less,
-    fl_less_unsigned,
-    fl_mode,
+    fl_zero = 1,
+    fl_carry_borrow = 2,
+    fl_carry_borrow_unsigned = 3,
+    fl_equal = 4,
+    fl_less = 5,
+    fl_less_unsigned = 6,
+    fl_mode = 7,
+
+    fl_ext_f = 31,
 };
 
 typedef u8 interrupt_code; enum {
@@ -111,22 +121,38 @@ typedef u8 ins_fmt; enum {
     fmt_r,
     fmt_m,
     fmt_f,
-    fmt_b
+    fmt_b,
+    fmt_e,
+};
+
+typedef u8 access_mode; enum {
+    access_translate, // dont care about permissions, just map the address
+    access_read,
+    access_write,
+    access_execute,
 };
 
 void raw_decode(u32 ins, instruction_info* restrict info);
 char* get_ins_name(instruction_info* restrict ins);
-void exec_instruction(emulator_state* restrict comet, instruction_info* restrict ins);
+void exec_instruction(instruction_info* restrict ins);
 
-bool phys_read_u8 (u64 addr, u8*  restrict var);
-bool phys_read_u16(u64 addr, u16* restrict var);
-bool phys_read_u32(u64 addr, u32* restrict var);
-bool phys_read_u64(u64 addr, u64* restrict var);
+typedef u8 mmu_response; enum {
+    tr_success,
+    tr_invalid,
+    tr_noperms,
+};
 
-bool phys_write_u8 (u64 addr, u8  value);
-bool phys_write_u16(u64 addr, u16 value);
-bool phys_write_u32(u64 addr, u32 value);
-bool phys_write_u64(u64 addr, u64 value);
+mmu_response translate_address(u64 virtual, u64* physical, access_mode mode);
+
+mmu_response phys_read_u8 (u64 addr, u8*  restrict var);
+mmu_response phys_read_u16(u64 addr, u16* restrict var);
+mmu_response phys_read_u32(u64 addr, u32* restrict var);
+mmu_response phys_read_u64(u64 addr, u64* restrict var);
+
+mmu_response phys_write_u8 (u64 addr, u8  value);
+mmu_response phys_write_u16(u64 addr, u16 value);
+mmu_response phys_write_u32(u64 addr, u32 value);
+mmu_response phys_write_u64(u64 addr, u64 value);
 
 u64 align_backwards(u64 ptr, u64 align);
 
@@ -139,3 +165,4 @@ u64 sign_extend(u64 val, u8 bitsize);
 void set_st_flag(u64* restrict register_bank, st_flag bit, bool value);
 bool get_st_flag(u64* restrict register_bank, st_flag bit);
 
+extern emulator comet;

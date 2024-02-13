@@ -23,6 +23,8 @@ SHUTTHEFUCKUP = -Wno-unknown-warning-option -Wno-incompatible-pointer-types-disc
 #e.g if comet.h changes, it forces a rebuild
 #if core.c changes, it only rebuilds.
 
+all: build
+
 build/%.o: src/%.c
 	$(CC) -c -o $@ $< $(CFLAGS) -MD $(SHUTTHEFUCKUP)
 

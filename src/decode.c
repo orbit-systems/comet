@@ -2,9 +2,9 @@
 
 // name, opcode, func, format
 #define INSTRUCTION_LIST \
-    INSTR("int",   0x01, 0, fmt_b) \
-    INSTR("usr",   0x01, 1, fmt_b) \
-    INSTR("fbf",   0x01, 2, fmt_b) \
+    INSTR("int",   0x01, 0, fmt_f) \
+    INSTR("usr",   0x01, 1, fmt_f) \
+    INSTR("fbf",   0x01, 2, fmt_f) \
     \
     INSTR("outr",  0x02, 0, fmt_m) \
     INSTR("outi",  0x03, 0, fmt_f) \
@@ -115,6 +115,13 @@ char* get_ins_name(instruction_info* restrict ins) {
 void raw_decode(u32 ins, instruction_info* restrict info) {
     info->opcode = (u8) (ins & 0xFF);
     switch (ins_formats[ins & 0xFF]) {
+    case fmt_e:
+        info->rde  = (u8)  (ins >> 28 & 0xF);
+        info->rs1  = (u8)  (ins >> 24 & 0xF);
+        info->rs2  = (u8)  (ins >> 20 & 0xF);
+        info->func = (u8)  (ins >> 16 & 0xF);
+        info->imm  = (u64) (ins >> 8  & 0xFF);
+        break;
     case fmt_r:
         info->rde  = (u8)  (ins >> 28 & 0xF);
         info->rs1  = (u8)  (ins >> 24 & 0xF);
@@ -131,10 +138,6 @@ void raw_decode(u32 ins, instruction_info* restrict info) {
         info->func = (u8)  (ins >> 24 & 0xF);
         info->imm  = (u64) (ins >> 8  & 0xFFFF);
         break;
-//  case fmt_j:
-//      info->rde  = (u8)  (ins >> 28 & 0xF);
-//      info->imm  = (u64) (ins >> 8  & 0xFFFFF);
-//      break;
     case fmt_b:
         info->func = (u8)  (ins >> 28 & 0xF);
         info->imm  = (u64) (ins >> 8  & 0xFFFFF);

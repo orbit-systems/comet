@@ -11,8 +11,6 @@ void print_help() {
     printf("\nusage: comet (path) [flags]\n");
     printf("\n-debug               launch window with debug interface");
     printf("\n-max-cycles:[int]    halt after cycle count has been reached (will run forever if unset)");
-    printf("\n-halt-on-inv         friendship ended with -halt-on-inv. now -max-cycles is my best friend");
-    printf("\n-no-color            disable ANSI formatting");
     printf("\n-bench               output benchmark info after execution is halted");
     printf("\n-help                display this text\n\n");
 }
@@ -33,7 +31,7 @@ cmd_arg make_argument(char* s) {
     return (cmd_arg){s, ""};
 }
 
-void load_arguments(int argc, char* argv[], emulator_state* comet) {
+void load_arguments(int argc, char* argv[]) {
     if (argc < 2) {
         print_help();
         exit(EXIT_SUCCESS);
@@ -44,37 +42,31 @@ void load_arguments(int argc, char* argv[], emulator_state* comet) {
             print_help();
             exit(EXIT_SUCCESS);
         } else if (!strcmp(a.key, "-debug")) {
-            comet->flag_debug = true;
-        } else if (!strcmp(a.key, "-no-color")) {
-            comet->flag_no_color = true;
+            comet.flag_debug = true;
         } else if (!strcmp(a.key, "-bench")) {
-            comet->flag_benchmark = true;
+            comet.flag_benchmark = true;
         } else if (!strcmp(a.key, "-max-cycles")) {
-            comet->flag_cycle_limit = strtoll(a.val, NULL, 0);
-            if (comet->flag_cycle_limit == 0) {
+            comet.flag_cycle_limit = strtoll(a.val, NULL, 0);
+            if (comet.flag_cycle_limit == 0) {
                 printf("error: expected positive int, got \"%s\"\n", a.val);
                 exit(EXIT_FAILURE);
             }
         } else {
             if (i == 1 && a.key[0] != '-') {
-                comet->flag_bin_path = a.key;
+                comet.flag_bin_path = a.key;
             } else {
                 printf("error: unrecognized option \"%s\"\n", a.key);
                 exit(EXIT_FAILURE);
             }
         }
     }
-};
+}
 
+emulator comet = (emulator){};
 
 int main(int argc, char *argv[]) {
 
-    emulator_state comet = {
-        .cpu = (cpu_state){}, 
-        .ic = (ic_state){}, 
-    };
-
-    load_arguments(argc, argv, &comet);
+    load_arguments(argc, argv);
     bool mem_init_success = init_memory();
     if (!mem_init_success) {
         printf("crash: virtual memory space could not initialize (ask sandwichman about this)\n");
@@ -100,7 +92,7 @@ int main(int argc, char *argv[]) {
     struct timeval begin, end;
     gettimeofday(&begin, 0);
 
-    comet.cpu.registers[r_pc] = 0x0;
+    comet.cpu.registers[r_ip] = 0x0;
     comet.cpu.running = true;
 
     while (comet.cpu.running && comet.flag_cycle_limit > comet.cpu.cycle) {
@@ -108,32 +100,32 @@ int main(int argc, char *argv[]) {
 
         // attempt to read instruction
 
-        bool success = phys_read_u32(comet.cpu.registers[r_pc], &comet.cpu.raw_ins);
+        bool success = phys_read_u32(comet.cpu.registers[r_ip], &comet.cpu.raw_ins);
         if (!success) { // if it did not work (unaligned access)
             // retrieve interrupt handler address
-            phys_read_u64(comet.ic.ivt_base_address + 8*int_unaligned_access, &comet.cpu.registers[r_pc]);
+            phys_read_u64(comet.ic.ivt_base_address + 8*int_unaligned_access, &comet.cpu.registers[r_ip]);
 
             // read new instruction
-            phys_read_u32(comet.cpu.registers[r_pc], &comet.cpu.raw_ins);
+            phys_read_u32(comet.cpu.registers[r_ip], &comet.cpu.raw_ins);
         }
 
         raw_decode(comet.cpu.raw_ins, &comet.cpu.ins_info);
         comet.cpu.registers[r_st] &= 0x00000000FFFFFFFFull;
         comet.cpu.registers[r_st] |= (u64) comet.cpu.raw_ins << 32;
 
-        exec_instruction(&comet, &comet.cpu.ins_info);
+        exec_instruction(&comet.cpu.ins_info);
 
-        comet.cpu.registers[r_pc] += 4 * (u64) comet.cpu.increment_next;
+        comet.cpu.registers[r_ip] += 4 * (u64) comet.cpu.increment_next;
     }
 
     gettimeofday(&end, 0);
     if (comet.flag_benchmark) {
         long seconds = end.tv_sec - begin.tv_sec;
         long microseconds = end.tv_usec - begin.tv_usec;
-        double elapsed = seconds + microseconds*1e-6;
-        double cycles_per_sec = comet.cpu.cycle / elapsed;
+        double elapsed = seconds + microseconds * 1e-6;
+        double cycles_per_sec = (double)comet.cpu.cycle / elapsed;
         printf("overall time : %fs\n", elapsed);
-        printf("total cycles : %lu\n", comet.cpu.cycle);
+        printf("total cycles : %llu\n", comet.cpu.cycle);
         printf("cycles/sec   : %f\n", cycles_per_sec);
     }
     free_memory();
