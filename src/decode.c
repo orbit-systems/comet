@@ -108,43 +108,6 @@ const char* ins_names[] = {
     #undef INSTR
 };
 
-char* get_ins_name(instruction_info* restrict ins) {
-    return ins_names[ins->opcode * 0x10 + ins->func];
-}
-
-void raw_decode(u32 ins, instruction_info* restrict info) {
-    info->opcode = (u8) (ins & 0xFF);
-    switch (ins_formats[ins & 0xFF]) {
-    case fmt_e:
-        info->rde  = (u8)  (ins >> 28 & 0xF);
-        info->rs1  = (u8)  (ins >> 24 & 0xF);
-        info->rs2  = (u8)  (ins >> 20 & 0xF);
-        info->func = (u8)  (ins >> 16 & 0xF);
-        info->imm  = (u64) (ins >> 8  & 0xFF);
-        break;
-    case fmt_r:
-        info->rde  = (u8)  (ins >> 28 & 0xF);
-        info->rs1  = (u8)  (ins >> 24 & 0xF);
-        info->rs2  = (u8)  (ins >> 20 & 0xF);
-        info->imm  = (u64) (ins >> 8  & 0xFFF);
-        break;
-    case fmt_m:
-        info->rde  = (u8)  (ins >> 28 & 0xF);
-        info->rs1  = (u8)  (ins >> 24 & 0xF);
-        info->imm  = (u64) (ins >> 8  & 0xFFFF);
-        break;
-    case fmt_f:
-        info->rde  = (u8)  (ins >> 28 & 0xF);
-        info->func = (u8)  (ins >> 24 & 0xF);
-        info->imm  = (u64) (ins >> 8  & 0xFFFF);
-        break;
-    case fmt_b:
-        info->func = (u8)  (ins >> 28 & 0xF);
-        info->imm  = (u64) (ins >> 8  & 0xFFFFF);
-        break;
-    }
-}
-
 u64 sign_extend(u64 val, u8 bitsize) {
     return (u64)((i64)(val << (64-bitsize)) >> (64-bitsize));
 }

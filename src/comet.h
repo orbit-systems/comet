@@ -1,53 +1,53 @@
 #pragma once
 #define COMET_H
 
-#include <stdlib.h>
-#include <stdint.h>
-#include <string.h>
-#include <stdio.h>
-#include <math.h>
-#include <sys/time.h>
+#include "orbit.h"
+// typedef struct instruction_info_s {
+//     u8 opcode;
+//     u8 func;
+//     u8 rde;
+//     u8 rs1;
+//     u8 rs2;
+//     u64 imm;
+// } instruction_info;
 
-// not gonna use stdbool fuck you
-typedef uint64_t u64;
-typedef uint32_t u32;
-typedef uint16_t u16;
-typedef uint8_t  u8;
-typedef int64_t  i64;
-typedef int32_t  i32;
-typedef int16_t  i16;
-typedef int8_t   i8;
-typedef uint64_t b64;
-typedef uint32_t b32;
-typedef uint16_t b16;
-typedef uint8_t  b8;
-typedef uint8_t  bool;
-#define false 0
-#define true (!false)
-
-#define U64_MAX ((i64)0xFFFFFFFFFFFFFFFF)
-#define U64_MIN ((i64)0)
-#define I64_MAX ((i64)0x7FFFFFFFFFFFFFFF)
-#define I64_MIN ((i64)0x8000000000000000)
-
-#define MEM_PAGE_SIZE 0x4000
-#define MEM_AMNT_PAGES 4096
-#define MEM_PHYS_MAX (MEM_PAGE_SIZE*MEM_AMNT_PAGES-1)
-
-#define TODO(msg) \
-    printf("TODO: \"%s\" at %s:%d\n", (msg), (__FILE__), (__LINE__)); \
-    exit(EXIT_FAILURE) \
-
-#define sign(x) ((x > 0) - (x < 0))
-
-typedef struct instruction_info_s {
+typedef union {
     u8 opcode;
-    u8 func;
-    u8 rde;
-    u8 rs1;
-    u8 rs2;
-    u64 imm;
+    struct {
+        u32 opcode : 8;
+        u32 imm    : 8;
+        u32 func   : 4;
+        u32 rs2    : 4;
+        u32 rs1    : 4;
+        u32 rde    : 4;
+    } E;
+    struct {
+        u32 opcode : 8;
+        u32 imm    : 12;
+        u32 rs2    : 4;
+        u32 rs1    : 4;
+        u32 rde    : 4;
+    } R;
+    struct {
+        u32 opcode : 8;
+        u32 imm    : 16;
+        u32 rs1    : 4;
+        u32 rde    : 4;
+    } M;
+    struct {
+        u32 opcode : 8;
+        u32 imm    : 16;
+        u32 func   : 4;
+        u32 rde    : 4;
+    } F;
+    struct {
+        u32 opcode : 8;
+        u32 imm    : 20;
+        u32 func   : 4;
+    } B;
 } instruction_info;
+
+static_assert(sizeof(instruction_info) == sizeof(u32), "sizeof(instruction_info) != sizeof(u32)");
 
 typedef struct CPU_s {
     u64 registers[16];
@@ -56,8 +56,6 @@ typedef struct CPU_s {
     instruction_info ins_info;
     bool increment_next;
     bool running;
-    bool paused;
-    bool step;
 
     bool user_mode;
 } CPU;
@@ -67,7 +65,9 @@ typedef struct IC_s {
 } IC;
 
 typedef struct MMU_s {
-    char* memory;
+    u8* memory;
+    u64 mem_max;
+
     u64 page_table_base;
 } MMU;
 
@@ -118,47 +118,16 @@ typedef u8 interrupt_code; enum {
 };
 
 typedef u8 ins_fmt; enum {
+    fmt_e,
     fmt_r,
     fmt_m,
     fmt_f,
     fmt_b,
-    fmt_e,
-};
-
-typedef u8 access_mode; enum {
-    access_translate, // dont care about permissions, just map the address
-    access_read,
-    access_write,
-    access_execute,
 };
 
 void raw_decode(u32 ins, instruction_info* restrict info);
 char* get_ins_name(instruction_info* restrict ins);
 void exec_instruction(instruction_info* restrict ins);
-
-typedef u8 mmu_response; enum {
-    tr_success,
-    tr_invalid,
-    tr_noperms,
-};
-
-mmu_response translate_address(u64 virtual, u64* physical, access_mode mode);
-
-mmu_response phys_read_u8 (u64 addr, u8*  restrict var);
-mmu_response phys_read_u16(u64 addr, u16* restrict var);
-mmu_response phys_read_u32(u64 addr, u32* restrict var);
-mmu_response phys_read_u64(u64 addr, u64* restrict var);
-
-mmu_response phys_write_u8 (u64 addr, u8  value);
-mmu_response phys_write_u16(u64 addr, u16 value);
-mmu_response phys_write_u32(u64 addr, u32 value);
-mmu_response phys_write_u64(u64 addr, u64 value);
-
-u64 align_backwards(u64 ptr, u64 align);
-
-bool init_memory();
-void free_memory();
-bool load_image(FILE* bin);
 
 u64 sign_extend(u64 val, u8 bitsize);
 
