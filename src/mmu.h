@@ -21,6 +21,8 @@ typedef u8 mmu_response; enum {
     res_unaligned,
 };
 
+
+mmu_response read_instruction(u64 addr, instruction* restrict var);
 mmu_response read_u8 (u64 addr, u8*  restrict var);
 mmu_response read_u16(u64 addr, u16* restrict var);
 mmu_response read_u32(u64 addr, u32* restrict var);

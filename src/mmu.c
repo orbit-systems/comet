@@ -14,6 +14,14 @@ void destroy_mmu() {
 
 // general purpose read/write
 
+mmu_response read_instruction(u64 addr, instruction* restrict var) {
+    if (get_flag(flag_mode)) {
+        mmu_response res = translate_address(addr, &addr, access_execute);
+        if (res != res_success) return res;
+    }
+    return phys_read_u32(addr, (u32*)var);
+}
+
 mmu_response read_u8(u64 addr, u8* restrict var) {
     if (get_flag(flag_mode)) {
         mmu_response res = translate_address(addr, &addr, access_read);
