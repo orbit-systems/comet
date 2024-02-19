@@ -112,12 +112,17 @@ int main(int argc, char *argv[]) {
     struct timeval exec_begin, exec_end;
     gettimeofday(&exec_begin, 0);
 
-    while (comet.cpu.running) {
-
-        if (comet.flag_cycle_limit == comet.cpu.cycle) comet.cpu.running = false;
-        
-        run();
+    if (comet.flag_cycle_limit == 0){
+        while (comet.cpu.running) {
+            run();
+        }
+    } else {
+        while (comet.cpu.running) {
+            if (comet.flag_cycle_limit == comet.cpu.cycle) comet.cpu.running = false;
+            run();
+        }
     }
+    
 
     gettimeofday(&exec_end, 0);
     long seconds = exec_end.tv_sec - exec_begin.tv_sec;
