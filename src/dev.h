@@ -18,3 +18,7 @@ void MMU_receive(u64 data);
 
 #define SYSTIMER_PORT 3
 void SYSTIMER_receive(u64 data);
+
+// some custom devices
+#define TTY_PORT 10
+void TTY_receive(u64 data);

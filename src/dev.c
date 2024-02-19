@@ -1,15 +1,19 @@
 #include "comet.h"
 #include "dev.h"
+#include "mmu.h"
+
+// device handlers
 
 void (*dev_receive_table[NUM_PORTS])(u64) = {
     [IC_PORT]  = IC_receive,
     [IOC_PORT] = IOC_receive,
     [MMU_PORT] = MMU_receive,
     [SYSTIMER_PORT] = SYSTIMER_receive,
+    [10] = TTY_receive,
 };
 
 void dev_receive() {
-    if (!comet.ioc.out_pin) return;
+    // if (!comet.ioc.out_pin) return;
     if (dev_receive_table[comet.ioc.port] != NULL) {
         dev_receive_table[comet.ioc.port](port_data(comet.ioc.port));
     }
@@ -37,6 +41,7 @@ void IC_receive(u64 data) {
         break;
     case ioc_bindint_waiting4int:
         bind_port(bindport, (u8)data);
+        status = ioc_standby;
         break;
     }
 }
@@ -56,6 +61,7 @@ void IOC_receive(u64 data) {
         break;
     case ic_waiting4ivt:
         comet.ic.ivt_base_address = data;
+        status = ic_standby;
         break;
     }
 }
@@ -66,4 +72,9 @@ void MMU_receive(u64 data) {
 
 void SYSTIMER_receive(u64 data) {
     TODO("system timer IO");
+}
+
+void TTY_receive(u64 data) {
+    // TODO make this decode data as a unicode value
+    putc((u8)data, stdout);
 }

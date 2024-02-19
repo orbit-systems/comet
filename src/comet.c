@@ -6,7 +6,10 @@
 // (unfinished) using aphelion v0.4
 
 #include "comet.h"
+#include "cpu.h"
 #include "mmu.h"
+#include "dev.h"
+#include "io.h"
 
 void print_help() {
     printf("\nusage: comet (path) [flags]\n");
@@ -100,7 +103,10 @@ int main(int argc, char *argv[]) {
     comet.cpu.registers[r_ip] = 0x0;
     comet.cpu.running = true;
 
-    TODO("cpu core");
+    // TODO("cpu core");
+    while (true) {
+        run();
+    }
 
     destroy_mmu();
     return EXIT_SUCCESS;
