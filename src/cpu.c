@@ -350,6 +350,10 @@ void run() {
         regval(ci.R.rde) = (i64)a / (i64)b;
         } break;
     case 0x27: { // idivi
+        if (regval(ci.E.rs2) == 0) {
+            push_interrupt(int_divide_by_zero);
+            break;
+        }
         u64 a = regval(ci.M.rs1);
         u64 b = sign_extend(ci.M.imm, 16);
         regval(ci.M.rde) = (i64)a / (i64)b;
@@ -635,6 +639,10 @@ void run() {
         }
         } break;
     case 0x48: { // fdiv
+        if (*(f16*)&regval(ci.E.rs2) == 0) {
+            push_interrupt(int_divide_by_zero);
+            break;
+        }
         switch (ci.E.func) {
         case 0: {
             *(f16*)&regval(ci.E.rde) = *(f16*)&regval(ci.E.rs1) / *(f16*)&regval(ci.E.rs2);
