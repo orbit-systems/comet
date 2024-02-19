@@ -3,7 +3,7 @@
 // ╰───────╯
 // by kaylatheegg, spsandwichman
 
-// (unfinished) using aphelion v0.4
+// using aphelion v0.4
 
 #define ORBIT_IMPLEMENTATION
 #include "comet.h"
