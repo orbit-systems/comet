@@ -24,11 +24,13 @@ typedef int8_t   i8;
 
 typedef double f64;
 typedef float f32;
-#if defined(__clang__)
-    typedef __fp16 f16;
-#elif defined(__GNUC__)
-    typedef _Float16 f16;
-#endif
+typedef _Float16 f16;
+
+// #if defined(__clang__)
+//     typedef __fp16 f16;
+// #elif defined(__GNUC__)
+//     typedef _Float16 f16;
+// #endif
 
 #if !defined(bool)
     typedef uint8_t  bool;

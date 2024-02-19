@@ -80,11 +80,12 @@ emulator comet = (emulator){};
 int main(int argc, char *argv[]) {
 
     load_arguments(argc, argv);
-    bool mem_init_success = init_MMU();
-    if (!mem_init_success) {
-        printf("crash: virtual memory space could not initialize (ask sandwichman about this)\n");
+    if (!init_MMU()) {
+        printf("crash: virtual memory space could not initialize (hint: try shrinking the memory space)\n");
         exit(EXIT_FAILURE);
     }
+
+    init_IC();
 
     FILE* bin_file = fopen(comet.flag_bin_path, "rb");
     if (bin_file == NULL) {
@@ -99,6 +100,8 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
+    
+
     fclose(bin_file);
 
     comet.cpu.registers[r_ip] = 0x0;
@@ -106,8 +109,7 @@ int main(int argc, char *argv[]) {
 
     set_flag(flag_ext_f, true);
 
-    // TODO("cpu core");
-    while (true) {
+    while (comet.cpu.running) {
         run();
     }
 

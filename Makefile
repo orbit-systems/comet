@@ -13,7 +13,7 @@ endif
 CC = gcc
 LD = gcc
 
-DEBUGFLAGS = -g -rdynamic -pg
+DEBUGFLAGS = -g -O0
 ASANFLAGS = -fsanitize=undefined -fsanitize=address
 DONTBEAFUCKINGIDIOT = -Werror -Wall -Wextra -pedantic -Wno-missing-field-initializers -Wno-unused-result
 CFLAGS = -O3 -Wincompatible-pointer-types
@@ -34,8 +34,11 @@ test: build
 	@echo ""
 	./$(EXECUTABLE_NAME) test/fib.bin -max-cycles:700000000 -bench
 
-debug:
-	$(DEBUGFLAGS) $(DONTBEAFUCKINGIDIOT)
+dbgbuild/%.o: src/%.c
+	@$(CC) -c -o $@ $< -Isrc/ -MD $(DEBUGFLAGS)
+
+dbgbuild: $(OBJECTS)
+	@$(LD) $(OBJECTS) -o $(EXECUTABLE_NAME) $(DEBUGFLAGS)
 
 clean:
 	@rm -rf build

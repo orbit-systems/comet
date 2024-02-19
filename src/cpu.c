@@ -3,12 +3,13 @@
 #include "dev.h"
 
 void run() {
-    
+    comet.cpu.cycle++;
+
     // load instruction
     mmu_response res = read_instruction(regval(r_ip), &current_instr);
     if (res != res_success) {
         push_interrupt_from_MMU(res);
-        return; // restart
+        return;
     }
 
     regval(r_ip) += 4;
@@ -187,6 +188,8 @@ void run() {
         case 7: // ltuis
             regval(ci.F.rde) = sign_extend(ci.F.imm, 16) << 48;
             break;
+        default:
+            push_interrupt(int_invalid_instruction);
         }
         } break;
 
@@ -259,6 +262,469 @@ void run() {
             (u8)regval(ci.E.rde));
         if (res != res_success) push_interrupt_from_MMU(res);
         } break;
+    
+    case 0x1e: { // cmpr
+        u64 a = regval(ci.M.rde);
+        u64 b = regval(ci.M.rs1);
+
+        set_flag(flag_equal,         a == b);
+        set_flag(flag_less,          (i64)a < (i64)b);
+        set_flag(flag_less_unsigned, a < b);
+        set_flag(flag_sign,          (i64) a < 0);
+        set_flag(flag_zero,          a == 0);
+        } break;
+    case 0x1f: { // cmpi
+        u64 a;
+        u64 b;
+        if (ci.F.func == 0) {
+            a = regval(ci.F.rde);
+            b = sign_extend(ci.F.imm, 16);
+        } else if (ci.F.func == 1) {
+            b = regval(ci.F.rde);
+            a = sign_extend(ci.F.imm, 16);
+        } else {
+            push_interrupt(int_invalid_instruction);
+            break;
+        }
+
+        set_flag(flag_equal,         a == b);
+        set_flag(flag_less,          (i64)a < (i64)b);
+        set_flag(flag_less_unsigned, a < b);
+        set_flag(flag_sign,          (i64) a < 0);
+        set_flag(flag_zero,          a == 0);
+        } break;
+
+    case 0x20: { // addr
+        u64 a = regval(ci.R.rs1);
+        u64 b = regval(ci.R.rs2);
+        bool u_overflow =  __builtin_uaddll_overflow(a, b, &regval(ci.R.rde));
+             u_overflow |= __builtin_uaddll_overflow(regval(ci.R.rde), get_flag(flag_carry_borrow_unsigned), &regval(ci.R.rde));
+        bool s_overflow =  __builtin_saddll_overflow((i64)a, (i64)b, (i64*)&regval(ci.R.rde));
+             s_overflow |= __builtin_saddll_overflow(regval(ci.R.rde), get_flag(flag_carry_borrow), (i64*)&regval(ci.R.rde));
+        set_flag(flag_carry_borrow_unsigned, u_overflow);
+        set_flag(flag_carry_borrow, s_overflow);
+        } break;
+    case 0x21: { // addi
+        u64 a = regval(ci.M.rs1);
+        u64 b = sign_extend(ci.M.imm, 16);
+        bool u_overflow =  __builtin_uaddll_overflow(a, b, &regval(ci.M.rde));
+             u_overflow |= __builtin_uaddll_overflow(regval(ci.M.rde), get_flag(flag_carry_borrow_unsigned), &regval(ci.M.rde));
+        bool s_overflow =  __builtin_saddll_overflow((i64)a, (i64)b, (i64*)&regval(ci.M.rde));
+             s_overflow |= __builtin_saddll_overflow(regval(ci.M.rde), get_flag(flag_carry_borrow), (i64*)&regval(ci.M.rde));
+        set_flag(flag_carry_borrow_unsigned, u_overflow);
+        set_flag(flag_carry_borrow, s_overflow);
+        } break;
+    case 0x22: { // subr
+        u64 a = regval(ci.R.rs1);
+        u64 b = regval(ci.R.rs2);
+        bool u_overflow =  __builtin_usubll_overflow(a, b, &regval(ci.R.rde));
+             u_overflow |= __builtin_usubll_overflow(regval(ci.R.rde), get_flag(flag_carry_borrow_unsigned), &regval(ci.R.rde));
+        bool s_overflow =  __builtin_ssubll_overflow((i64)a, (i64)b, (i64*)&regval(ci.R.rde));
+             s_overflow |= __builtin_ssubll_overflow(regval(ci.R.rde), get_flag(flag_carry_borrow), (i64*)&regval(ci.R.rde));
+        set_flag(flag_carry_borrow_unsigned, u_overflow);
+        set_flag(flag_carry_borrow, s_overflow);
+        } break;
+    case 0x23: { // subi
+        u64 a = regval(ci.M.rs1);
+        u64 b = sign_extend(ci.M.imm, 16);
+        bool u_overflow =  __builtin_uaddll_overflow(a, b, &regval(ci.M.rde));
+             u_overflow |= __builtin_uaddll_overflow(regval(ci.M.rde), get_flag(flag_carry_borrow_unsigned), &regval(ci.M.rde));
+        bool s_overflow =  __builtin_saddll_overflow((i64)a, (i64)b, (i64*)&regval(ci.M.rde));
+             s_overflow |= __builtin_saddll_overflow(regval(ci.M.rde), get_flag(flag_carry_borrow), (i64*)&regval(ci.M.rde));
+        set_flag(flag_carry_borrow_unsigned, u_overflow);
+        set_flag(flag_carry_borrow, s_overflow);
+        } break;
+    case 0x24: { // imulr
+        u64 a = regval(ci.R.rs1);
+        u64 b = regval(ci.R.rs2);
+        regval(ci.R.rde) = (i64)a * (i64)b;
+        } break;
+    case 0x25: { // imuli
+        u64 a = regval(ci.M.rs1);
+        u64 b = sign_extend(ci.M.imm, 16);
+        regval(ci.M.rde) = (i64)a * (i64)b;
+        } break;
+    case 0x26: { // idivr
+        u64 a = regval(ci.R.rs1);
+        u64 b = regval(ci.R.rs2);
+        regval(ci.R.rde) = (i64)a / (i64)b;
+        } break;
+    case 0x27: { // idivi
+        u64 a = regval(ci.M.rs1);
+        u64 b = sign_extend(ci.M.imm, 16);
+        regval(ci.M.rde) = (i64)a / (i64)b;
+        } break;
+    case 0x28: { // umulr
+        u64 a = regval(ci.R.rs1);
+        u64 b = regval(ci.R.rs2);
+        regval(ci.R.rde) = a * b;
+        } break;
+    case 0x29: { // umuli
+        u64 a = regval(ci.M.rs1);
+        u64 b = sign_extend(ci.M.imm, 16);
+        regval(ci.M.rde) = a * b;
+        } break;
+    case 0x2a: { // udivr
+        u64 a = regval(ci.R.rs1);
+        u64 b = regval(ci.R.rs2);
+        regval(ci.R.rde) = a / b;
+        } break;
+    case 0x2b: { // udivi
+        u64 a = regval(ci.M.rs1);
+        u64 b = sign_extend(ci.M.imm, 16);
+        regval(ci.M.rde) = a / b;
+        } break;
+    case 0x2c: { // remr
+        u64 a = regval(ci.R.rs1);
+        u64 b = regval(ci.R.rs2);
+        regval(ci.R.rde) = (i64)a % (i64)b;
+        } break;
+    case 0x2d: { // remi
+        u64 a = regval(ci.M.rs1);
+        u64 b = sign_extend(ci.M.imm, 16);
+        regval(ci.M.rde) = (i64)a % (i64)b;
+        } break;
+    case 0x2e: { // modr
+        i64 a = (i64)regval(ci.R.rs1);
+        i64 b = (i64)regval(ci.R.rs2);
+        if (b == -1) {
+            regval(ci.R.rde) = 0;
+            break;
+        }
+        i64 r = a % b;
+        if (r < 0) {
+            if (b >= 0) r += b;
+            else        r -= b;
+        }
+        regval(ci.R.rde) = r;
+        } break;
+    case 0x2f: { // modi
+        i64 a = (i64)regval(ci.M.rs1);
+        i64 b = (i64)sign_extend(ci.M.imm, 16);
+        if (b == -1) {
+            regval(ci.M.rde) = 0;
+            break;
+        }
+        i64 r = a % b;
+        if (r < 0) {
+            if (b >= 0) r += b;
+            else        r -= b;
+        }
+        regval(ci.M.rde) = r;
+        } break;
+    
+
+    case 0x30: { // andr
+        u64 a = regval(ci.R.rs1);
+        u64 b = regval(ci.R.rs2);
+        regval(ci.R.rde) = a & b;
+        } break;
+    case 0x31: { // andi
+        u64 a = regval(ci.M.rs1);
+        u64 b = (u64)(ci.M.imm);
+        regval(ci.M.rde) = a & b;
+        } break;
+    case 0x32: { // orr
+        u64 a = regval(ci.R.rs1);
+        u64 b = regval(ci.R.rs2);
+        regval(ci.R.rde) = a | b;
+        } break;
+    case 0x33: { // ori
+        u64 a = regval(ci.M.rs1);
+        u64 b = (u64)(ci.M.imm);
+        regval(ci.M.rde) = a | b;
+        } break;
+    case 0x34: { // norr
+        u64 a = regval(ci.R.rs1);
+        u64 b = regval(ci.R.rs2);
+        regval(ci.R.rde) = ~(a | b);
+        } break;
+    case 0x35: { // nori
+        u64 a = regval(ci.M.rs1);
+        u64 b = (u64)(ci.M.imm);
+        regval(ci.M.rde) = ~(a | b);
+        } break;
+    case 0x36: { // xorr
+        u64 a = regval(ci.R.rs1);
+        u64 b = regval(ci.R.rs2);
+        regval(ci.R.rde) = a ^ b;
+        } break;
+    case 0x37: { // xori
+        u64 a = regval(ci.M.rs1);
+        u64 b = (u64)(ci.M.imm);
+        regval(ci.M.rde) = a ^ b;
+        } break;
+    case 0x38: { // shlr
+        u64 a = regval(ci.R.rs1);
+        u64 b = regval(ci.R.rs2);
+        regval(ci.R.rde) = a << b;
+        } break;
+    case 0x39: { // shli
+        u64 a = regval(ci.M.rs1);
+        u64 b = (u64)(ci.M.imm);
+        regval(ci.M.rde) = a << b;
+        } break;
+    case 0x3a: { // asrr
+        u64 a = regval(ci.R.rs1);
+        u64 b = regval(ci.R.rs2);
+        regval(ci.R.rde) = (i64)a >> b;
+        } break;
+    case 0x3b: { // asri
+        u64 a = regval(ci.M.rs1);
+        u64 b = (u64)(ci.M.imm);
+        regval(ci.M.rde) = (i64)a >> b;
+        } break;
+    case 0x3c: { // lsrr
+        u64 a = regval(ci.R.rs1);
+        u64 b = regval(ci.R.rs2);
+        regval(ci.R.rde) = (u64)a >> b;
+        } break;
+    case 0x3d: { // lsri
+        u64 a = regval(ci.M.rs1);
+        u64 b = (u64)(ci.M.imm);
+        regval(ci.M.rde) = (u64)a >> b;
+        } break;
+    case 0x3e: { // bitr
+        u64 a = regval(ci.R.rs1);
+        u64 b = regval(ci.R.rs2);
+        regval(ci.R.rde) = (a >> b) & 1ull;
+        } break;
+    case 0x3f: { // biti
+        u64 a = regval(ci.M.rs1);
+        u64 b = (u64)(ci.M.imm);
+        regval(ci.M.rde) = (a >> b) & 1ull;
+        } break;
+
+    /* Extension F- Floating-Point Operations */
+    case 0x40: { // fcmp
+        switch (ci.E.func) {
+        case 0: {
+            f16 a = *(f16*)&regval(ci.M.rde);
+            f16 b = *(f16*)&regval(ci.M.rs1);
+            set_flag(flag_equal,         a == b);
+            set_flag(flag_less,          a < b);
+            set_flag(flag_less_unsigned, a < b);
+            set_flag(flag_sign,          a < 0);
+            set_flag(flag_zero,          a == 0);
+            } break;
+        case 1: {
+            f32 a = *(f32*)&regval(ci.M.rde);
+            f32 b = *(f32*)&regval(ci.M.rs1);
+            set_flag(flag_equal,         a == b);
+            set_flag(flag_less,          a < b);
+            set_flag(flag_less_unsigned, a < b);
+            set_flag(flag_sign,          a < 0);
+            set_flag(flag_zero,          a == 0);
+            } break;
+        case 2: {
+            f64 a = *(f64*)&regval(ci.M.rde);
+            f64 b = *(f64*)&regval(ci.M.rs1);
+            set_flag(flag_equal,         a == b);
+            set_flag(flag_less,          a < b);
+            set_flag(flag_less_unsigned, a < b);
+            set_flag(flag_sign,          a < 0);
+            set_flag(flag_zero,          a == 0);
+            } break;
+        default:
+            push_interrupt(int_invalid_instruction);
+        }
+        } break;
+    case 0x41: { // fto
+        switch (ci.E.func) {
+        case 0: {
+            *(f16*)&regval(ci.E.rde) = (f16)regval(ci.E.rs1);
+            } break;
+        case 1: {
+            *(f32*)&regval(ci.E.rde) = (f32)regval(ci.E.rs1);
+            } break;
+        case 2: {
+            *(f64*)&regval(ci.E.rde) = (f64)regval(ci.E.rs1);
+            } break;
+        default:
+            push_interrupt(int_invalid_instruction);
+        }
+        } break;
+    case 0x42: { // ffrom
+        switch (ci.E.func) {
+        case 0: {
+            regval(ci.E.rde) = (u64)(i64)*(f16*)&regval(ci.E.rs1);
+            } break;
+        case 1: {
+            regval(ci.E.rde) = (u64)(i64)*(f32*)&regval(ci.E.rs1);
+            } break;
+        case 2: {
+            regval(ci.E.rde) = (u64)(i64)*(f64*)&regval(ci.E.rs1);
+            } break;
+        default:
+            push_interrupt(int_invalid_instruction);
+        }
+        } break;
+    case 0x43: { // fneg
+        switch (ci.E.func) {
+        case 0: {
+            *(f16*)&regval(ci.E.rde) = - *(f16*)&regval(ci.E.rs1);
+            } break;
+        case 1: {
+            *(f32*)&regval(ci.E.rde) = - *(f32*)&regval(ci.E.rs1);
+            } break;
+        case 2: {
+            *(f64*)&regval(ci.E.rde) = - *(f64*)&regval(ci.E.rs1);
+            } break;
+        default:
+            push_interrupt(int_invalid_instruction);
+        }
+        } break;
+    case 0x44: { // fabs
+        switch (ci.E.func) {
+        case 0: {
+            *(f16*)&regval(ci.E.rde) = *(f16*)&regval(ci.E.rs1) >= 0 ? *(f16*)&regval(ci.E.rs1) : -*(f16*)&regval(ci.E.rs1);
+            } break;
+        case 1: {
+            *(f32*)&regval(ci.E.rde) = - fabsf(*(f32*)&regval(ci.E.rs1));
+            } break;
+        case 2: {
+            *(f64*)&regval(ci.E.rde) = - fabs(*(f64*)&regval(ci.E.rs1));
+            } break;
+        default:
+            push_interrupt(int_invalid_instruction);
+        }
+        } break;
+    case 0x45: { // fadd
+        switch (ci.E.func) {
+        case 0: {
+            *(f16*)&regval(ci.E.rde) = *(f16*)&regval(ci.E.rs1) + *(f16*)&regval(ci.E.rs2);
+            } break;
+        case 1: {
+            *(f32*)&regval(ci.E.rde) = *(f32*)&regval(ci.E.rs1) + *(f32*)&regval(ci.E.rs2);
+            } break;
+        case 2: {
+            *(f64*)&regval(ci.E.rde) = *(f64*)&regval(ci.E.rs1) + *(f64*)&regval(ci.E.rs2);
+            } break;
+        default:
+            push_interrupt(int_invalid_instruction);
+        }
+        } break;
+    case 0x46: { // fsub
+        switch (ci.E.func) {
+        case 0: {
+            *(f16*)&regval(ci.E.rde) = *(f16*)&regval(ci.E.rs1) - *(f16*)&regval(ci.E.rs2);
+            } break;
+        case 1: {
+            *(f32*)&regval(ci.E.rde) = *(f32*)&regval(ci.E.rs1) - *(f32*)&regval(ci.E.rs2);
+            } break;
+        case 2: {
+            *(f64*)&regval(ci.E.rde) = *(f64*)&regval(ci.E.rs1) - *(f64*)&regval(ci.E.rs2);
+            } break;
+        default:
+            push_interrupt(int_invalid_instruction);
+        }
+        } break;
+    case 0x47: { // fmul
+        switch (ci.E.func) {
+        case 0: {
+            *(f16*)&regval(ci.E.rde) = *(f16*)&regval(ci.E.rs1) * *(f16*)&regval(ci.E.rs2);
+            } break;
+        case 1: {
+            *(f32*)&regval(ci.E.rde) = *(f32*)&regval(ci.E.rs1) * *(f32*)&regval(ci.E.rs2);
+            } break;
+        case 2: {
+            *(f64*)&regval(ci.E.rde) = *(f64*)&regval(ci.E.rs1) * *(f64*)&regval(ci.E.rs2);
+            } break;
+        default:
+            push_interrupt(int_invalid_instruction);
+        }
+        } break;
+    case 0x48: { // fdiv
+        switch (ci.E.func) {
+        case 0: {
+            *(f16*)&regval(ci.E.rde) = *(f16*)&regval(ci.E.rs1) / *(f16*)&regval(ci.E.rs2);
+            } break;
+        case 1: {
+            *(f32*)&regval(ci.E.rde) = *(f32*)&regval(ci.E.rs1) / *(f32*)&regval(ci.E.rs2);
+            } break;
+        case 2: {
+            *(f64*)&regval(ci.E.rde) = *(f64*)&regval(ci.E.rs1) / *(f64*)&regval(ci.E.rs2);
+            } break;
+        default:
+            push_interrupt(int_invalid_instruction);
+        }
+        } break;
+    case 0x49: { // fma
+        switch (ci.E.func) {
+        case 0: {
+            *(f16*)&regval(ci.E.rde) = *(f16*)&regval(ci.E.rs1) * *(f16*)&regval(ci.E.rs2) + *(f16*)&regval(ci.E.rde);
+            } break;
+        case 1: {
+            *(f32*)&regval(ci.E.rde) = fmaf(*(f32*)&regval(ci.E.rs1), *(f32*)&regval(ci.E.rs2), *(f32*)&regval(ci.E.rde));
+            } break;
+        case 2: {
+            *(f64*)&regval(ci.E.rde) = fma(*(f64*)&regval(ci.E.rs1), *(f64*)&regval(ci.E.rs2), *(f64*)&regval(ci.E.rde));
+            } break;
+        default:
+            push_interrupt(int_invalid_instruction);
+        }
+        } break;
+    case 0x4a: { // fsqrt
+        switch (ci.E.func) {
+        case 0: {
+            *(f16*)&regval(ci.E.rde) = sqrtf(*(f16*)&regval(ci.E.rs1));
+            } break;
+        case 1: {
+            *(f32*)&regval(ci.E.rde) = sqrtf(*(f32*)&regval(ci.E.rs1));
+            } break;
+        case 2: {
+            *(f64*)&regval(ci.E.rde) = sqrt(*(f64*)&regval(ci.E.rs1));
+            } break;
+        default:
+            push_interrupt(int_invalid_instruction);
+        }
+        } break;
+    case 0x4b: { // fmin
+        switch (ci.E.func) {
+        case 0: {
+            *(f16*)&regval(ci.E.rde) = *(f16*)&regval(ci.E.rs1) > *(f16*)&regval(ci.E.rs2) ? *(f16*)&regval(ci.E.rs2) : *(f16*)&regval(ci.E.rs1);
+            } break;
+        case 1: {
+            *(f32*)&regval(ci.E.rde) = fminf(*(f32*)&regval(ci.E.rs1), *(f32*)&regval(ci.E.rs2));
+            } break;
+        case 2: {
+            *(f64*)&regval(ci.E.rde) = fmin(*(f64*)&regval(ci.E.rs1), *(f64*)&regval(ci.E.rs2));
+            } break;
+        default:
+            push_interrupt(int_invalid_instruction);
+        }
+        } break;
+    case 0x4c: { // fmax
+        switch (ci.E.func) {
+        case 0: {
+            *(f16*)&regval(ci.E.rde) = *(f16*)&regval(ci.E.rs1) > *(f16*)&regval(ci.E.rs2) ? *(f16*)&regval(ci.E.rs1) : *(f16*)&regval(ci.E.rs2);
+            } break;
+        case 1: {
+            *(f32*)&regval(ci.E.rde) = fmaxf(*(f32*)&regval(ci.E.rs1), *(f32*)&regval(ci.E.rs2));
+            } break;
+        case 2: {
+            *(f64*)&regval(ci.E.rde) = fmax(*(f64*)&regval(ci.E.rs1), *(f64*)&regval(ci.E.rs2));
+            } break;
+        default:
+            push_interrupt(int_invalid_instruction);
+        }
+        } break;
+    case 0x4d: { // fsat
+        switch (ci.E.func) {
+        case 0: {
+            *(f16*)&regval(ci.E.rde) = ceilf(*(f16*)&regval(ci.E.rs1));
+            } break;
+        case 1: {
+            *(f32*)&regval(ci.E.rde) = ceilf(*(f32*)&regval(ci.E.rs1));
+            } break;
+        case 2: {
+            *(f64*)&regval(ci.E.rde) = ceil(*(f64*)&regval(ci.E.rs1));
+            } break;
+        default:
+            push_interrupt(int_invalid_instruction);
+        }
+        } break;
+
     }
 
     if (comet.ioc.out_pin) {
@@ -270,8 +736,6 @@ void run() {
     if (regval(r_sp) > regval(r_fp)) {
         push_interrupt(int_stack_underflow);
     }
-
-    TODO("work lmfao");
 }
 
 void push_stack(u64 data) {

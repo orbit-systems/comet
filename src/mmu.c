@@ -5,6 +5,7 @@
 bool init_MMU() {
     if (comet.mmu.mem_max == 0) comet.mmu.mem_max = MEM_DEFAULT_SIZE - 1;
     comet.mmu.memory = malloc(comet.mmu.mem_max + 1);
+    memset(comet.mmu.memory, 0, comet.mmu.mem_max + 1);
     return comet.mmu.memory != NULL;
 }
 
@@ -15,7 +16,7 @@ void destroy_mmu() {
 // general purpose read/write
 
 mmu_response read_instruction(u64 addr, instruction* restrict var) {
-    if (get_flag(flag_mode)) {
+    if (get_flag(flag_mode) == mode_user) {
         mmu_response res = translate_address(addr, &addr, access_execute);
         if (res != res_success) return res;
     }
