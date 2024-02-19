@@ -1,3 +1,6 @@
+#pragma once
+#define MEM_H
+
 #include "orbit.h"
 
 #define MEM_PAGE_SIZE 0x4000

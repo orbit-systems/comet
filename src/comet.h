@@ -2,14 +2,6 @@
 #define COMET_H
 
 #include "orbit.h"
-// typedef struct instruction_info_s {
-//     u8 opcode;
-//     u8 func;
-//     u8 rde;
-//     u8 rs1;
-//     u8 rs2;
-//     u64 imm;
-// } instruction_info;
 
 typedef union {
     u8 opcode;
