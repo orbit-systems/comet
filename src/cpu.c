@@ -14,6 +14,7 @@ void run() {
 
     regval(r_ip) += 4;
 
+    // printf("ip %08X instr %08X \n", regval(r_ip), current_instr);
     instruction ci = current_instr;
     switch (ci.opcode) {
     case 0x01: { // system control

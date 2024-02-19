@@ -32,7 +32,7 @@ build: $(OBJECTS)
 
 test: build
 	@echo ""
-	./$(EXECUTABLE_NAME) test/fib.bin -max-cycles:700000000 -bench
+	./$(EXECUTABLE_NAME) test/example.bin -max-cycles:700000000 -bench
 
 dbgbuild/%.o: src/%.c
 	@$(CC) -c -o $@ $< -Isrc/ -MD $(DEBUGFLAGS)
