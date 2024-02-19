@@ -14,6 +14,6 @@ void send_out(u16 port, u64 data);
 // send information to the CPU on a port
 void send_in(u16 port, u64 data);
 
-u64 bind_port(u16 port, u8 interrupt);
+void bind_port(u16 port, u8 interrupt);
 
 u64 port_data(u16 port);

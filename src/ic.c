@@ -31,13 +31,14 @@ void push_interrupt(u8 code) {
     if (comet.ic.queue.len == 0) {
         comet.ic.ret_addr = comet.cpu.registers[r_ip];
         comet.ic.ret_status = comet.cpu.registers[r_st];
-        set_flag(flag_mode, false);
+        set_flag(flag_mode, mode_kernel);
     }
     if (comet.ic.queue.len == comet.ic.queue.cap) {
         // interrupt queue overflow
         da_clear(&comet.ic.queue);
         code = int_interrupt_overflow;
     }
+    // hijack instruction pointer
     mmu_response res = phys_read_u64(comet.ic.ivt_base_address + 8*code, &comet.cpu.registers[r_ip]);
     if (res != res_success) {
         push_interrupt_from_MMU(res);
@@ -55,6 +56,7 @@ void return_interrupt() {
         comet.cpu.registers[r_ip] = comet.ic.ret_addr;
         comet.cpu.registers[r_st] = comet.ic.ret_status;
     } else {
+        // hijack instruction pointer
         u8 code = comet.ic.queue.at[comet.ic.queue.len-1].code;
         mmu_response res = phys_read_u64(comet.ic.ivt_base_address + 8*code, &comet.cpu.registers[r_ip]);
         if (res != res_success) {
@@ -70,6 +72,7 @@ void resolve_interrupt() {
     comet.ic.ret_addr = comet.cpu.registers[r_ip];
     comet.ic.ret_status = comet.cpu.registers[r_st];
     if (comet.ic.queue.len != 0) {
+        // hijack instruction pointer
         u8 code = comet.ic.queue.at[comet.ic.queue.len-1].code;
         mmu_response res = phys_read_u64(comet.ic.ivt_base_address + 8*code, &comet.cpu.registers[r_ip]);
         if (res != res_success) {

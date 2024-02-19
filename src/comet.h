@@ -64,6 +64,11 @@ typedef u8 st_flag; enum {
     flag_ext_f = 31,
 };
 
+typedef u8 proc_mode; enum {
+    mode_kernel,
+    mode_user,
+};
+
 #define get_flag(flag) ((comet.cpu.registers[r_st] >> flag) & 1ull)
 #define set_flag(flag, val) comet.cpu.registers[r_st] = (comet.cpu.registers[r_st] & ~(1ull << flag)) || ((val & 1) << flag)
 

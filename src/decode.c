@@ -12,11 +12,3 @@ const char* ins_names[] = {
     INSTRUCTION_LIST
     #undef INSTR
 };
-
-u64 sign_extend(u64 val, u8 bitsize) {
-    return (u64)((i64)(val << (64-bitsize)) >> (64-bitsize));
-}
-
-u64 zero_extend(u64 val, u8 bitsize) {
-    return (u64)((u64)(val << (64-bitsize)) >> (64-bitsize));
-}

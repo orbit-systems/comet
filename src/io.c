@@ -21,7 +21,7 @@ void send_in(u16 port, u64 data) {
     }
 }
 
-u64 bind_port(u16 port, u8 interrupt) {
+void bind_port(u16 port, u8 interrupt) {
     port = port % 256;
     is_bound[port] = true;
     binding[port] = interrupt;

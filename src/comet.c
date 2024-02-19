@@ -5,6 +5,7 @@
 
 // (unfinished) using aphelion v0.4
 
+#define ORBIT_IMPLEMENTATION
 #include "comet.h"
 #include "cpu.h"
 #include "mmu.h"
@@ -102,6 +103,8 @@ int main(int argc, char *argv[]) {
 
     comet.cpu.registers[r_ip] = 0x0;
     comet.cpu.running = true;
+
+    set_flag(flag_ext_f, true);
 
     // TODO("cpu core");
     while (true) {

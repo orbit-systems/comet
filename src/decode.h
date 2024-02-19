@@ -11,9 +11,9 @@
     INSTR("usr",   0x01, 3, fmt_F) \
     \
     INSTR("outr",  0x02, 0, fmt_M) \
-    INSTR("outi",  0x03, 0, fmt_F) \
+    INSTR("outi",  0x03, 0, fmt_M) \
     INSTR("inr",   0x04, 0, fmt_M) \
-    INSTR("ini",   0x05, 0, fmt_F) \
+    INSTR("ini",   0x05, 0, fmt_M) \
     \
     INSTR("jal",   0x06, 0, fmt_M) \
     INSTR("jalr",  0x07, 0, fmt_M) \
@@ -109,7 +109,4 @@
     INSTR("fmin",  0x4b, 0, fmt_E) \
     INSTR("fmax",  0x4c, 0, fmt_E) \
     INSTR("fsat",  0x4d, 0, fmt_E) \
-    INSTR("fcnv",  0x4e, 0, fmt_E) \
-
-u64 sign_extend(u64 val, u8 bitsize);
-u64 zero_extend(u64 val, u8 bitsize);
+    INSTR("fcnv",  0x4e, 0, fmt_E)
