@@ -1,5 +1,6 @@
 #include "comet.h"
 #include "mmu.h"
+#include "ic.h"
 
 // interrupt handling and interrupt controller
 
@@ -53,11 +54,19 @@ void return_interrupt() {
         comet.cpu.registers[r_ip] = comet.ic.ret_addr;
         comet.cpu.registers[r_st] = comet.ic.ret_status;
     } else {
-
+        u8 code = comet.ic.queue.at[comet.ic.queue.len-1].code;
+        mmu_response res = phys_read_u64(comet.ic.ivt_base_address + 8*code, &comet.cpu.registers[r_ip]);
+        if (res != res_success) {
+            push_interrupt_from_MMU(res);
+        }
     }
 }
 
 // pop interrupt while resuming execution at the current location
 void resolve_interrupt() {
     if (comet.ic.queue.len == 0) return;
+    da_pop_front(&comet.ic.queue);
+    comet.ic.ret_addr = comet.cpu.registers[r_ip];
+    comet.ic.ret_status = comet.cpu.registers[r_st];
+    set_flag(flag_mode, false);
 }

@@ -93,7 +93,7 @@ typedef struct CPU_s {
 } CPU;
 
 typedef struct intqueue_entry_s {
-    u8 interrupt;
+    u8 code;
 } intqueue_entry;
 
 da_typedef(intqueue_entry);
@@ -115,21 +115,19 @@ typedef struct IOC_s {
     bool in_pin;
     bool out_pin;
     u16  port;
-    u64  bus;
 } IOC;
 
 typedef struct emulator_s {
     CPU cpu;
     IC ic; // interrupt controller
     MMU mmu; // memory management unit
+    IOC ioc; // i/o controller
 
     bool flag_debug;
     u64  flag_cycle_limit;
     bool flag_no_color;
     bool flag_benchmark;
     char* flag_bin_path;
-
-    bool flag_internal_restart;
 } emulator;
 
 extern emulator comet;
