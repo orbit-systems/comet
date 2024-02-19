@@ -183,7 +183,7 @@ mmu_response translate_address(u64 virtual, u64* restrict physical, access_mode 
     // get PDE
     read_result = phys_read_u64(comet.mmu.page_table_base + level_1_index * 8, &pde);
     if (read_result != res_success || (pde & 1ull) == 0) {
-        return res_invalidmap;
+        return res_accviolation;
     }
     // set authoritative perms
     if ((pde & (1ull << 1)) >> 1 == 1) {
@@ -210,7 +210,7 @@ mmu_response translate_address(u64 virtual, u64* restrict physical, access_mode 
     // get PDE
     read_result = phys_read_u64(next + level_2_index * 8, &pde);
     if (read_result != res_success || (pde & 1ull) == 0) {
-        return res_invalidmap;
+        return res_accviolation;
     }
     // set authoritative perms
     if ((pde & (1ull << 1)) >> 1 == 1) {
@@ -237,7 +237,7 @@ mmu_response translate_address(u64 virtual, u64* restrict physical, access_mode 
     // get PDE
     read_result = phys_read_u64(next + level_3_index * 8, &pde);
     if (read_result != res_success || (pde & 1ull) == 0) {
-        return res_invalidmap;
+        return res_accviolation;
     }
     // set authoritative perms
     if ((pde & (1ull << 1)) >> 1 == 1) {
@@ -264,7 +264,7 @@ mmu_response translate_address(u64 virtual, u64* restrict physical, access_mode 
     // get PDE
     read_result = phys_read_u64(next + level_4_index * 8, &pde);
     if (read_result != res_success || (pde & 1ull) == 0) {
-        return res_invalidmap;
+        return res_accviolation;
     }
     // set authoritative perms
     if ((pde & (1ull << 1)) >> 1 == 1) {
@@ -291,7 +291,7 @@ mmu_response translate_address(u64 virtual, u64* restrict physical, access_mode 
     // get PDE
     read_result = phys_read_u64(next + level_5_index * 8, &pde);
     if (read_result != res_success || (pde & 1ull) == 0) {
-        return res_invalidmap;
+        return res_accviolation;
     }
     // set authoritative perms
     if ((pde & (1ull << 1)) >> 1 == 1) {

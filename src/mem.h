@@ -15,7 +15,7 @@ typedef u8 access_mode; enum {
 
 typedef u8 mmu_response; enum {
     res_success,
-    res_invalidmap,
+    res_accviolation,
     res_noperms,
     res_outofbounds,
     res_unaligned,
