@@ -1,5 +1,5 @@
 #include "comet.h"
-#include "mem.h"
+#include "mmu.h"
 
 // interrupt handling and interrupt controller
 
@@ -7,11 +7,29 @@ void init_IC() {
     da_init(&comet.ic.queue, 32);
 }
 
+// interpret mmu response and push interrupt if applicable
+void push_interrupt_from_MMU(mmu_response res) {
+    u8 code;
+    switch (res) {
+    case res_accviolation:
+    case res_noperms:
+    case res_outofbounds:
+        code = int_access_violation;
+        break;
+    case res_unaligned:
+        code = int_unaligned_access;
+        break;
+    default: 
+        return;
+    }
+    push_interrupt(code);
+}
+
 void push_interrupt(u8 code) {
     if (comet.ic.queue.len == 0) {
         comet.ic.ret_addr = comet.cpu.registers[r_ip];
         comet.ic.ret_status = comet.cpu.registers[r_st];
-        set_flag(flag_mode, true);
+        set_flag(flag_mode, false);
     }
     if (comet.ic.queue.len == comet.ic.queue.cap) {
         // interrupt queue overflow
@@ -20,7 +38,7 @@ void push_interrupt(u8 code) {
     }
     mmu_response res = phys_read_u64(comet.ic.ivt_base_address + 8*code, &comet.cpu.registers[r_ip]);
     if (res != res_success) {
-        TODO("issue proper interrupts in the IC");
+        push_interrupt_from_MMU(res);
     } else {
         da_push(&comet.ic.queue, (intqueue_entry){ code });
     }

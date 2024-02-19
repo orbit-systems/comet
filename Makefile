@@ -19,11 +19,6 @@ DONTBEAFUCKINGIDIOT = -Werror -Wall -Wextra -pedantic -Wno-missing-field-initial
 CFLAGS = -O3 -Wincompatible-pointer-types
 SHUTTHEFUCKUP = -Wno-unknown-warning-option -Wno-incompatible-pointer-types-discards-qualifiers -Wno-initializer-overrides -Wno-discarded-qualifiers
 
-#MD adds a dependency file, .d to the directory. the line at the bottom
-#forces make to rebuild, if any dependences need it.
-#e.g if comet.h changes, it forces a rebuild
-#if core.c changes, it only rebuilds.
-
 all: build
 
 build/%.o: src/%.c

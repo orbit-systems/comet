@@ -1,4 +1,6 @@
 #include "comet.h"
+#include "mmu.h"
+#include "ic.h"
 
 // yeah
 i64 forceinline mod64(i64 a, i64 b) {

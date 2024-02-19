@@ -6,7 +6,7 @@
 // (unfinished) using aphelion v0.4
 
 #include "comet.h"
-#include "mem.h"
+#include "mmu.h"
 
 void print_help() {
     printf("\nusage: comet (path) [flags]\n");

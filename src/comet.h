@@ -41,48 +41,6 @@ typedef union {
 
 static_assert(sizeof(instruction) == sizeof(u32), "sizeof(instruction) != sizeof(u32)");
 
-typedef struct CPU_s {
-    u64 registers[16];
-    u64 cycle;
-    instruction instr;
-    bool running;
-} CPU;
-
-typedef struct intqueue_entry_s {
-    u8 interrupt;
-} intqueue_entry;
-
-da_typedef(intqueue_entry);
-
-typedef struct IC_s {
-    u64 ivt_base_address;
-
-    u64 ret_addr;
-    u64 ret_status;
-    da(intqueue_entry) queue;
-} IC;
-
-typedef struct MMU_s {
-    u8* memory;
-    u64 mem_max;
-
-    u64 page_table_base;
-} MMU;
-
-typedef struct emulator_s {
-    CPU cpu;
-    IC ic; // interrupt controller
-    MMU mmu; // memory management unit
-
-    bool flag_debug;
-    u64  flag_cycle_limit;
-    bool flag_no_color;
-    bool flag_benchmark;
-    char* flag_bin_path;
-
-    bool flag_internal_restart;
-} emulator;
-
 typedef u8 register_name; enum {
     r_rz,
     r_ra, r_rb, r_rc, r_rd,
@@ -127,11 +85,51 @@ typedef u8 ins_fmt; enum {
     fmt_B,
 };
 
-void raw_decode(u32 ins, instruction* restrict info);
-char* get_ins_name(instruction* restrict ins);
-void exec_instruction(instruction* restrict ins);
+typedef struct CPU_s {
+    u64 registers[16];
+    u64 cycle;
+    instruction instr;
+    bool running;
+} CPU;
 
-u64 sign_extend(u64 val, u8 bitsize);
+typedef struct intqueue_entry_s {
+    u8 interrupt;
+} intqueue_entry;
 
+da_typedef(intqueue_entry);
+
+typedef struct IC_s {
+    u64 ivt_base_address;
+    u64 ret_addr;
+    u64 ret_status;
+    da(intqueue_entry) queue;
+} IC;
+
+typedef struct MMU_s {
+    u8* memory;
+    u64 mem_max;
+    u64 page_table_base;
+} MMU;
+
+typedef struct IOC_s {
+    bool in_pin;
+    bool out_pin;
+    u16  port;
+    u64  bus;
+} IOC;
+
+typedef struct emulator_s {
+    CPU cpu;
+    IC ic; // interrupt controller
+    MMU mmu; // memory management unit
+
+    bool flag_debug;
+    u64  flag_cycle_limit;
+    bool flag_no_color;
+    bool flag_benchmark;
+    char* flag_bin_path;
+
+    bool flag_internal_restart;
+} emulator;
 
 extern emulator comet;

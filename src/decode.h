@@ -111,6 +111,5 @@
     INSTR("fsat",  0x4d, 0, fmt_E) \
     INSTR("fcnv",  0x4e, 0, fmt_E) \
 
-
 u64 sign_extend(u64 val, u8 bitsize);
 u64 zero_extend(u64 val, u8 bitsize);
