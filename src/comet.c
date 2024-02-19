@@ -49,13 +49,13 @@ void load_arguments(int argc, char* argv[]) {
         } else if (!strcmp(a.key, "-bench")) {
             comet.flag_benchmark = true;
         } else if (!strcmp(a.key, "-max-cycles")) {
-            comet.flag_cycle_limit = strtoll(a.val, NULL, 0);
+            comet.flag_cycle_limit = strtoull(a.val, NULL, 0);
             if (comet.flag_cycle_limit == 0) {
                 printf("error: expected positive int, got \"%s\"\n", a.val);
                 exit(EXIT_FAILURE);
             }
         } else if (!strcmp(a.key, "-memory")) {
-            comet.mmu.mem_max = strtoll(a.val, NULL, 0);
+            comet.mmu.mem_max = strtoull(a.val, NULL, 0);
             if (comet.mmu.mem_max == 0) {
                 printf("error: expected positive int, got \"%s\"\n", a.val);
                 exit(EXIT_FAILURE);
@@ -76,7 +76,7 @@ emulator comet = (emulator){};
 int main(int argc, char *argv[]) {
 
     load_arguments(argc, argv);
-    bool mem_init_success = init_memory();
+    bool mem_init_success = init_MMU();
     if (!mem_init_success) {
         printf("crash: virtual memory space could not initialize (ask sandwichman about this)\n");
         exit(EXIT_FAILURE);
@@ -102,6 +102,6 @@ int main(int argc, char *argv[]) {
 
     TODO("cpu core");
 
-    free_memory();
+    destroy_mmu();
     return EXIT_SUCCESS;
 }

@@ -45,6 +45,6 @@ mmu_response phys_write_u64(u64 addr, u64 value);
 mmu_response translate_address(u64 virtual, u64* restrict physical, access_mode mode);
 u64 align_backwards(u64 ptr, u64 align);
 
-bool init_memory();
-void free_memory();
+bool init_MMU();
+void destroy_mmu();
 bool load_image(FILE* bin);

@@ -2,20 +2,20 @@
 #include "mem.h"
 // this is much more sensible
 
-bool init_memory() {
+bool init_MMU() {
     if (comet.mmu.mem_max == 0) comet.mmu.mem_max = MEM_DEFAULT_SIZE - 1;
     comet.mmu.memory = malloc(comet.mmu.mem_max + 1);
     return comet.mmu.memory != NULL;
 }
 
-void free_memory() {
+void destroy_mmu() {
     free(comet.mmu.memory);
 }
 
 // general purpose read/write
 
 mmu_response read_u8(u64 addr, u8* restrict var) {
-    if (comet.cpu.user_mode) {
+    if (get_flag(flag_mode)) {
         mmu_response res = translate_address(addr, &addr, access_read);
         if (res != res_success) return res;
     }
@@ -23,7 +23,7 @@ mmu_response read_u8(u64 addr, u8* restrict var) {
 }
 
 mmu_response read_u16(u64 addr, u16* restrict var) {
-    if (comet.cpu.user_mode) {
+    if (get_flag(flag_mode)) {
         mmu_response res = translate_address(addr, &addr, access_read);
         if (res != res_success) return res;
     }
@@ -31,7 +31,7 @@ mmu_response read_u16(u64 addr, u16* restrict var) {
 }
 
 mmu_response read_u32(u64 addr, u32* restrict var) {
-    if (comet.cpu.user_mode) {
+    if (get_flag(flag_mode)) {
         mmu_response res = translate_address(addr, &addr, access_read);
         if (res != res_success) return res;
     }
@@ -39,7 +39,7 @@ mmu_response read_u32(u64 addr, u32* restrict var) {
 }
 
 mmu_response read_u64(u64 addr, u64* restrict var) {
-    if (comet.cpu.user_mode) {
+    if (get_flag(flag_mode)) {
         mmu_response res = translate_address(addr, &addr, access_read);
         if (res != res_success) return res;
     }
@@ -47,7 +47,7 @@ mmu_response read_u64(u64 addr, u64* restrict var) {
 }
 
 mmu_response write_u8(u64 addr, u8 value) {
-    if (comet.cpu.user_mode) {
+    if (get_flag(flag_mode)) {
         mmu_response res = translate_address(addr, &addr, access_write);
         if (res != res_success) return res;
     }
@@ -55,7 +55,7 @@ mmu_response write_u8(u64 addr, u8 value) {
 }
 
 mmu_response write_u16(u64 addr, u16 value) {
-    if (comet.cpu.user_mode) {
+    if (get_flag(flag_mode)) {
         mmu_response res = translate_address(addr, &addr, access_write);
         if (res != res_success) return res;
     }
@@ -63,7 +63,7 @@ mmu_response write_u16(u64 addr, u16 value) {
 }
 
 mmu_response write_u32(u64 addr, u32 value) {
-    if (comet.cpu.user_mode) {
+    if (get_flag(flag_mode)) {
         mmu_response res = translate_address(addr, &addr, access_write);
         if (res != res_success) return res;
     }
@@ -71,7 +71,7 @@ mmu_response write_u32(u64 addr, u32 value) {
 }
 
 mmu_response write_u64(u64 addr, u64 value) {
-    if (comet.cpu.user_mode) {
+    if (get_flag(flag_mode)) {
         mmu_response res = translate_address(addr, &addr, access_write);
         if (res != res_success) return res;
     }

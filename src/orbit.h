@@ -40,7 +40,7 @@ typedef float f32;
 #   define forceinline __forceinline
 #elif defined(__GNUC__)
 #   define forceinline inline __attribute__((__always_inline__))
-#elif defined(__CLANG__)
+#elif defined(__clang__)
 #   if __has_attribute(__always_inline__)
 #       define forceinline inline __attribute__((__always_inline__))
 #   else
@@ -127,6 +127,10 @@ typedef float f32;
     } \
 } while (0)
 
+#define da_clear(da_ptr) do { \
+    (da_ptr)->len = 0;\
+} while (0)
+
 #define da_destroy(da_ptr) do { \
     if ((da_ptr)->at == NULL) break; \
     free((da_ptr)->at); \
@@ -148,6 +152,9 @@ typedef float f32;
     (da_ptr)->len--; \
 } while (0)
 
+#define da_push(da_ptr, element) da_append(da_ptr, element)
+#define da_pop(da_ptr) (da_ptr)->len--
+#define da_pop_front(da_ptr) da_remove_at(da_ptr, 0)
 
 // strings and string-related utils.
 

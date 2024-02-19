@@ -11,11 +11,12 @@ ifeq ($(OS),Windows_NT)
 endif
 
 CC = gcc
+LD = gcc
 
 DEBUGFLAGS = -g -rdynamic -pg
 ASANFLAGS = -fsanitize=undefined -fsanitize=address
 DONTBEAFUCKINGIDIOT = -Werror -Wall -Wextra -pedantic -Wno-missing-field-initializers -Wno-unused-result
-CFLAGS = -O3
+CFLAGS = -O3 -Wincompatible-pointer-types
 SHUTTHEFUCKUP = -Wno-unknown-warning-option -Wno-incompatible-pointer-types-discards-qualifiers -Wno-initializer-overrides -Wno-discarded-qualifiers
 
 #MD adds a dependency file, .d to the directory. the line at the bottom
@@ -26,10 +27,13 @@ SHUTTHEFUCKUP = -Wno-unknown-warning-option -Wno-incompatible-pointer-types-disc
 all: build
 
 build/%.o: src/%.c
-	$(CC) -c -o $@ $< $(CFLAGS) -MD $(SHUTTHEFUCKUP)
+	@echo compiling $<
+	@$(CC) -c -o $@ $< $(CFLAGS) -MD $(SHUTTHEFUCKUP)
 
 build: $(OBJECTS)
-	$(CC) $(OBJECTS) -o $(EXECUTABLE_NAME) $(CFLAGS) -MD
+	@echo linking with $(LD)
+	@$(CC) $(OBJECTS) -o $(EXECUTABLE_NAME) $(CFLAGS) -MD
+	@echo $(EXECUTABLE_NAME) built
 
 test: build
 	@echo ""
@@ -38,10 +42,13 @@ test: build
 debug:
 	$(DEBUGFLAGS) $(DONTBEAFUCKINGIDIOT)
 
-test_gpu: build
-	@./$(EXECUTABLE_NAME) test/gputest.bin -debug
-
 clean:
-	rm -f build/*
+	@rm -rf build
+	@mkdir build
+
+printbuildinfo:
+	@echo using $(CC) with flags $(CFLAGS)
+
+new: clean printbuildinfo build
 
 -include $(OBJECTS:.o=.d)
