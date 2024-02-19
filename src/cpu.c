@@ -732,7 +732,8 @@ void run() {
             push_interrupt(int_invalid_instruction);
         }
         } break;
-
+    default:
+        push_interrupt(int_invalid_instruction);
     }
 
     if (comet.ioc.out_pin) {

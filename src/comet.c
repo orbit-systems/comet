@@ -111,7 +111,7 @@ int main(int argc, char *argv[]) {
 
     struct timeval exec_begin, exec_end;
     gettimeofday(&exec_begin, 0);
-    
+
     while (comet.cpu.running) {
 
         if (comet.flag_cycle_limit == comet.cpu.cycle) comet.cpu.running = false;
@@ -123,9 +123,9 @@ int main(int argc, char *argv[]) {
     long seconds = exec_end.tv_sec - exec_begin.tv_sec;
     long microseconds = exec_end.tv_usec - exec_begin.tv_usec;
     double elapsed = (double) seconds + (double) microseconds*1e-6;
-    printf("\t  time      : %fs\n", elapsed);
-    printf("\t  cycles    : %zu\n", comet.cpu.cycle);
-    printf("\t  cycles/s  : %.3f\n", (double) comet.cpu.cycle / elapsed);
+    printf("\ttime      : %fs\n", elapsed);
+    printf("\tcycles    : %zu\n", comet.cpu.cycle);
+    printf("\tcycles/s  : %.3f\n", (double) comet.cpu.cycle / elapsed);
 
     destroy_mmu();
     return EXIT_SUCCESS;
