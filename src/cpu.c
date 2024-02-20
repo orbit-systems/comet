@@ -2,6 +2,20 @@
 #include "cpu.h"
 #include "dev.h"
 
+void forceinline push_stack(u64 data) {
+    regval(r_sp) -= 8;
+    push_interrupt_from_MMU(write_u64(regval(r_sp), data));
+}
+
+void forceinline pop_stack(u64* val) {
+    mmu_response res = read_u64(regval(r_sp), val);
+    if (res != res_success) {
+        push_interrupt_from_MMU(res);
+    } else {
+        regval(r_sp) += 8;
+    }
+}
+
 void run() {
     comet.cpu.cycle++;
 
@@ -300,40 +314,40 @@ void run() {
     case 0x20: { // addr
         u64 a = regval(ci.R.rs1);
         u64 b = regval(ci.R.rs2);
-        bool u_overflow =  __builtin_uaddll_overflow(a, b, &regval(ci.R.rde));
-             u_overflow |= __builtin_uaddll_overflow(regval(ci.R.rde), get_flag(flag_carry_borrow_unsigned), (i64*)&regval(ci.R.rde));
-        bool s_overflow =  __builtin_saddll_overflow((i64)a, (i64)b, (i64*)&regval(ci.R.rde));
-             s_overflow |= __builtin_saddll_overflow(regval(ci.R.rde), get_flag(flag_carry_borrow), (i64*)&regval(ci.R.rde));
+        bool u_overflow =  __builtin_uaddl_overflow(a, b, &regval(ci.R.rde));
+             u_overflow |= __builtin_uaddl_overflow(regval(ci.R.rde), get_flag(flag_carry_borrow_unsigned), (i64*)&regval(ci.R.rde));
+        bool s_overflow =  __builtin_saddl_overflow((i64)a, (i64)b, (i64*)&regval(ci.R.rde));
+             s_overflow |= __builtin_saddl_overflow(regval(ci.R.rde), get_flag(flag_carry_borrow), (i64*)&regval(ci.R.rde));
         set_flag(flag_carry_borrow_unsigned, u_overflow);
         set_flag(flag_carry_borrow, s_overflow);
         } break;
     case 0x21: { // addi
         u64 a = regval(ci.M.rs1);
         u64 b = sign_extend(ci.M.imm, 16);
-        bool u_overflow =  __builtin_uaddll_overflow(a, b, &regval(ci.M.rde));
-             u_overflow |= __builtin_uaddll_overflow(regval(ci.M.rde), get_flag(flag_carry_borrow_unsigned), &regval(ci.M.rde));
-        bool s_overflow =  __builtin_saddll_overflow((i64)a, (i64)b, (i64*)&regval(ci.M.rde));
-             s_overflow |= __builtin_saddll_overflow(regval(ci.M.rde), get_flag(flag_carry_borrow), (i64*)&regval(ci.M.rde));
+        bool u_overflow =  __builtin_uaddl_overflow(a, b, &regval(ci.M.rde));
+             u_overflow |= __builtin_uaddl_overflow(regval(ci.M.rde), get_flag(flag_carry_borrow_unsigned), &regval(ci.M.rde));
+        bool s_overflow =  __builtin_saddl_overflow((i64)a, (i64)b, (i64*)&regval(ci.M.rde));
+             s_overflow |= __builtin_saddl_overflow(regval(ci.M.rde), get_flag(flag_carry_borrow), (i64*)&regval(ci.M.rde));
         set_flag(flag_carry_borrow_unsigned, u_overflow);
         set_flag(flag_carry_borrow, s_overflow);
         } break;
     case 0x22: { // subr
         u64 a = regval(ci.R.rs1);
         u64 b = regval(ci.R.rs2);
-        bool u_overflow =  __builtin_usubll_overflow(a, b, &regval(ci.R.rde));
-             u_overflow |= __builtin_usubll_overflow(regval(ci.R.rde), get_flag(flag_carry_borrow_unsigned), &regval(ci.R.rde));
-        bool s_overflow =  __builtin_ssubll_overflow((i64)a, (i64)b, (i64*)&regval(ci.R.rde));
-             s_overflow |= __builtin_ssubll_overflow(regval(ci.R.rde), get_flag(flag_carry_borrow), (i64*)&regval(ci.R.rde));
+        bool u_overflow =  __builtin_usubl_overflow(a, b, &regval(ci.R.rde));
+             u_overflow |= __builtin_usubl_overflow(regval(ci.R.rde), get_flag(flag_carry_borrow_unsigned), &regval(ci.R.rde));
+        bool s_overflow =  __builtin_ssubl_overflow((i64)a, (i64)b, (i64*)&regval(ci.R.rde));
+             s_overflow |= __builtin_ssubl_overflow(regval(ci.R.rde), get_flag(flag_carry_borrow), (i64*)&regval(ci.R.rde));
         set_flag(flag_carry_borrow_unsigned, u_overflow);
         set_flag(flag_carry_borrow, s_overflow);
         } break;
     case 0x23: { // subi
         u64 a = regval(ci.M.rs1);
         u64 b = sign_extend(ci.M.imm, 16);
-        bool u_overflow =  __builtin_uaddll_overflow(a, b, &regval(ci.M.rde));
-             u_overflow |= __builtin_uaddll_overflow(regval(ci.M.rde), get_flag(flag_carry_borrow_unsigned), &regval(ci.M.rde));
-        bool s_overflow =  __builtin_saddll_overflow((i64)a, (i64)b, (i64*)&regval(ci.M.rde));
-             s_overflow |= __builtin_saddll_overflow(regval(ci.M.rde), get_flag(flag_carry_borrow), (i64*)&regval(ci.M.rde));
+        bool u_overflow =  __builtin_uaddl_overflow(a, b, &regval(ci.M.rde));
+             u_overflow |= __builtin_uaddl_overflow(regval(ci.M.rde), get_flag(flag_carry_borrow_unsigned), &regval(ci.M.rde));
+        bool s_overflow =  __builtin_saddl_overflow((i64)a, (i64)b, (i64*)&regval(ci.M.rde));
+             s_overflow |= __builtin_saddl_overflow(regval(ci.M.rde), get_flag(flag_carry_borrow), (i64*)&regval(ci.M.rde));
         set_flag(flag_carry_borrow_unsigned, u_overflow);
         set_flag(flag_carry_borrow, s_overflow);
         } break;
@@ -723,7 +737,7 @@ void run() {
     case 0x4d: { // fsat
         switch (ci.E.func) {
         case 0: {
-            *(f16*)&regval(ci.E.rde) = ceilf(*(f16*)&regval(ci.E.rs1));
+            *(f16*)&regval(ci.E.rde) = ceilf((f32)*(f16*)&regval(ci.E.rs1));
             } break;
         case 1: {
             *(f32*)&regval(ci.E.rde) = ceilf(*(f32*)&regval(ci.E.rs1));
@@ -762,10 +776,10 @@ void run() {
             }
             } break;
         case 1: {
-            regval(ci.E.rde) = !!__isnan(*(f32*)&regval(ci.E.rs1));
+            regval(ci.E.rde) = !!__isnanf(*(f32*)&regval(ci.E.rs1));
             } break;
         case 2: {
-            regval(ci.E.rde) = !!__isnanf(*(f64*)&regval(ci.E.rs1));
+            regval(ci.E.rde) = !!__isnan(*(f64*)&regval(ci.E.rs1));
             } break;
         default:
             push_interrupt(int_invalid_instruction);
@@ -786,29 +800,4 @@ void run() {
     if (regval(r_sp) > regval(r_fp)) {
         push_interrupt(int_stack_underflow);
     }
-}
-
-void push_stack(u64 data) {
-    regval(r_sp) -= 8;
-    push_interrupt_from_MMU(write_u64(regval(r_sp), data));
-}
-
-void pop_stack(u64* val) {
-    mmu_response res = read_u64(regval(r_sp), val);
-    if (res != res_success) {
-        push_interrupt_from_MMU(res);
-    } else {
-        regval(r_sp) += 8;
-    }
-}
-
-// yeah
-i64 forceinline mod64(i64 a, i64 b) {
-    if (b == -1) return 0;
-    i64 r = a % b;
-    if (r < 0) {
-        if (b >= 0) r += b;
-        else        r -= b;
-    }
-    return r;
 }

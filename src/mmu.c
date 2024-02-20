@@ -156,14 +156,6 @@ mmu_response phys_write_u64(u64 addr, u64 value) {
     return res_success;
 }
 
-u64 align_backwards(u64 ptr, u64 align) {
-    u64 p = ptr - align + 1;
-    u64 mod = p & (align - 1);
-    if (mod != 0)
-        p += align - mod;
-    return p;
-}
-
 bool load_image(FILE* bin) {
     fseek(bin, 0, SEEK_END);
     long bin_size = ftell(bin);

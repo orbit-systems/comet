@@ -16,7 +16,7 @@ char* cc            = "gcc";     // (optional) c compiler / linker to use (defau
 char* output_dir    = "";        // (optional) folder to drop the final executable in (defaults to the main folder)
 char* flags         = "-O3";     // (optional) c compiler flags
 char* include_dir   = "src";     // (optional) c include path
-char* link_flags    = "";        // (optional) linker flags
+char* link_flags    = "-lm -lc"; // (optional) linker flags
 
 int transparency_mode = 0;       // (optional) if not zero, print the executed commands instead of nice messages
 

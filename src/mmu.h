@@ -45,7 +45,6 @@ mmu_response phys_write_u32(u64 addr, u32 value);
 mmu_response phys_write_u64(u64 addr, u64 value);
 
 mmu_response translate_address(u64 virtual, u64* restrict physical, access_mode mode);
-u64 align_backwards(u64 ptr, u64 align);
 
 bool init_MMU();
 void destroy_mmu();

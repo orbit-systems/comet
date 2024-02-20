@@ -23,11 +23,11 @@ all: build
 
 build/%.o: src/%.c
 	@echo compiling $<
-	@$(CC) -c -o $@ $< $(CFLAGS) -MD $(SHUTTHEFUCKUP)
+	@$(CC) -c -o $@ $< $(CFLAGS) -MD
 
 build: $(OBJECTS)
 	@echo linking with $(LD)
-	@$(CC) $(OBJECTS) -o $(EXECUTABLE_NAME) $(CFLAGS) -MD
+	@$(CC) $(OBJECTS) -o $(EXECUTABLE_NAME) -lc -lm -MD
 	@echo $(EXECUTABLE_NAME) built
 
 test: build

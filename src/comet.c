@@ -6,6 +6,8 @@
 // using aphelion v0.4
 
 #define ORBIT_IMPLEMENTATION
+#include "orbit.h"
+
 #include "comet.h"
 #include "cpu.h"
 #include "mmu.h"
