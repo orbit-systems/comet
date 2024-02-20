@@ -1,7 +1,8 @@
 include 'aphelion/aphel.inc'
 
 llis ra, 1
-addr ra, rb, rc
+addr rz, rz, rz
+
 bruh:
     addi ra, ra, 1
     bra bruh
