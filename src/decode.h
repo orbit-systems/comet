@@ -109,4 +109,5 @@
     INSTR("fmin",  0x4b, 0, fmt_E) \
     INSTR("fmax",  0x4c, 0, fmt_E) \
     INSTR("fsat",  0x4d, 0, fmt_E) \
-    INSTR("fcnv",  0x4e, 0, fmt_E)
+    INSTR("fcnv",  0x4e, 0, fmt_E) \
+    INSTR("fnan",  0x4f, 0, fmt_E)

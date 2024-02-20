@@ -5,6 +5,8 @@
 void run() {
     comet.cpu.cycle++;
 
+    printf("[at 0x%016X %02x]\n", regval(r_ip), current_instr.opcode);
+
     // load instruction
     mmu_response res = read_instruction(regval(r_ip), &current_instr);
     if (res != res_success) {
@@ -299,7 +301,7 @@ void run() {
         u64 a = regval(ci.R.rs1);
         u64 b = regval(ci.R.rs2);
         bool u_overflow =  __builtin_uaddll_overflow(a, b, &regval(ci.R.rde));
-             u_overflow |= __builtin_uaddll_overflow(regval(ci.R.rde), get_flag(flag_carry_borrow_unsigned), &regval(ci.R.rde));
+             u_overflow |= __builtin_uaddll_overflow(regval(ci.R.rde), get_flag(flag_carry_borrow_unsigned), (i64*)&regval(ci.R.rde));
         bool s_overflow =  __builtin_saddll_overflow((i64)a, (i64)b, (i64*)&regval(ci.R.rde));
              s_overflow |= __builtin_saddll_overflow(regval(ci.R.rde), get_flag(flag_carry_borrow), (i64*)&regval(ci.R.rde));
         set_flag(flag_carry_borrow_unsigned, u_overflow);
@@ -733,9 +735,47 @@ void run() {
             push_interrupt(int_invalid_instruction);
         }
         } break;
+    case 0x4e: { // fcnv
+        switch (ci.E.func) {
+        case 0b0000: *(f16*)&regval(ci.E.rde) = (f16) *(f16*)&regval(ci.E.rs1); break;
+        case 0b0001: *(f32*)&regval(ci.E.rde) = (f32) *(f16*)&regval(ci.E.rs1); break;
+        case 0b0010: *(f64*)&regval(ci.E.rde) = (f64) *(f16*)&regval(ci.E.rs1); break;
+        case 0b0100: *(f16*)&regval(ci.E.rde) = (f16) *(f32*)&regval(ci.E.rs1); break;
+        case 0b0101: *(f32*)&regval(ci.E.rde) = (f32) *(f32*)&regval(ci.E.rs1); break;
+        case 0b0110: *(f64*)&regval(ci.E.rde) = (f64) *(f32*)&regval(ci.E.rs1); break;
+        case 0b1000: *(f16*)&regval(ci.E.rde) = (f16) *(f64*)&regval(ci.E.rs1); break;
+        case 0b1001: *(f32*)&regval(ci.E.rde) = (f32) *(f64*)&regval(ci.E.rs1); break;
+        case 0b1010: *(f64*)&regval(ci.E.rde) = (f64) *(f64*)&regval(ci.E.rs1); break;
+        default:
+            push_interrupt(int_invalid_instruction);
+        }
+        } break;
+    case 0x4f: { // fnan
+        switch (ci.E.func) {
+        case 0: {
+            u16 b = *(u16*)&regval(ci.E.rs1);
+            regval(ci.E.rde) = 0;
+            if ((b >> 10) ^ 0b011111 == 0) {
+                if (b & 0b1111111111) {
+                    regval(ci.E.rde) = 1;
+                }
+            }
+            } break;
+        case 1: {
+            regval(ci.E.rde) = !!__isnan(*(f32*)&regval(ci.E.rs1));
+            } break;
+        case 2: {
+            regval(ci.E.rde) = !!__isnanf(*(f64*)&regval(ci.E.rs1));
+            } break;
+        default:
+            push_interrupt(int_invalid_instruction);
+        }
+        } break;
     default:
         push_interrupt(int_invalid_instruction);
     }
+
+
 
     if (comet.ioc.out_pin) {
         dev_receive(); // run corresponding output handler

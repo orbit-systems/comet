@@ -16,7 +16,7 @@ LD = gcc
 DEBUGFLAGS = -g -O0
 ASANFLAGS = -fsanitize=undefined -fsanitize=address
 DONTBEAFUCKINGIDIOT = -Werror -Wall -Wextra -pedantic -Wno-missing-field-initializers -Wno-unused-result
-CFLAGS = -O3 -Wincompatible-pointer-types
+CFLAGS = -O3 -Wincompatible-pointer-types -fno-strict-aliasing
 SHUTTHEFUCKUP = -Wno-unknown-warning-option -Wno-incompatible-pointer-types-discards-qualifiers -Wno-initializer-overrides -Wno-discarded-qualifiers
 
 all: build

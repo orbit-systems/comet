@@ -10,6 +10,7 @@ void send_out(u16 port, u64 data) {
     comet.ioc.out_pin = true;
     comet.ioc.port = port;
     ports[port] = data;
+    // printf("---%d---%d\n", comet.ioc.port, data);
 }
 
 // send information to the CPU on a port

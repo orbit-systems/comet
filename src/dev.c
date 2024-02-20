@@ -76,5 +76,7 @@ void SYSTIMER_receive(u64 data) {
 
 void TTY_receive(u64 data) {
     // TODO make this decode data as a unicode value
-    putc((u8)data, stdout);
+    // printf("TTY RECV %d %c\n ", data, data);
+    putchar((u8)data);
+    // printf("TTY RECEIVE");
 }

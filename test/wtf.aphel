@@ -1,0 +1,7 @@
+include 'aphelion/aphel.inc'
+
+llis ra, 1
+addr ra, rb, rc
+bruh:
+    addi ra, ra, 1
+    bra bruh
