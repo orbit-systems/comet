@@ -19,7 +19,7 @@ void forceinline pop_stack(u64* val) {
 void run() {
     comet.cpu.cycle++;
 
-    printf("[at 0x%016X %02x]\n", regval(r_ip), current_instr.opcode);
+    // printf("[at 0x%016X %02x]\n", regval(r_ip), current_instr.opcode);
 
     // load instruction
     mmu_response res = read_instruction(regval(r_ip), &current_instr);
@@ -315,7 +315,7 @@ void run() {
         u64 a = regval(ci.R.rs1);
         u64 b = regval(ci.R.rs2);
         bool u_overflow =  __builtin_uaddl_overflow(a, b, &regval(ci.R.rde));
-             u_overflow |= __builtin_uaddl_overflow(regval(ci.R.rde), get_flag(flag_carry_borrow_unsigned), (i64*)&regval(ci.R.rde));
+             u_overflow |= __builtin_uaddl_overflow(regval(ci.R.rde), get_flag(flag_carry_borrow_unsigned), &regval(ci.R.rde));
         bool s_overflow =  __builtin_saddl_overflow((i64)a, (i64)b, (i64*)&regval(ci.R.rde));
              s_overflow |= __builtin_saddl_overflow(regval(ci.R.rde), get_flag(flag_carry_borrow), (i64*)&regval(ci.R.rde));
         set_flag(flag_carry_borrow_unsigned, u_overflow);
@@ -601,10 +601,10 @@ void run() {
             *(f16*)&regval(ci.E.rde) = *(f16*)&regval(ci.E.rs1) >= 0 ? *(f16*)&regval(ci.E.rs1) : -*(f16*)&regval(ci.E.rs1);
             } break;
         case 1: {
-            *(f32*)&regval(ci.E.rde) = - fabsf(*(f32*)&regval(ci.E.rs1));
+            *(f32*)&regval(ci.E.rde) = fabsf(*(f32*)&regval(ci.E.rs1));
             } break;
         case 2: {
-            *(f64*)&regval(ci.E.rde) = - fabs(*(f64*)&regval(ci.E.rs1));
+            *(f64*)&regval(ci.E.rde) = fabs(*(f64*)&regval(ci.E.rs1));
             } break;
         default:
             push_interrupt(int_invalid_instruction);
