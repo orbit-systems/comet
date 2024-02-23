@@ -26,12 +26,12 @@
     INSTR("ble",   0x0a, 4, fmt_B) \
     INSTR("bltu",  0x0a, 5, fmt_B) \
     INSTR("bleu",  0x0a, 6, fmt_B) \
-    INSTR("beq",   0x0a, 9, fmt_B) \
-    INSTR("bez",   0x0a, 10, fmt_B) \
-    INSTR("blt",   0x0a, 11, fmt_B) \
-    INSTR("ble",   0x0a, 12, fmt_B) \
-    INSTR("bltu",  0x0a, 13, fmt_B) \
-    INSTR("bleu",  0x0a, 14, fmt_B) \
+    INSTR("bne",   0x0a, 9, fmt_B) \
+    INSTR("bnz",   0x0a, 10, fmt_B) \
+    INSTR("bge",   0x0a, 11, fmt_B) \
+    INSTR("bgt",   0x0a, 12, fmt_B) \
+    INSTR("bgeu",  0x0a, 13, fmt_B) \
+    INSTR("bgtu",  0x0a, 14, fmt_B) \
     \
     INSTR("push",  0x0b, 0, fmt_M) \
     INSTR("pop",   0x0c, 0, fmt_M) \
