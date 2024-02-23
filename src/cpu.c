@@ -751,15 +751,12 @@ void run() {
         } break;
     case 0x4e: { // fcnv
         switch (ci.E.func) {
-        case 0b0000: *(f16*)&regval(ci.E.rde) = (f16) *(f16*)&regval(ci.E.rs1); break;
         case 0b0001: *(f32*)&regval(ci.E.rde) = (f32) *(f16*)&regval(ci.E.rs1); break;
         case 0b0010: *(f64*)&regval(ci.E.rde) = (f64) *(f16*)&regval(ci.E.rs1); break;
         case 0b0100: *(f16*)&regval(ci.E.rde) = (f16) *(f32*)&regval(ci.E.rs1); break;
-        case 0b0101: *(f32*)&regval(ci.E.rde) = (f32) *(f32*)&regval(ci.E.rs1); break;
         case 0b0110: *(f64*)&regval(ci.E.rde) = (f64) *(f32*)&regval(ci.E.rs1); break;
         case 0b1000: *(f16*)&regval(ci.E.rde) = (f16) *(f64*)&regval(ci.E.rs1); break;
         case 0b1001: *(f32*)&regval(ci.E.rde) = (f32) *(f64*)&regval(ci.E.rs1); break;
-        case 0b1010: *(f64*)&regval(ci.E.rde) = (f64) *(f64*)&regval(ci.E.rs1); break;
         default:
             push_interrupt(int_invalid_instruction);
         }
