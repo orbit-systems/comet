@@ -118,6 +118,7 @@ int main(int argc, char *argv[]) {
 
     if (comet.flag_cycle_limit == 0){
         while (comet.cpu.running) {
+            // printf("\n\nWOAH\n\n");
             run();
         }
     } else {

@@ -40,6 +40,7 @@ void run() {
     
 
     instruction ci = current_instr;
+
     switch (ci.opcode) {
     case 0x01: { // system control
         switch(ci.F.func) {
@@ -189,6 +190,8 @@ void run() {
         } break;
 
     case 0x10: { // load immediate
+
+
         switch (ci.F.func) {
         case 0: // lli
             *(u16*)&regval(ci.F.rde) = (u16)ci.F.imm;
@@ -221,70 +224,70 @@ void run() {
 
     case 0x11: { // lw
         mmu_response res = read_u64(
-            regval(ci.E.rs1) + sign_extend(ci.E.imm, 8) + regval(ci.E.rs2) << ci.E.func,
+            regval(ci.E.rs1) + sign_extend(ci.E.imm, 8) + (regval(ci.E.rs2) << ci.E.func),
             &regval(ci.E.rde));
         if (res != res_success) push_interrupt_from_MMU(res);
         } break;
     case 0x12: { // lh
         mmu_response res = read_u32(
-            regval(ci.E.rs1) + sign_extend(ci.E.imm, 8) + regval(ci.E.rs2) << ci.E.func,
+            regval(ci.E.rs1) + sign_extend(ci.E.imm, 8) + (regval(ci.E.rs2) << ci.E.func),
             (u32*)&regval(ci.E.rde));
         if (res != res_success) push_interrupt_from_MMU(res);
         } break;
     case 0x13: { // lhs
         mmu_response res = read_u32(
-            regval(ci.E.rs1) + sign_extend(ci.E.imm, 8) + regval(ci.E.rs2) << ci.E.func,
+            regval(ci.E.rs1) + sign_extend(ci.E.imm, 8) + (regval(ci.E.rs2) << ci.E.func),
             (u32*)&regval(ci.E.rde));
         if (res != res_success) push_interrupt_from_MMU(res);
         regval(ci.E.rde) = sign_extend(regval(ci.E.rde), 32);
         } break;
     case 0x14: { // lq
         mmu_response res = read_u16(
-            regval(ci.E.rs1) + sign_extend(ci.E.imm, 8) + regval(ci.E.rs2) << ci.E.func,
+            regval(ci.E.rs1) + sign_extend(ci.E.imm, 8) + (regval(ci.E.rs2) << ci.E.func),
             (u16*)&regval(ci.E.rde));
         if (res != res_success) push_interrupt_from_MMU(res);
         } break;
     case 0x15: { // lqs
         mmu_response res = read_u16(
-            regval(ci.E.rs1) + sign_extend(ci.E.imm, 8) + regval(ci.E.rs2) << ci.E.func,
+            regval(ci.E.rs1) + sign_extend(ci.E.imm, 8) + (regval(ci.E.rs2) << ci.E.func),
             (u16*)&regval(ci.E.rde));
         if (res != res_success) push_interrupt_from_MMU(res);
         regval(ci.E.rde) = sign_extend(regval(ci.E.rde), 16);
         } break;
     case 0x16: { // lb
         mmu_response res = read_u8(
-            regval(ci.E.rs1) + sign_extend(ci.E.imm, 8) + regval(ci.E.rs2) << ci.E.func,
+            regval(ci.E.rs1) + sign_extend(ci.E.imm, 8) + (regval(ci.E.rs2) << ci.E.func),
             (u8*)&regval(ci.E.rde));
         if (res != res_success) push_interrupt_from_MMU(res);
         } break;
     case 0x17: { // lbs
         mmu_response res = read_u8(
-            regval(ci.E.rs1) + sign_extend(ci.E.imm, 8) + regval(ci.E.rs2) << ci.E.func,
+            regval(ci.E.rs1) + sign_extend(ci.E.imm, 8) + (regval(ci.E.rs2) << ci.E.func),
             (u8*)&regval(ci.E.rde));
         if (res != res_success) push_interrupt_from_MMU(res);
         regval(ci.E.rde) = sign_extend(regval(ci.E.rde), 8);
         } break;
     case 0x18: { // sw
         mmu_response res = write_u64(
-            regval(ci.E.rs1) + sign_extend(ci.E.imm, 8) + regval(ci.E.rs2) << ci.E.func,
+            regval(ci.E.rs1) + sign_extend(ci.E.imm, 8) + (regval(ci.E.rs2) << ci.E.func),
             regval(ci.E.rde));
         if (res != res_success) push_interrupt_from_MMU(res);
         } break;
     case 0x19: { // sh
         mmu_response res = write_u32(
-            regval(ci.E.rs1) + sign_extend(ci.E.imm, 8) + regval(ci.E.rs2) << ci.E.func,
+            regval(ci.E.rs1) + sign_extend(ci.E.imm, 8) + (regval(ci.E.rs2) << ci.E.func),
             (u32)regval(ci.E.rde));
         if (res != res_success) push_interrupt_from_MMU(res);
         } break;
     case 0x1a: { // sq
         mmu_response res = write_u16(
-            regval(ci.E.rs1) + sign_extend(ci.E.imm, 8) + regval(ci.E.rs2) << ci.E.func,
+            regval(ci.E.rs1) + sign_extend(ci.E.imm, 8) + (regval(ci.E.rs2) << ci.E.func),
             (u16)regval(ci.E.rde));
         if (res != res_success) push_interrupt_from_MMU(res);
         } break;
     case 0x1b: { // sb
         mmu_response res = write_u8(
-            regval(ci.E.rs1) + sign_extend(ci.E.imm, 8) + regval(ci.E.rs2) << ci.E.func,
+            regval(ci.E.rs1) + sign_extend(ci.E.imm, 8) + (regval(ci.E.rs2) << ci.E.func),
             (u8)regval(ci.E.rde));
         if (res != res_success) push_interrupt_from_MMU(res);
         } break;
@@ -351,16 +354,17 @@ void run() {
              u_overflow |= __builtin_usubl_overflow(regval(ci.R.rde), get_flag(flag_carry_borrow_unsigned), &regval(ci.R.rde));
         bool s_overflow =  __builtin_ssubl_overflow((i64)a, (i64)b, (i64*)&regval(ci.R.rde));
              s_overflow |= __builtin_ssubl_overflow(regval(ci.R.rde), get_flag(flag_carry_borrow), (i64*)&regval(ci.R.rde));
+        
         set_flag(flag_carry_borrow_unsigned, u_overflow);
         set_flag(flag_carry_borrow, s_overflow);
         } break;
     case 0x23: { // subi
         u64 a = regval(ci.M.rs1);
         u64 b = sign_extend(ci.M.imm, 16);
-        bool u_overflow =  __builtin_uaddl_overflow(a, b, &regval(ci.M.rde));
-             u_overflow |= __builtin_uaddl_overflow(regval(ci.M.rde), get_flag(flag_carry_borrow_unsigned), &regval(ci.M.rde));
-        bool s_overflow =  __builtin_saddl_overflow((i64)a, (i64)b, (i64*)&regval(ci.M.rde));
-             s_overflow |= __builtin_saddl_overflow(regval(ci.M.rde), get_flag(flag_carry_borrow), (i64*)&regval(ci.M.rde));
+        bool u_overflow =  __builtin_usubl_overflow(a, b, &regval(ci.M.rde));
+             u_overflow |= __builtin_usubl_overflow(regval(ci.M.rde), get_flag(flag_carry_borrow_unsigned), &regval(ci.M.rde));
+        bool s_overflow =  __builtin_ssubl_overflow((i64)a, (i64)b, (i64*)&regval(ci.M.rde));
+             s_overflow |= __builtin_ssubl_overflow(regval(ci.M.rde), get_flag(flag_carry_borrow), (i64*)&regval(ci.M.rde));
         set_flag(flag_carry_borrow_unsigned, u_overflow);
         set_flag(flag_carry_borrow, s_overflow);
         } break;
@@ -798,8 +802,6 @@ void run() {
     default:
         push_interrupt(int_invalid_instruction);
     }
-
-
 
     if (comet.ioc.out_pin) {
         dev_receive(); // run corresponding output handler

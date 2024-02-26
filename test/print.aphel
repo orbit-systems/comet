@@ -1,0 +1,208 @@
+define stdout, 10
+define STACK, 100000
+
+loc 0
+IVT:
+    bra setup
+
+loc 2048
+align 4
+
+setup:
+    li ra, IVT
+    li rb, interrupt_handler
+    .fill_IVT:
+        sw  ra, rb
+        add ra, ra, 8
+        cmp ra, 2048
+        blt .fill_IVT
+
+    li  fp, STACK
+    mov sp, fp
+    call ra, main
+    spin:
+        bra spin
+
+interrupt_handler:
+
+    li   ra, interrupt_handler_text
+    call rb, print_cstring
+
+    .spin:
+        bra .spin
+;
+
+interrupt_handler_text: 
+    utf8 "[interrupt]\n\0"
+align 4
+
+
+; actual shit
+
+main:
+
+    li ra, str1
+    li rb, str2
+    li rc, 7
+    call ri, mem_eq
+    call ri, print_bool
+    call ri, print_newline
+
+    ret
+;
+
+
+str1: utf8 "string1\0"
+str2: utf8 "string2\0"
+align 4
+
+print_i64: ; (integer : ra)
+    push rb
+
+    cmp ra, 0
+    bge print_u64
+    
+    sub ra, rz, ra
+    li  rb, '-'
+    out stdout, rb
+    
+    pop rb
+print_u64: ; (integer : ra)
+    push rb
+    push rz
+
+    .loop:
+        mod  rb, ra, 10
+        add  rb, rb, '0'
+        push rb
+        udiv ra, ra, 10
+        cmp  ra, 0
+        bne .loop
+
+    .print:
+        pop ra
+        cmp ra, 0
+        beq .end
+        out stdout, ra
+        bra .print
+
+    .end:
+        li ra, '\n'
+        out stdout, ra
+
+        pop rb
+        ret
+;
+
+print_cstring: ; (charptr: ra)
+    push rb
+    .loop:
+        lbs rb, ra
+        cmp rb, '\0'
+        bez .end
+        out stdout, rb
+        add ra, ra, 1
+        bra .loop
+    .end:
+    pop  rb
+    ret
+;
+
+print_slice: ; (charptr: ra, len: rb)
+    push rc
+    .loop:
+        cmp rb, 0
+        beq .end
+        lbs rc, ra
+        out stdout, rc
+        add ra, ra, 1
+        sub rb, rb, 1
+        bra .loop
+    .end:
+    pop rc
+    ret
+;
+
+print_bool: ; (boolean: ra)
+    cmp ra, rz
+    bnz .true
+    
+    li ra, 'f'
+    out stdout, ra
+    li ra, 'a'
+    out stdout, ra
+    li ra, 'l'
+    out stdout, ra
+    li ra, 's'
+    out stdout, ra
+    li ra, 'e'
+    out stdout, ra
+    ret
+
+    .true:
+    li ra, 't'
+    out stdout, ra
+    li ra, 'r'
+    out stdout, ra
+    li ra, 'u'
+    out stdout, ra
+    li ra, 'e'
+    out stdout, ra
+    ret
+;
+
+print_newline: ; ()
+    push ra
+    li ra, '\n'
+    out stdout, ra
+    pop ra
+    ret
+;
+
+mem_set: ; (region: ra, value: rb, length: rc)
+    
+    ; len = region + len
+    ; while (region != len) {
+    ;     region* = value;
+    ;     region += 1;
+    ; }
+
+    add rc, ra, rc
+
+    .loop:
+        cmp ra, rc
+        beq .end
+
+        sb  ra, rb
+        add ra, ra, 1
+        bra .loop
+    
+    .end:
+    ret
+;
+
+mem_eq: ; (region1: ra, region2: rb, length: rc) -> (bool: ra)
+    push rd
+    push re
+
+    add rc, ra, rc
+
+    .loop:
+        cmp ra, rc
+        beq .exit
+
+        lbs rd, ra
+        lbs re, rb
+        cmp rd, re
+        bne .exit
+        add ra, ra, 1
+        add rb, rb, 1
+        bra .loop
+
+    .exit:
+        pop re
+        pop rd
+
+        setfe ra
+        ret
+;
