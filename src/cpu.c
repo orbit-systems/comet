@@ -812,4 +812,17 @@ void run() {
     if (regval(r_sp) > regval(r_fp)) {
         push_interrupt(int_stack_underflow);
     }
+
+    char cyclenum[80];
+    sprintf(cyclenum, "%i", comet.cpu.cycle);
+    printf(cyclenum);
+    printf("\n");
+
+    
+
+    if (comet.cpu.cycle % 4096 == 0) { // every 4096 cycles
+        char ch;
+        char a = read(STDIN_FILENO, &ch, 1);
+        putchar('e');
+    }
 }

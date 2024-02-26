@@ -13,6 +13,7 @@
 #include "mmu.h"
 #include "dev.h"
 #include "io.h"
+#include "term.h"
 
 void print_help() {
     printf("\nusage: comet (path) [flags]\n");
