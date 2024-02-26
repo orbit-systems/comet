@@ -3,6 +3,9 @@
 
 #include "comet.h"
 
+extern const ins_fmt ins_formats[256];
+extern const char* ins_names[];
+
 // name, opcode, func, format
 #define INSTRUCTION_LIST \
     INSTR("int",   0x01, 0, fmt_F) \

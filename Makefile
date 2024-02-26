@@ -13,7 +13,7 @@ endif
 CC = gcc
 LD = gcc
 
-DEBUGFLAGS = -g -O0
+DEBUGFLAGS = -ggdb -Og
 ASANFLAGS = -fsanitize=undefined -fsanitize=address
 DONTBEAFUCKINGIDIOT = -Werror -Wall -Wextra -pedantic -Wno-missing-field-initializers -Wno-unused-result
 CFLAGS = -O3 -fno-strict-aliasing

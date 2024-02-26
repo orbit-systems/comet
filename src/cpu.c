@@ -1,6 +1,7 @@
 #include "comet.h"
 #include "cpu.h"
 #include "dev.h"
+#include "decode.h"
 
 void forceinline push_stack(u64 data) {
     regval(r_sp) -= 8;
@@ -26,9 +27,17 @@ void run() {
         return;
     }
 
-    if (comet.flag_debug) printf("[at 0x%016X instr %08X]\n", regval(r_ip), current_instr);
-
     regval(r_ip) += 4;
+
+    if (comet.flag_debug) {
+        u64 func = 0;
+        printf("%s", ins_names[current_instr.opcode * 0x10 + (u8)func]);
+        printf("\tra: %-16llx rb: %-16llx rc: %-16llx rd: %-16llx\n", regval(r_ra), regval(r_rb), regval(r_rc), regval(r_rd));
+        printf("\tre: %-16llx rf: %-16llx rg: %-16llx rh: %-16llx\n", regval(r_re), regval(r_rf), regval(r_rg), regval(r_rh));
+        printf("\tri: %-16llx rj: %-16llx rk: %-16llx\n", regval(r_ri), regval(r_rj), regval(r_rk));
+        printf("\tsp: %-16llx fp: %-16llx ip: %-16llx st: %016llx\n", regval(r_sp), regval(r_fp), regval(r_ip), regval(r_st));
+    }
+    
 
     instruction ci = current_instr;
     switch (ci.opcode) {
@@ -92,6 +101,7 @@ void run() {
         } break;
 
     case 0x06: { // jal
+        // printf("[[%p]]", regval(r_ip));
         push_stack(regval(r_ip));
         regval(r_ip) = regval(ci.M.rs1) + (u64)(4 * (i64)sign_extend(ci.M.imm, 16));
         } break;
@@ -303,11 +313,15 @@ void run() {
             break;
         }
 
-        set_flag(flag_equal,         a == b);
-        set_flag(flag_less,          (i64)a < (i64)b);
-        set_flag(flag_less_unsigned, a < b);
-        set_flag(flag_sign,          (i64) a < 0);
-        set_flag(flag_zero,          a == 0);
+        // printf("AAAAA a = %p b = %p, %s\n", a, b, a == b ? "true" : "false");
+
+        set_flag(flag_equal,         (a == b));
+        set_flag(flag_less,          ((i64)a < (i64)b));
+        set_flag(flag_less_unsigned, (a < b));
+        set_flag(flag_sign,          ((i64) a < 0));
+        set_flag(flag_zero,          (a == 0));
+        // printf("AAAAA a = %p b = %p, %s\n", a, b, get_flag(flag_equal) ? "true" : "false");
+
         } break;
 
     case 0x20: { // addr
