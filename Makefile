@@ -13,10 +13,10 @@ endif
 CC = gcc
 LD = gcc
 
-DEBUGFLAGS = -g -O0
+DEBUGFLAGS = -ggdb -Og
 ASANFLAGS = -fsanitize=undefined -fsanitize=address
 DONTBEAFUCKINGIDIOT = -Werror -Wall -Wextra -pedantic -Wno-missing-field-initializers -Wno-unused-result
-CFLAGS = -O3 -Wincompatible-pointer-types -fno-strict-aliasing
+CFLAGS = -O3 -fno-strict-aliasing
 SHUTTHEFUCKUP = -Wno-unknown-warning-option -Wno-incompatible-pointer-types-discards-qualifiers -Wno-initializer-overrides -Wno-discarded-qualifiers
 
 all: build
@@ -27,7 +27,7 @@ build/%.o: src/%.c
 
 build: $(OBJECTS)
 	@echo linking with $(LD)
-	@$(CC) $(OBJECTS) -o $(EXECUTABLE_NAME) -lc -lm -MD
+	@$(CC) $(OBJECTS) -o $(EXECUTABLE_NAME) -lm -MD
 	@echo $(EXECUTABLE_NAME) built
 
 test: build

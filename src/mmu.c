@@ -68,7 +68,7 @@ mmu_response write_u16(u64 addr, u16 value) {
         mmu_response res = translate_address(addr, &addr, access_write);
         if (res != res_success) return res;
     }
-    return phys_write_u8(addr, value);
+    return phys_write_u16(addr, value);
 }
 
 mmu_response write_u32(u64 addr, u32 value) {
@@ -76,7 +76,7 @@ mmu_response write_u32(u64 addr, u32 value) {
         mmu_response res = translate_address(addr, &addr, access_write);
         if (res != res_success) return res;
     }
-    return phys_write_u8(addr, value);
+    return phys_write_u32(addr, value);
 }
 
 mmu_response write_u64(u64 addr, u64 value) {
@@ -84,7 +84,7 @@ mmu_response write_u64(u64 addr, u64 value) {
         mmu_response res = translate_address(addr, &addr, access_write);
         if (res != res_success) return res;
     }
-    return phys_write_u8(addr, value);
+    return phys_write_u64(addr, value);
 }
 
 // physical read/write

@@ -1,6 +1,7 @@
 #include "comet.h"
 #include "cpu.h"
 #include "dev.h"
+#include "decode.h"
 
 void forceinline push_stack(u64 data) {
     regval(r_sp) -= 8;
@@ -19,8 +20,6 @@ void forceinline pop_stack(u64* val) {
 void run() {
     comet.cpu.cycle++;
 
-    // printf("[at 0x%016X %02x]\n", regval(r_ip), current_instr.opcode);
-
     // load instruction
     mmu_response res = read_instruction(regval(r_ip), &current_instr);
     if (res != res_success) {
@@ -30,7 +29,16 @@ void run() {
 
     regval(r_ip) += 4;
 
-    // printf("ip %08X instr %08X \n", regval(r_ip), current_instr);
+    if (comet.flag_debug) {
+        u64 func = 0;
+        printf("%s", ins_names[current_instr.opcode * 0x10 + (u8)func]);
+        printf("\tra: %-16llx rb: %-16llx rc: %-16llx rd: %-16llx\n", regval(r_ra), regval(r_rb), regval(r_rc), regval(r_rd));
+        printf("\tre: %-16llx rf: %-16llx rg: %-16llx rh: %-16llx\n", regval(r_re), regval(r_rf), regval(r_rg), regval(r_rh));
+        printf("\tri: %-16llx rj: %-16llx rk: %-16llx\n", regval(r_ri), regval(r_rj), regval(r_rk));
+        printf("\tsp: %-16llx fp: %-16llx ip: %-16llx st: %016llx\n", regval(r_sp), regval(r_fp), regval(r_ip), regval(r_st));
+    }
+    
+
     instruction ci = current_instr;
     switch (ci.opcode) {
     case 0x01: { // system control
@@ -93,6 +101,7 @@ void run() {
         } break;
 
     case 0x06: { // jal
+        // printf("[[%p]]", regval(r_ip));
         push_stack(regval(r_ip));
         regval(r_ip) = regval(ci.M.rs1) + (u64)(4 * (i64)sign_extend(ci.M.imm, 16));
         } break;
@@ -107,57 +116,57 @@ void run() {
         regval(r_ip) = regval(ci.M.rs1);
         } break;
     case 0x0a: { // branch instructions
-        switch (ci.B.imm){
+        switch (ci.B.func){
         case 0x0: // bra
-            regval(r_ip) += (u64)(4 * (i64)sign_extend(ci.M.imm, 20));
+            regval(r_ip) += (4 * (i64)sign_extend(ci.B.imm, 20));
             break;
         case 0x1: // beq
             if (get_flag(flag_equal))
-                regval(r_ip) += (u64)(4 * (i64)sign_extend(ci.M.imm, 20));
+                regval(r_ip) += (u64)(4 * (i64)sign_extend(ci.B.imm, 20));
             break;
         case 0x2: // bez
             if (get_flag(flag_zero))
-                regval(r_ip) += (u64)(4 * (i64)sign_extend(ci.M.imm, 20));
+                regval(r_ip) += (u64)(4 * (i64)sign_extend(ci.B.imm, 20));
             break;
         case 0x3: // blt
             if (get_flag(flag_less))
-                regval(r_ip) += (u64)(4 * (i64)sign_extend(ci.M.imm, 20));
+                regval(r_ip) += (u64)(4 * (i64)sign_extend(ci.B.imm, 20));
             break;
         case 0x4: // ble
             if (get_flag(flag_less) || get_flag(flag_equal))
-                regval(r_ip) += (u64)(4 * (i64)sign_extend(ci.M.imm, 20));
+                regval(r_ip) += (u64)(4 * (i64)sign_extend(ci.B.imm, 20));
             break;
         case 0x5: // bltu
             if (get_flag(flag_less_unsigned))
-                regval(r_ip) += (u64)(4 * (i64)sign_extend(ci.M.imm, 20));
+                regval(r_ip) += (u64)(4 * (i64)sign_extend(ci.B.imm, 20));
             break;
         case 0x6: // bleu
             if (get_flag(flag_less_unsigned) || get_flag(flag_equal))
-                regval(r_ip) += (u64)(4 * (i64)sign_extend(ci.M.imm, 20));
+                regval(r_ip) += (u64)(4 * (i64)sign_extend(ci.B.imm, 20));
             break;
         case 0x9: // bne
             if (!get_flag(flag_equal))
-                regval(r_ip) += (u64)(4 * (i64)sign_extend(ci.M.imm, 20));
+                regval(r_ip) += (u64)(4 * (i64)sign_extend(ci.B.imm, 20));
             break;
         case 0xA: // bnz
             if (!get_flag(flag_zero))
-                regval(r_ip) += (u64)(4 * (i64)sign_extend(ci.M.imm, 20));
+                regval(r_ip) += (u64)(4 * (i64)sign_extend(ci.B.imm, 20));
             break;
         case 0xB: // bge
             if (!get_flag(flag_less))
-                regval(r_ip) += (u64)(4 * (i64)sign_extend(ci.M.imm, 20));
+                regval(r_ip) += (u64)(4 * (i64)sign_extend(ci.B.imm, 20));
             break;
         case 0xC: // bgt
             if (!(get_flag(flag_less) || get_flag(flag_equal)))
-                regval(r_ip) += (u64)(4 * (i64)sign_extend(ci.M.imm, 20));
+                regval(r_ip) += (u64)(4 * (i64)sign_extend(ci.B.imm, 20));
             break;
         case 0xD: // bgeu
             if (!get_flag(flag_less_unsigned))
-                regval(r_ip) += (u64)(4 * (i64)sign_extend(ci.M.imm, 20));
+                regval(r_ip) += (u64)(4 * (i64)sign_extend(ci.B.imm, 20));
             break;
         case 0xE: // bteu
             if (!(get_flag(flag_less_unsigned) || get_flag(flag_equal)))
-                regval(r_ip) += (u64)(4 * (i64)sign_extend(ci.M.imm, 20));
+                regval(r_ip) += (u64)(4 * (i64)sign_extend(ci.B.imm, 20));
             break;
         default:
             push_interrupt(int_invalid_instruction);
@@ -304,11 +313,15 @@ void run() {
             break;
         }
 
-        set_flag(flag_equal,         a == b);
-        set_flag(flag_less,          (i64)a < (i64)b);
-        set_flag(flag_less_unsigned, a < b);
-        set_flag(flag_sign,          (i64) a < 0);
-        set_flag(flag_zero,          a == 0);
+        // printf("AAAAA a = %p b = %p, %s\n", a, b, a == b ? "true" : "false");
+
+        set_flag(flag_equal,         (a == b));
+        set_flag(flag_less,          ((i64)a < (i64)b));
+        set_flag(flag_less_unsigned, (a < b));
+        set_flag(flag_sign,          ((i64) a < 0));
+        set_flag(flag_zero,          (a == 0));
+        // printf("AAAAA a = %p b = %p, %s\n", a, b, get_flag(flag_equal) ? "true" : "false");
+
         } break;
 
     case 0x20: { // addr
