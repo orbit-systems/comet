@@ -88,10 +88,13 @@ print_cstring: ; (charptr: ra)
 stdin_interrupt_handler:
     push ra
     push rb
-    li ra, init_text
-    call rb, print_cstring
+    in ra, stdin
+    call rb, print_char
+    sub ra, ra, 32
+    call rb, print_char
     pop rb
     pop ra
+    iret
 
 // ================ //
 
