@@ -13,6 +13,7 @@
 #include "mmu.h"
 #include "dev.h"
 #include "io.h"
+#include "term.h"
 
 void print_help() {
     printf("\nusage: comet (path) [flags]\n");
@@ -116,6 +117,8 @@ int main(int argc, char *argv[]) {
         gettimeofday(&exec_begin, 0);
     }
 
+    term_setup(); //setup terminal
+
     if (comet.flag_cycle_limit == 0){
         while (comet.cpu.running) {
             // printf("\n\nWOAH\n\n");
@@ -127,6 +130,8 @@ int main(int argc, char *argv[]) {
             run();
         }
     }
+
+    term_reset(); //unsetup terminal
     
     if (comet.flag_benchmark) {
         gettimeofday(&exec_end, 0);

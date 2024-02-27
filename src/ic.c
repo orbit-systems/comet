@@ -50,8 +50,8 @@ void push_interrupt(u8 code) {
 // pop interrupt and return to the exit point
 void return_interrupt() {
     if (comet.ic.queue.len == 0) return;
-
     da_pop_front(&comet.ic.queue);
+
     if (comet.ic.queue.len == 0) {
         comet.cpu.registers[r_ip] = comet.ic.ret_addr;
         comet.cpu.registers[r_st] = comet.ic.ret_status;
@@ -68,7 +68,9 @@ void return_interrupt() {
 // pop interrupt while resuming execution at the current location
 void resolve_interrupt() {
     if (comet.ic.queue.len == 0) return;
+    printf("qa len %d\n", comet.ic.queue.len);
     da_pop_front(&comet.ic.queue);
+    printf("qb len %d\n", comet.ic.queue.len);
     comet.ic.ret_addr = comet.cpu.registers[r_ip];
     comet.ic.ret_status = comet.cpu.registers[r_st];
     if (comet.ic.queue.len != 0) {

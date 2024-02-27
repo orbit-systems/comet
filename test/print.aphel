@@ -50,7 +50,7 @@ main:
     ; call ri, print_bool
     ; call ri, print_newline
 
-    li ra, -123456789
+    li   ra, 1000
     call ri, print_i64
     call ri, print_newline
 
@@ -63,7 +63,6 @@ str2: utf8 "string2\0"
 align 4
 
 print_i64: ; (integer : ra)
-    push rb
 
     cmp ra, 0
     bge print_u64
@@ -72,7 +71,6 @@ print_i64: ; (integer : ra)
     li  rb, '-'
     out stdout, rb
     
-    pop rb
 print_u64: ; (integer : ra)
     push rb
     push rz

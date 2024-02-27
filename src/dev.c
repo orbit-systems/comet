@@ -20,7 +20,7 @@ void dev_receive() {
     comet.ioc.out_pin = false;
 }
 
-void IC_receive(u64 data) {
+void IOC_receive(u64 data) {
     enum {
         ioc_standby,
         ioc_bindint_waiting4port,
@@ -46,7 +46,7 @@ void IC_receive(u64 data) {
     }
 }
 
-void IOC_receive(u64 data) {
+void IC_receive(u64 data) {
     enum {
         ic_standby,
         ic_waiting4ivt,
