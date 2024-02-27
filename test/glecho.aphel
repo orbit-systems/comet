@@ -90,8 +90,6 @@ stdin_interrupt_handler:
     push rb
     in ra, stdin
     call rb, print_char
-    sub ra, ra, 32
-    call rb, print_char
     pop rb
     pop ra
     iret

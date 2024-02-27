@@ -2,6 +2,7 @@
 #include "cpu.h"
 #include "dev.h"
 #include "decode.h"
+#include "term.h"
 
 void forceinline push_stack(u64 data) {
     regval(r_sp) -= 8;
