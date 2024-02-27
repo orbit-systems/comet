@@ -19,14 +19,16 @@ setup:
 
     li  fp, STACK
     mov sp, fp
+
     call ra, main
-    spin:
-        bra spin
+
+    .spin:
+        bra .spin
 
 interrupt_handler:
 
     li   ra, interrupt_handler_text
-    call rb, print_cstring
+    call ri, print_cstring
 
     .spin:
         bra .spin
@@ -41,11 +43,15 @@ align 4
 
 main:
 
-    li ra, str1
-    li rb, str2
-    li rc, 7
-    call ri, mem_eq
-    call ri, print_bool
+    ; li ra, str1
+    ; li rb, str2
+    ; li rc, 7
+    ; call ri, mem_eq
+    ; call ri, print_bool
+    ; call ri, print_newline
+
+    li ra, -123456789
+    call ri, print_i64
     call ri, print_newline
 
     ret
@@ -87,9 +93,6 @@ print_u64: ; (integer : ra)
         bra .print
 
     .end:
-        li ra, '\n'
-        out stdout, ra
-
         pop rb
         ret
 ;
@@ -200,9 +203,9 @@ mem_eq: ; (region1: ra, region2: rb, length: rc) -> (bool: ra)
         bra .loop
 
     .exit:
+        setfe ra
+
         pop re
         pop rd
-
-        setfe ra
         ret
 ;
