@@ -28,12 +28,16 @@ void push_interrupt_from_MMU(mmu_response res) {
 }
 
 void push_interrupt(u8 code) {
+    printf("pushing %d\n", code);
+    printf("q len %d\n", comet.ic.queue.len);
     if (comet.ic.queue.len == 0) {
+        printf("a\n");
         comet.ic.ret_addr = comet.cpu.registers[r_ip];
         comet.ic.ret_status = comet.cpu.registers[r_st];
         set_flag(flag_mode, mode_kernel);
     }
     if (comet.ic.queue.len == comet.ic.queue.cap) {
+        printf("b\n");
         // interrupt queue overflow
         da_clear(&comet.ic.queue);
         code = int_interrupt_overflow;

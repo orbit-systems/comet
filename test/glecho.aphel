@@ -16,16 +16,14 @@ setup:
     li rb, interrupt_handler
     .fill_IVT:
         sw  ra, rb // set whatever memory adress ra has to the interrupt_handler function
-
-        cmp ra, IOCport // but is it number 11? doesnt HAVE to be port number, but its convenient
-        call rd, add_stdin_to_table // if so, call this function
-
         add ra, ra, 8 //increment to next place at table
 
         cmp ra, 2048 // is it at end of table?
         blt .fill_IVT // if not, do it again
     li  fp, STACK
     mov sp, fp
+
+    call ra, add_stdin_to_table
 
     call ra, stdin_set_IVT_base_address
 
@@ -34,8 +32,9 @@ setup:
         bra spin
 
 add_stdin_to_table: 
-    li rc, stdin_interrupt_handler // sets rc to address of the function stdin_interrupt_handler
-    sw ra, rc // sets the memory at ra (in this case, number 11, where we want in the IVT) to the function above
+    li rb, stdin_interrupt_handler // sets rb to address of the function stdin_interrupt_handler
+    li rc, IVT // set rc to address of IVT
+    sw rc, 88, rb // sets the memory at 11th position in IVT
     ret // go back
 
 stdin_set_IVT_base_address:
@@ -50,7 +49,7 @@ stdin_set_IVT_base_address:
     // send interrupt number
     li rb, stdin // #*#*#* interrupt number doesnt HAVE to equal port number. i just used it here for convenience *#*#*#
     out IOCport, rb
-    
+
     ret
 
 interrupt_handler:
@@ -69,7 +68,7 @@ align 4
 print_char: // (char ra)
     push rb
     out stdout, ra
-    pop ra
+    pop rb
     ret
 
 print_cstring: ; (charptr: ra)
@@ -89,16 +88,20 @@ print_cstring: ; (charptr: ra)
 stdin_interrupt_handler:
     push ra
     push rb
-    li ra, 'g'
-    call rb, stdin_interrupt_handler
+    li ra, init_text
+    call rb, print_cstring
     pop rb
     pop ra
 
 // ================ //
 
 main:
-    li ra, 'b'
-    call rb, print_char
+    li ra, init_text
+    call rb, print_cstring
 
     .loop:
         bra .loop
+
+init_text:
+utf8 "made it to main function!\n\0"
+align 4

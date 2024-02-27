@@ -17,6 +17,18 @@ void forceinline pop_stack(u64* val) {
     }
 }
 
+int kbhit() // https://web.archive.org/web/20170407122137/http://cc.byexamples.com/2007/04/08/non-blocking-user-input-in-loop-without-ncurses/
+{
+    struct timeval tv;
+    fd_set fds;
+    tv.tv_sec = 0;
+    tv.tv_usec = 0;
+    FD_ZERO(&fds);
+    FD_SET(STDIN_FILENO, &fds); //STDIN_FILENO is 0
+    select(STDIN_FILENO+1, &fds, NULL, NULL, &tv);
+    return FD_ISSET(STDIN_FILENO, &fds);
+}
+
 void run() {
     comet.cpu.cycle++;
 
@@ -814,26 +826,13 @@ void run() {
     }
 
     if (comet.cpu.cycle % 4096 == 0) { // every 4096 cycles
-        /*char buffer[1];
-        char ch;
-
-        printf("g");
-
-        size_t bytes = fread(buffer, sizeof(char), 1, stdin);
-        ch = buffer[0];
-        printf("f");
-        printf("%d", bytes);*/
-
-        // ^^^ this is bad code, remove it
-
-        // ch is the character
-
-        if (ch != EOF) {
-            printf("%d", ch);
-            if (ch == 3 || ch == 28) { // ctrl-c OR ctrl-backslash
+        int c;
+        if (kbhit()) {
+            c = fgetc(stdin);
+            if (c == 3 || c == 28) { // ctrl-c or ctrl-backslash
                 Exit();
             }
-            send_in(11, ch); //port 11
+            send_in(11, c); // send in on port 11
         }
     }
 }
