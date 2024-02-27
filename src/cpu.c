@@ -813,16 +813,27 @@ void run() {
         push_interrupt(int_stack_underflow);
     }
 
-    char cyclenum[80];
-    sprintf(cyclenum, "%i", comet.cpu.cycle);
-    printf(cyclenum);
-    printf("\n");
-
-    
-
     if (comet.cpu.cycle % 4096 == 0) { // every 4096 cycles
+        /*char buffer[1];
         char ch;
-        char a = read(STDIN_FILENO, &ch, 1);
-        putchar('e');
+
+        printf("g");
+
+        size_t bytes = fread(buffer, sizeof(char), 1, stdin);
+        ch = buffer[0];
+        printf("f");
+        printf("%d", bytes);*/
+
+        // ^^^ this is bad code, remove it
+
+        // ch is the character
+
+        if (ch != EOF) {
+            printf("%d", ch);
+            if (ch == 3 || ch == 28) { // ctrl-c OR ctrl-backslash
+                Exit();
+            }
+            send_in(11, ch); //port 11
+        }
     }
 }

@@ -15,7 +15,7 @@ void term_setup(void) {
     is_term_set_up = 1;
 
     struct termios cool_state = old;
-    cool_state.c_lflag &= (~ICANON & ~ECHO);
+    cool_state.c_lflag &= (~ICANON & ~ECHO & ~IGNBRK); // ~IGNBRK ignores ctrl-c and stuff
     tcsetattr(STDIN_FILENO, TCSANOW, &cool_state);
 }
 
@@ -25,14 +25,15 @@ void term_reset(void) {
         is_term_set_up = 0;
     }
 }
+
 void Exit(void) {
-    term_unfuck();
+    term_reset();
     exit(EXIT_FAILURE);
 }
 #elif defined(_WIN32)
 #warning windows support for term missing, defaulting to nothing
 void term_setup(void) {}
-void term_unfuck(void) {}
+void term_reset(void) {}
 void Exit(void) {
     exit(EXIT_FAILURE);
 }
