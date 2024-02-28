@@ -13,7 +13,7 @@ main:
     
     call ri, get_u64
 
-    idiv ra, ra, 2
+    imul ra, ra, 2
 
     call ri, print_u64
 
