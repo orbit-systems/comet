@@ -343,30 +343,30 @@ void run() {
     case 0x20: { // addr
         u64 a = regval(ci.R.rs1);
         u64 b = regval(ci.R.rs2);
-        bool u_overflow =  __builtin_uaddl_overflow(a, b, &regval(ci.R.rde));
-             u_overflow |= __builtin_uaddl_overflow(regval(ci.R.rde), get_flag(flag_carry_borrow_unsigned), &regval(ci.R.rde));
-        bool s_overflow =  __builtin_saddl_overflow((i64)a, (i64)b, (i64*)&regval(ci.R.rde));
-             s_overflow |= __builtin_saddl_overflow(regval(ci.R.rde), get_flag(flag_carry_borrow), (i64*)&regval(ci.R.rde));
+        bool u_overflow =  __builtin_uaddll_overflow(a, b, &regval(ci.R.rde));
+             u_overflow |= __builtin_uaddll_overflow(regval(ci.R.rde), get_flag(flag_carry_borrow_unsigned), &regval(ci.R.rde));
+        bool s_overflow =  __builtin_saddll_overflow((i64)a, (i64)b, (i64*)&regval(ci.R.rde));
+             s_overflow |= __builtin_saddll_overflow(regval(ci.R.rde), get_flag(flag_carry_borrow), (i64*)&regval(ci.R.rde));
         set_flag(flag_carry_borrow_unsigned, u_overflow);
         set_flag(flag_carry_borrow, s_overflow);
         } break;
     case 0x21: { // addi
         u64 a = regval(ci.M.rs1);
         u64 b = sign_extend(ci.M.imm, 16);
-        bool u_overflow =  __builtin_uaddl_overflow(a, b, &regval(ci.M.rde));
-             u_overflow |= __builtin_uaddl_overflow(regval(ci.M.rde), get_flag(flag_carry_borrow_unsigned), &regval(ci.M.rde));
-        bool s_overflow =  __builtin_saddl_overflow((i64)a, (i64)b, (i64*)&regval(ci.M.rde));
-             s_overflow |= __builtin_saddl_overflow(regval(ci.M.rde), get_flag(flag_carry_borrow), (i64*)&regval(ci.M.rde));
+        bool u_overflow =  __builtin_uaddll_overflow(a, b, &regval(ci.M.rde));
+             u_overflow |= __builtin_uaddll_overflow(regval(ci.M.rde), get_flag(flag_carry_borrow_unsigned), &regval(ci.M.rde));
+        bool s_overflow =  __builtin_saddll_overflow((i64)a, (i64)b, (i64*)&regval(ci.M.rde));
+             s_overflow |= __builtin_saddll_overflow(regval(ci.M.rde), get_flag(flag_carry_borrow), (i64*)&regval(ci.M.rde));
         set_flag(flag_carry_borrow_unsigned, u_overflow);
         set_flag(flag_carry_borrow, s_overflow);
         } break;
     case 0x22: { // subr
         u64 a = regval(ci.R.rs1);
         u64 b = regval(ci.R.rs2);
-        bool u_overflow =  __builtin_usubl_overflow(a, b, &regval(ci.R.rde));
-             u_overflow |= __builtin_usubl_overflow(regval(ci.R.rde), get_flag(flag_carry_borrow_unsigned), &regval(ci.R.rde));
-        bool s_overflow =  __builtin_ssubl_overflow((i64)a, (i64)b, (i64*)&regval(ci.R.rde));
-             s_overflow |= __builtin_ssubl_overflow(regval(ci.R.rde), get_flag(flag_carry_borrow), (i64*)&regval(ci.R.rde));
+        bool u_overflow =  __builtin_usubll_overflow(a, b, &regval(ci.R.rde));
+             u_overflow |= __builtin_usubll_overflow(regval(ci.R.rde), get_flag(flag_carry_borrow_unsigned), &regval(ci.R.rde));
+        bool s_overflow =  __builtin_ssubll_overflow((i64)a, (i64)b, (i64*)&regval(ci.R.rde));
+             s_overflow |= __builtin_ssubll_overflow(regval(ci.R.rde), get_flag(flag_carry_borrow), (i64*)&regval(ci.R.rde));
         
         set_flag(flag_carry_borrow_unsigned, u_overflow);
         set_flag(flag_carry_borrow, s_overflow);
@@ -374,10 +374,10 @@ void run() {
     case 0x23: { // subi
         u64 a = regval(ci.M.rs1);
         u64 b = sign_extend(ci.M.imm, 16);
-        bool u_overflow =  __builtin_usubl_overflow(a, b, &regval(ci.M.rde));
-             u_overflow |= __builtin_usubl_overflow(regval(ci.M.rde), get_flag(flag_carry_borrow_unsigned), &regval(ci.M.rde));
-        bool s_overflow =  __builtin_ssubl_overflow((i64)a, (i64)b, (i64*)&regval(ci.M.rde));
-             s_overflow |= __builtin_ssubl_overflow(regval(ci.M.rde), get_flag(flag_carry_borrow), (i64*)&regval(ci.M.rde));
+        bool u_overflow =  __builtin_usubll_overflow(a, b, &regval(ci.M.rde));
+             u_overflow |= __builtin_usubll_overflow(regval(ci.M.rde), get_flag(flag_carry_borrow_unsigned), &regval(ci.M.rde));
+        bool s_overflow =  __builtin_ssubll_overflow((i64)a, (i64)b, (i64*)&regval(ci.M.rde));
+             s_overflow |= __builtin_ssubll_overflow(regval(ci.M.rde), get_flag(flag_carry_borrow), (i64*)&regval(ci.M.rde));
         set_flag(flag_carry_borrow_unsigned, u_overflow);
         set_flag(flag_carry_borrow, s_overflow);
         } break;
@@ -833,6 +833,7 @@ void run() {
             if (c == 3 || c == 28) { // ctrl-c or ctrl-backslash
                 Exit();
             }
+            if (c == '\r') c = '\n';
             send_in(11, c); // send in on port 11
         }
     }

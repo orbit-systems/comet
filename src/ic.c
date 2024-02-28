@@ -28,6 +28,10 @@ void push_interrupt_from_MMU(mmu_response res) {
 }
 
 void push_interrupt(u8 code) {
+    if (code == 255) {
+        comet.flag_debug = true;
+        return;
+    }
     if (comet.ic.queue.len == 0) {
         comet.ic.ret_addr = comet.cpu.registers[r_ip];
         comet.ic.ret_status = comet.cpu.registers[r_st];

@@ -162,12 +162,6 @@ print_newline: ; ()
 
 mem_set: ; (region: ra, value: rb, length: rc)
     
-    ; len = region + len
-    ; while (region != len) {
-    ;     region* = value;
-    ;     region += 1;
-    ; }
-
     add rc, ra, rc
 
     .loop:

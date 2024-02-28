@@ -6,18 +6,20 @@ OBJECTS = $(SRC:src/%.c=build/%.o)
 
 EXECUTABLE_NAME = comet
 
-ifeq ($(OS),Windows_NT)
-	EXECUTABLE_NAME = comet.exe
-endif
-
 CC = gcc
 LD = gcc
 
 DEBUGFLAGS = -ggdb -Og
 ASANFLAGS = -fsanitize=undefined -fsanitize=address
 DONTBEAFUCKINGIDIOT = -Werror -Wall -Wextra -pedantic -Wno-missing-field-initializers -Wno-unused-result
-CFLAGS = -O3 -fno-strict-aliasing
+CFLAGS = -O3 -fno-strict-aliasing -mconsole
 SHUTTHEFUCKUP = -Wno-unknown-warning-option -Wno-incompatible-pointer-types-discards-qualifiers -Wno-initializer-overrides -Wno-discarded-qualifiers
+LINK_FLAGS = -lm 
+
+ifeq ($(OS),Windows_NT)
+	EXECUTABLE_NAME = comet.exe
+	LINK_FLAGS += -lws2_32
+endif
 
 all: build
 
@@ -27,7 +29,7 @@ build/%.o: src/%.c
 
 build: $(OBJECTS)
 	@echo linking with $(LD)
-	@$(CC) $(OBJECTS) -o $(EXECUTABLE_NAME) -lm -MD
+	@$(CC) $(OBJECTS) -o $(EXECUTABLE_NAME) $(LINK_FLAGS)
 	@echo $(EXECUTABLE_NAME) built
 
 test: build
