@@ -10,23 +10,47 @@ loc 2048
 align 4
 
 main:
+    
+    call ri, get_u64
 
-    .spin:
+    idiv ra, ra, 2
 
-        li ra, BUH
-        call rj, print_cstring
+    call ri, print_u64
 
-        bra .spin
+    li rc, '\n'
+    out stdout, rc
 
+    bra main
 
     ret
 ;
 
-BUH:
-    utf8 "BUH \0"
-align 4
+get_u64: ; () -> (integer: ra)
+    li ra, 0
+    li rc, 0
+    li rd, char_in
 
+    ; accumulator in ra
+    .reset:
+        sb  rd, rz
+    .loop:
+        lbs rc, rd
+        cmp rc, 0
+        beq .loop
 
+        cmp rc, '\n'
+        beq .end
+
+        ; process digit
+        out  stdout, rc
+        imul ra, ra, 10
+        sub  rc, rc, '0'
+        add  ra, ra, rc
+        bra .reset
+
+    .end:
+        out  stdout, rc
+        ret
 
 print_i64: ; (integer : ra)
     cmp ra, 0
