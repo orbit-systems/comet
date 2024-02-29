@@ -1,0 +1,17 @@
+include "test/common.aphel"
+
+include "test/io.aphel"
+
+main:
+
+    li   ra, 100 ; bind stdin to interrupt 100
+    call rk, io.setup
+
+
+    li   ra, hello_text
+    call rk, io.print_cstring
+
+    ret
+
+hello_text:
+    utf8 "hello with includes!\n\0"

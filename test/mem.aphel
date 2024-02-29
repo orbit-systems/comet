@@ -1,0 +1,41 @@
+mem_set: ; (region: ra, value: rb, length: rc)
+    
+    add rc, ra, rc
+
+    .loop:
+        cmp ra, rc
+        beq .end
+
+        sb  ra, rb
+        add ra, ra, 1
+        bra .loop
+    
+    .end:
+    ret
+;
+
+mem_eq: ; (region1: ra, region2: rb, length: rc) -> (bool: ra)
+    push rd
+    push re
+
+    add rc, ra, rc
+
+    .loop:
+        cmp ra, rc
+        beq .exit
+
+        lbs rd, ra
+        lbs re, rb
+        cmp rd, re
+        bne .exit
+        add ra, ra, 1
+        add rb, rb, 1
+        bra .loop
+
+    .exit:
+        setfe ra
+
+        pop re
+        pop rd
+        ret
+;

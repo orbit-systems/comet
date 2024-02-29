@@ -1,0 +1,156 @@
+define io.stdout, 10
+define io.stdin, 11
+
+io.last_input:
+    d8 0
+align 4
+
+io.setup: ; (ra: interrupt number to use)
+    push rb
+    push rc
+
+    // add interrupt handler to IVT
+    li rb, io.stdin_interrupt_handler // sets rb to address of the function stdin_interrupt_handler
+    li rc, IVT // set rc to address of IVT
+    sw rc, 0, ra, 3, rb 
+
+    // bind interrupt to port
+    li rb, 0
+    out 1, rb
+    li rb, io.stdin
+    out 1, rb
+    out 1, ra
+
+    pop rc
+    pop rb
+    ret
+;
+
+io.stdin_interrupt_handler:
+    push ra
+    push rb
+    
+    in ra, io.stdin
+    li rb, io.last_input
+    sb rb, ra
+    
+    pop rb
+    pop ra
+    iret
+;
+
+io.get_last: ; () -> (last_input: ra)
+    push rb
+    li rb, io.last_input
+    lb ra, rb
+    pop rb
+    ret;
+;
+
+; get the last input and reset io.last_input to zero
+io.get_last_n_reset: ; () -> (last_input: ra)
+    push rb
+    li rb, io.last_input
+    lb ra, rb
+    sb rb, rz
+    pop rb
+    ret;
+;
+
+io.print_i64: ; (integer : ra)
+
+    cmp ra, 0
+    bge io.print_u64
+    
+    sub ra, rz, ra
+    li  rb, '-'
+    out io.stdout, rb
+    
+io.print_u64: ; (integer : ra)
+    push rb
+    push rz
+
+    .loop:
+        mod  rb, ra, 10
+        add  rb, rb, '0'
+        push rb
+        udiv ra, ra, 10
+        cmp  ra, 0
+        bne .loop
+
+    .print:
+        pop ra
+        cmp ra, 0
+        beq .end
+        out io.stdout, ra
+        bra .print
+
+    .end:
+        pop rb
+        ret
+;
+
+io.print_cstring: ; (charptr: ra)
+    push rb
+    .loop:
+        lbs rb, ra
+        cmp rb, '\0'
+        bez .end
+        out io.stdout, rb
+        add ra, ra, 1
+        bra .loop
+    .end:
+    pop  rb
+    ret
+;
+
+io.print_slice: ; (charptr: ra, len: rb)
+    push rc
+    .loop:
+        cmp rb, 0
+        beq .end
+        lbs rc, ra
+        out io.stdout, rc
+        add ra, ra, 1
+        sub rb, rb, 1
+        bra .loop
+    .end:
+    pop rc
+    ret
+;
+
+io.print_bool: ; (boolean: ra)
+    cmp ra, rz
+    bnz .true
+    
+    li ra, 'f'
+    out io.stdout, ra
+    li ra, 'a'
+    out io.stdout, ra
+    li ra, 'l'
+    out io.stdout, ra
+    li ra, 's'
+    out io.stdout, ra
+    li ra, 'e'
+    out io.stdout, ra
+    ret
+
+    .true:
+    li ra, 't'
+    out io.stdout, ra
+    li ra, 'r'
+    out io.stdout, ra
+    li ra, 'u'
+    out io.stdout, ra
+    li ra, 'e'
+    out io.stdout, ra
+    ret
+;
+
+io.print_nl: ; ()
+    push ra
+    li ra, '\n'
+    out io.stdout, ra
+    pop ra
+    ret
+;
