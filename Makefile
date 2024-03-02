@@ -12,14 +12,16 @@ LD = gcc
 DEBUGFLAGS = -ggdb -Og
 ASANFLAGS = -fsanitize=undefined -fsanitize=address
 DONTBEAFUCKINGIDIOT = -Werror -Wall -Wextra -pedantic -Wno-missing-field-initializers -Wno-unused-result
-CFLAGS = -O3 -fno-strict-aliasing 
+CFLAGS = -O3 -fno-strict-aliasing
 SHUTTHEFUCKUP = -Wno-unknown-warning-option -Wno-incompatible-pointer-types-discards-qualifiers -Wno-initializer-overrides -Wno-discarded-qualifiers
-LINK_FLAGS = -lm -flto -lpthread -lSDL2
+LINK_FLAGS = -lm -flto -lpthread 
 
 ifeq ($(OS),Windows_NT)
 	EXECUTABLE_NAME = comet.exe
-	LINK_FLAGS += -lws2_32
+	LINK_FLAGS += -lws2_32 -lmingw32 -L./ -lSDL2
 	CFLAGS += -mconsole
+else
+	LINK_FLAGS += -lSDL2
 endif
 
 all: build
