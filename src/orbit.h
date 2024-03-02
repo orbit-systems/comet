@@ -26,13 +26,14 @@ typedef int8_t   i8;
 
 typedef double f64;
 typedef float f32;
+typedef _Float16 f16; // FUCK YOU KAYLA GET A BETTER GCC I DONT GIVE A SHIT ANYMORE
 
-#ifdef __F16CINTRIN_H
-typedef _Float16 f16;
-#else
-#warning "Float16 ops not supported on this target. Comet will not be compliant! Tell kayla to write a soft-float16."
-typedef float f16;
-#endif
+// #ifdef __F16CINTRIN_H
+// typedef _Float16 f16;
+// #else
+// #warning "Float16 ops not supported on this target. Comet will not be compliant! Tell kayla to write a soft-float16."
+// typedef float f16;
+// #endif
 
 // #if defined(__clang__)
 //     typedef __fp16 f16;
