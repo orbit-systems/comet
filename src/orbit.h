@@ -24,7 +24,13 @@ typedef int8_t   i8;
 
 typedef double f64;
 typedef float f32;
+
+#ifdef FLT16_MAX
 typedef _Float16 f16;
+#else
+#warning "Float16 ops not supported on this target. Comet will not be compliant! Tell kayla to write a soft-float16."
+typedef float f16;
+#endif
 
 // #if defined(__clang__)
 //     typedef __fp16 f16;

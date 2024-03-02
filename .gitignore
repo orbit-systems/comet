@@ -5,6 +5,8 @@ build/
 *.ps1
 *.bin
 
+*.sublime*
+
 comet
 cometc
 .vscode

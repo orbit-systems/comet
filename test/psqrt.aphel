@@ -1,0 +1,38 @@
+psqrt:
+	//ra contains the value of a in posit form
+	//rb will contain sqrt a.
+	//rc, rd, re, rf are clobbered.
+	//epsilon = 0.0001
+
+	//find solution to x^2 - a = 0
+
+	li rc, 0.0001
+	li rd, 2.0
+	li re, 0.0
+	li rf, 0.NaR // 1 << 63
+	//x_0 = ra
+	//x_n+1 = (x_n^2 - ra)/2*x_n
+
+	pcmp ra, re //if ra < 0 
+	ble psqrt_exit
+
+	pcmp ra, rf //if ra is NaR
+	beq psqrt_exit
+
+	mov rb, ra
+	psqrt_loop:
+		pmul re, rb, rb
+		padd re, rb, ra
+		pdiv re, rb, rd
+		pdiv re, re, rb
+		//test if |x_n+1 - x_n| < epsilon
+
+		psub rf, re, rb
+		pabs rf
+		pcmp rf, rc
+		ble psqrt_exit
+		mov rb, ra
+		bra sqrt_loop
+	psqrt_exit:
+		mov rb, rf 
+		ret 
