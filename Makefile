@@ -12,9 +12,9 @@ LD = gcc
 DEBUGFLAGS = -ggdb -Og
 ASANFLAGS = -fsanitize=undefined -fsanitize=address
 DONTBEAFUCKINGIDIOT = -Werror -Wall -Wextra -pedantic -Wno-missing-field-initializers -Wno-unused-result
-CFLAGS = -O3 -fno-strict-aliasing
+CFLAGS = -O3 -fno-strict-aliasing -flto
 SHUTTHEFUCKUP = -Wno-unknown-warning-option -Wno-incompatible-pointer-types-discards-qualifiers -Wno-initializer-overrides -Wno-discarded-qualifiers
-LINK_FLAGS = -lm 
+LINK_FLAGS = -lm -flto
 
 ifeq ($(OS),Windows_NT)
 	EXECUTABLE_NAME = comet.exe
