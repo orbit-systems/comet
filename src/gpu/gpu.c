@@ -16,7 +16,6 @@ SDL_Texture* gpu_framebuf_tex;
 #define SCREEN_BUFF 0xD000
 
 
-emulator comet;
 
 void *gpuThread(void* argvp) {
 	if (isGpuInit == 0) {
