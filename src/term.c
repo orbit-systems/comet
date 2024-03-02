@@ -43,7 +43,8 @@ void Exit(void) {
 HANDLE handle_stdin;
 HANDLE handle_stdout;
 
-// #warning windows support for term missing, defaulting to nothing
+#warning "windows terminal is jank! use at your own annoyance"
+
 void term_setup(void) {
     if (is_term_set_up) return;
 
