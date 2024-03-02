@@ -2,6 +2,8 @@
 #define COMET_H
 
 #include "orbit.h"
+#include <pthread.h>
+
 
 #if defined(_WIN32)
 #   include <winsock2.h>

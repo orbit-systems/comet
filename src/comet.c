@@ -14,6 +14,7 @@
 #include "dev.h"
 #include "io.h"
 #include "term.h"
+#include "gpu/gpu.h"
 
 void print_help() {
     printf("\nusage: comet (path) [flags]\n");
@@ -123,6 +124,11 @@ int main(int argc, char *argv[]) {
 
     term_setup(); //setup terminal
 
+    //create gpu thread
+    pthread_t gpu_thread_id;
+    pthread_create(&gpu_thread_id, NULL, gpuThread, NULL);
+
+
     if (comet.flag_cycle_limit == 0){
         while (comet.cpu.running) {
             // printf("\n\nWOAH\n\n");
@@ -136,7 +142,10 @@ int main(int argc, char *argv[]) {
     }
 
     term_reset(); //unsetup terminal
-    
+
+    //destroy gpu thread
+    pthread_join(gpu_thread_id, NULL);
+
     if (comet.flag_benchmark) {
         gettimeofday(&exec_end, 0);
         long seconds = exec_end.tv_sec - exec_begin.tv_sec;

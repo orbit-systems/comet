@@ -1,4 +1,4 @@
-SRCPATHS = src/*.c
+SRCPATHS = src/*.c src/gpu/*.c
 SRC = $(wildcard $(SRCPATHS))
 OBJECTS = $(SRC:src/%.c=build/%.o)
 
@@ -12,9 +12,9 @@ LD = gcc
 DEBUGFLAGS = -ggdb -Og
 ASANFLAGS = -fsanitize=undefined -fsanitize=address
 DONTBEAFUCKINGIDIOT = -Werror -Wall -Wextra -pedantic -Wno-missing-field-initializers -Wno-unused-result
-CFLAGS = -O3 -fno-strict-aliasing -flto
+CFLAGS = -O3 -fno-strict-aliasing 
 SHUTTHEFUCKUP = -Wno-unknown-warning-option -Wno-incompatible-pointer-types-discards-qualifiers -Wno-initializer-overrides -Wno-discarded-qualifiers
-LINK_FLAGS = -lm -flto
+LINK_FLAGS = -lm -flto -lpthread -lSDL2
 
 ifeq ($(OS),Windows_NT)
 	EXECUTABLE_NAME = comet.exe
@@ -24,7 +24,7 @@ endif
 
 all: build
 
-build/%.o: src/%.c
+build/%.o: */%.c
 	@echo compiling $<
 	@$(CC) -c -o $@ $< $(CFLAGS) -MD
 
@@ -37,7 +37,7 @@ test: build
 	@echo ""
 	./$(EXECUTABLE_NAME) test/example.bin -max-cycles:700000000 -bench
 
-dbgbuild/%.o: src/%.c
+dbgbuild/%.o: */%.c
 	@$(CC) -c -o $@ $< -Isrc/ -MD $(DEBUGFLAGS)
 
 dbgbuild: $(OBJECTS)
@@ -46,6 +46,7 @@ dbgbuild: $(OBJECTS)
 clean:
 	@rm -rf build
 	@mkdir build
+	@mkdir build/gpu
 
 printbuildinfo:
 	@echo using $(CC) with flags $(CFLAGS)
