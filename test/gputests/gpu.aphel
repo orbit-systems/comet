@@ -1,0 +1,65 @@
+include "test/common.aphel"
+include "test/gputests/codepage437.aphel"
+
+define cp437_width, 8
+define cp437_height, 16
+
+define VGA_FRAMEBUFFER, 0x1000
+define VGA_WIDTH, 80
+define VGA_HEIGHT, 50
+
+define FONT_BUFF, 0x2000
+
+;NOTE: this program is designed to be standalone, and so does not use sandwichman
+;function notation and convention in main and init_font.
+
+main:
+	call ra, init_font
+
+	li ra, 0
+	li rb, 0
+	li rc, 0
+	li rd, 0
+
+	.loop:
+		mov rc, ra
+		call rd, draw_character
+		add ra, ra, 0x1
+		cmp ra, 0x100
+		bne .loop
+		
+	ret
+
+init_font:
+	;load 4096 byte font
+	li ra, 0
+	li rb, 0
+	li rc, 0
+	.loop:
+		lw rc, rb, cp437_binary ; rc = cp437_binary[rb]
+		sw ra, FONT_BUFF, rc; FONT_BUFF[ra] = rc
+		add ra, ra, 0x4
+		add rb, rb, 0x4
+		cmp ra, 4100 ; 4096 + 4
+		bne .loop
+
+	ret
+
+draw_character: ; (x: ra, y: rb, c: rc) -> ()
+	define VGA_ATTRIB, 0x0F ; white text, black foreground, no blink
+	
+	and rc, rc, 0xFF ; trunc rc to char
+	
+	push rd ;using rd
+	li rd, VGA_ATTRIB
+	shl rd, rd, 8
+	or rc, rc, rd ; rc = 0x0Fcc
+
+	umul rd, rb, VGA_WIDTH
+	add rd, rd, ra
+	shl rd, rd, 1
+	;rd contains offset into VGA_FRAMEBUFFER
+	sq rd, VGA_FRAMEBUFFER, rc ; VGA_FRAMEBUFFER[rb * VGA_WIDTH + ra] = rc
+
+	pop rd
+	ret

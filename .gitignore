@@ -7,6 +7,7 @@ build/
 
 *.sublime*
 
+luna
 comet
 cometc
 .vscode
