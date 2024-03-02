@@ -19,6 +19,7 @@ void print_help() {
     printf("\nusage: comet (path) [flags]\n");
     printf("\n-debug               launch window with debug interface");
     printf("\n-max-cycles:[int]    halt after cycle count has been reached (will run forever if unset)");
+    printf("\n-polling-rate:[int]  use a custom polling rate for user input, every [input] cycles (0 = never poll, default 4096)");
     printf("\n-memory:[int]        use a custom address space size; the maximum addressable byte will be [int]-1");
     printf("\n                     if not provided, defaults to 2^26 (64 MiB)");
     printf("\n-bench               output benchmark info after execution is halted");
@@ -42,6 +43,7 @@ cmd_arg make_argument(char* s) {
 }
 
 void load_arguments(int argc, char* argv[]) {
+    comet.flag_polling_rate = 4096;
     if (argc < 2) {
         print_help();
         exit(EXIT_SUCCESS);
@@ -61,6 +63,8 @@ void load_arguments(int argc, char* argv[]) {
                 printf("error: expected positive int, got \"%s\"\n", a.val);
                 exit(EXIT_FAILURE);
             }
+        } else if(!strcmp(a.key, "-polling-rate")) {
+            comet.flag_polling_rate = strtoull(a.val, NULL, 0);
         } else if (!strcmp(a.key, "-memory")) {
             comet.mmu.mem_max = strtoull(a.val, NULL, 0);
             if (comet.mmu.mem_max == 0) {
