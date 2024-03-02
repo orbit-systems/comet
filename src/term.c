@@ -1,5 +1,6 @@
 #include "orbit.h"
 #include "term.h"
+#include "comet.h"
 #include <stdlib.h>
 
 
@@ -14,13 +15,14 @@ static struct termios old;
 
 void term_setup(void) {
     if (is_term_set_up) return;
+    if (comet.flag_polling_rate != 0) {
+        tcgetattr(STDIN_FILENO, &old);
+        is_term_set_up = true;
 
-    tcgetattr(STDIN_FILENO, &old);
-    is_term_set_up = true;
-
-    struct termios cool_state = old;
-    cool_state.c_lflag &= (~ICANON & ~ECHO & ~IGNBRK); // ~IGNBRK ignores ctrl-c and stuff
-    tcsetattr(STDIN_FILENO, TCSANOW, &cool_state);
+        struct termios cool_state = old;
+        cool_state.c_lflag &= (~ICANON & ~ECHO & ~IGNBRK); // ~IGNBRK ignores ctrl-c and stuff
+        tcsetattr(STDIN_FILENO, TCSANOW, &cool_state);
+    }
 }
 
 void term_reset(void) {

@@ -826,15 +826,17 @@ void run() {
         push_interrupt(int_stack_underflow);
     }
 
-    if (comet.cpu.cycle % 4096 == 0) { // every 4096 cycles
-        int c;
-        if (kbhit()) {
-            c = fgetc(stdin);
-            if (c == 3 || c == 28) { // ctrl-c or ctrl-backslash
-                Exit();
+    if (comet.flag_polling_rate != 0) {
+        if (comet.cpu.cycle % comet.flag_polling_rate == 0) { // every 4096 cycles
+            int c;
+            if (kbhit()) {
+                c = fgetc(stdin);
+                if (c == 3 || c == 28) { // ctrl-c or ctrl-backslash
+                    Exit();
+                }
+                if (c == '\r') c = '\n';
+                send_in(11, c); // send in on port 11
             }
-            if (c == '\r') c = '\n';
-            send_in(11, c); // send in on port 11
         }
     }
 }

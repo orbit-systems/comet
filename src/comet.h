@@ -135,6 +135,7 @@ typedef struct emulator_s {
 
     bool flag_debug;
     u64  flag_cycle_limit;
+    u64  flag_polling_rate;
     bool flag_no_color;
     bool flag_benchmark;
     char* flag_bin_path;
