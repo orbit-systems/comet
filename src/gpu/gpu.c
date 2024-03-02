@@ -13,7 +13,6 @@ SDL_Texture* gpu_framebuf_tex;
 #define SCREEN_WIDTH 800
 #define SCREEN_HEIGHT 800
 
-emulator comet;
 
 void *gpuThread(void* argvp) {
 	if (isGpuInit == 0) {
