@@ -3,12 +3,8 @@
 #include "../comet.h"
 #include "../mmu.h"
 
-int isGpuInit = 0;
-
 SDL_Window* gpu_window;
 SDL_Renderer* gpu_renderer;
-SDL_Surface* gpu_framebuf;
-SDL_Texture* gpu_framebuf_tex;
 
 #define SCREEN_WIDTH 800
 #define SCREEN_HEIGHT 800
@@ -18,10 +14,7 @@ SDL_Texture* gpu_framebuf_tex;
 
 
 void *gpuThread(void* argvp) {
-	if (isGpuInit == 0) {
-		gpu_init();
-		isGpuInit = 1;
-	}
+	gpu_init();
 	int running = 1;
 
 	SDL_Event e;
@@ -32,6 +25,9 @@ void *gpuThread(void* argvp) {
 				break;
 		} 
 		
+		if (comet.cpu.running == false) {
+			break;
+		}
 		
 
 		SDL_SetRenderDrawColor(gpu_renderer, 0, 0, 0, 0xFF);
@@ -45,6 +41,10 @@ void *gpuThread(void* argvp) {
 	}
 
 	comet.cpu.running = 0;
+
+	SDL_DestroyWindow(gpu_window);
+
+	SDL_DestroyRenderer(gpu_renderer);
 
 
 }
@@ -88,9 +88,6 @@ void gpu_draw() {
 void gpu_init() {
 	gpu_window = SDL_CreateWindow("Aphelion GPU", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, 0);
 	gpu_renderer = SDL_CreateRenderer(gpu_window, -1, SDL_RENDERER_ACCELERATED);
-	gpu_framebuf = SDL_CreateRGBSurface(0, SCREEN_WIDTH, SCREEN_HEIGHT, 32, 0x000000FF, 0x0000FF00, 0x00FF0000, 0xFF000000);
-	//SDL_FillRect(gpu_framebuf, NULL, 0x000000FF);
-	//gpu_framebuf_tex = SDL_CreateTextureFromSurface(gpu_renderer, gpu_framebuf);
 }
 
 
