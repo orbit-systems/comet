@@ -4,14 +4,13 @@ include "test/gputests/codepage437.aphel"
 define cp437_width, 8
 define cp437_height, 16
 
-define VGA_FRAMEBUFFER, 0xE000
+define VGA_FRAMEBUFFER, 0xD000
 define VGA_WIDTH, 80
 define VGA_HEIGHT, 50
 
 define FONT_BUFF, 0xF000
-
-;NOTE: this program is designed to be standalone, and so does not use sandwichman
-;function notation and convention in main and init_font.
+define CURSOR_X, 0x10000
+define CURSOR_Y, 0x10001
 
 main:
 	call ra, init_font
@@ -23,6 +22,7 @@ main:
 
 	main.loop:
 		li rc, 65
+		li rd, 0x0F
 		call rd, draw_character
 		add ra, ra, 0x1
 		cmp ra, 4000
@@ -30,37 +30,52 @@ main:
 		
 	ret
 
-draw_character: ; (x: ra, y: rb, c: rc) -> ()
-	define VGA_ATTRIB, 0x0F ; white text, black foreground, no blink
-	
-	and rc, rc, 0xFF ; trunc rc to char
-	
-	push rd ;using rd
-	li rd, VGA_ATTRIB
-	shl rd, rd, 8
-	or rc, rc, rd ; rc = 0x0Fcc
+draw_character: ; (x: ra, y: rb, char: rc, attrib: rd) -> ()
+	and rc, rc, 0x00FF ; trunc rc to char
+	and rd, rd, 0x00FF
+	push rg
+		mov rg, rd
+		shl rg, rg, 8
+		or rg, rc, rg ; rc = aacc
 
-	umul rd, rb, VGA_WIDTH
-	add rd, rd, ra
-	shl rd, rd, 1
-	;rd contains offset into VGA_FRAMEBUFFER
-	addi rd, rd, VGA_FRAMEBUFFER
-	sq rd, 0, rc ; VGA_FRAMEBUFFER[rb * VGA_WIDTH + ra] = rc
+		push re ;using re
+			umul re, rb, VGA_WIDTH
+			add re, re, ra
+			umul re, re, 2
+			;re contains offset into VGA_FRAMEBUFFER
+			push rf
+				li rf, VGA_FRAMEBUFFER
+				add re, re, rf
+			pop rf
+			sq re, 0, rg ; VGA_FRAMEBUFFER[rb * VGA_WIDTH + ra] = rg
 
-	pop rd
+		pop re
+	pop rg
 	ret
 
-init_font:
+init_font: ; () -> ()
 	;load 4096 byte font
-	li ra, FONT_BUFF
-	li rb, cp437_binary
-	li rc, 0
-	init_font.loop:
-		lw rc, rb, 0 ; rc = cp437_binary[rb]
-		sw ra, 0, rc; FONT_BUFF[ra] = rc
-		add ra, ra, 0x8
-		add rb, rb, 0x8
-		cmp ra, 4104 ; 4096 + 8
-		blt init_font.loop
+	push ra
+		push rb
+			push rc 
+				push rd
+
+					li ra, FONT_BUFF
+					li rb, cp437_binary
+					li rc, 0
+					li rd, 0
+					init_font.loop:
+						lw rc, rb, 0 ; rc = cp437_binary[rb]
+						sw ra, 0, rc; FONT_BUFF[ra] = rc
+						add ra, ra, 0x8
+						add rb, rb, 0x8
+						add rd, rd, 0x1
+						cmp rd, 4096 ; 4096 + 8
+						ble init_font.loop
+
+				pop rd
+			pop rc
+		pop rb
+	pop ra
 
 	ret
