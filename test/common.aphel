@@ -1,15 +1,15 @@
 define STACK, 100000
+define IVT, 0
 
 loc 0
-IVT:
-    bra setup
+    bra common.setup
 
 loc 2048
 align 4
 
-setup:
+common.setup:
     li ra, IVT
-    li rb, interrupt_handler
+    li rb, common.interrupt_handler
     .fill_IVT:
         sw  ra, rb
         add ra, ra, 8
@@ -24,7 +24,7 @@ setup:
     .spin:
         bra .spin
 
-interrupt_handler:
+common.interrupt_handler:
     .spin:
         bra .spin
 ;

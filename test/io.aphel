@@ -54,7 +54,7 @@ io.get_last_n_reset: ; () -> (last_input: ra)
     lb ra, rb
     sb rb, rz
     pop rb
-    ret;
+    ret
 ;
 
 io.print_i64: ; (integer : ra)
@@ -143,6 +143,11 @@ io.print_bool: ; (boolean: ra)
     li ra, 'u'
     out io.stdout, ra
     li ra, 'e'
+    out io.stdout, ra
+    ret
+;
+
+io.print_char: ; (char: ra)
     out io.stdout, ra
     ret
 ;

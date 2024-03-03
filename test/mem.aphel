@@ -1,4 +1,4 @@
-mem_set: ; (region: ra, value: rb, length: rc)
+mem.set: ; (region: ra, value: rb, length: rc)
     
     add rc, ra, rc
 
@@ -14,7 +14,18 @@ mem_set: ; (region: ra, value: rb, length: rc)
     ret
 ;
 
-mem_eq: ; (region1: ra, region2: rb, length: rc) -> (bool: ra)
+mem.zero:
+    add rb, ra, rb
+    .loop:
+        cmp ra, rb
+        beq .end
+        sb  ra, rz
+        add ra, ra, 1
+        bra .loop
+    .end:
+    ret
+;
+mem.eq: ; (region1: ra, region2: rb, length: rc) -> (bool: ra)
     push rd
     push re
 
@@ -39,3 +50,32 @@ mem_eq: ; (region1: ra, region2: rb, length: rc) -> (bool: ra)
         pop rd
         ret
 ;
+
+mem.find: ; (region: ra, byte: rb, max_length: rc) -> (index: ra)
+    push rd
+    push re
+
+    mov re, ra
+    add rc, ra, rc
+
+    .loop:
+        cmp ra, rc
+        beq .not_found
+
+        lbs rd, ra
+        cmp rd, rb
+        beq .found
+        add ra, ra, 1
+        bra .loop
+
+    .not_found:
+        li ra, -1
+        bra .exit
+
+    .found:
+        sub ra, ra, re
+
+    .exit:
+        pop re
+        pop rd
+        ret
