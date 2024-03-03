@@ -9,48 +9,227 @@ define VGA_WIDTH, 80
 define VGA_HEIGHT, 50
 
 define FONT_BUFF, 0xF000
-define CURSOR_X, 0x10000
-define CURSOR_Y, 0x10001
+
+CURSOR_POS:
+	d16 0
+
+TEST_STR:
+utf8 "                 .88888888:.\n"
+utf8 "                88888888.88888.\n"
+utf8 "              .8888888888888888.\n"
+utf8 "              888888888888888888\n"
+utf8 "              88' _`88'_  `88888\n"
+utf8 "              88 88 88 88  88888\n"
+utf8 "              88_88_::_88_:88888\n"
+utf8 "              88:::,::,:::::8888\n"
+utf8 "              88`:::::::::'`8888\n"
+utf8 "             .88  `::::'    8:88.\n"
+utf8 "            8888            `8:888.\n"
+utf8 "          .8888'             `888888.\n"
+utf8 "         .8888:..  .::.  ...:'8888888:.\n"
+utf8 "        .8888.'     :'     `'::`88:88888\n"
+utf8 "       .8888        '         `.888:8888.\n"
+utf8 "      888:8         .           888:88888\n"
+utf8 "    .888:88        .:           888:88888:\n"
+utf8 "    8888888.       ::           88:888888\n"
+utf8 "    `.::.888.      ::          .88888888\n"
+utf8 "   .::::::.888.    ::         :::`8888'.:.\n"
+utf8 "  ::::::::::.888   '         .::::::::::::\n"
+utf8 "  ::::::::::::.8    '      .:8::::::::::::.\n"
+utf8 " .::::::::::::::.        .:888:::::::::::::\n"
+utf8 " :::::::::::::::88:.__..:88888:::::::::::'\n"
+utf8 "  `'.:::::::::::88888888888.88:::::::::'\n"
+utf8 "        `':::_:' -- '' -'-' `':_::::'`\n\0"
+
+
+
+TEST_STR_2:
+utf8 "meowers in the chat say wooo\n\0"
+
+align 4
 
 main:
 	call ra, init_font
 
-	li ra, 0
-	li rb, 0
-	li rc, 0
-	li rd, 0
+	li ra, TEST_STR
+	li rb, 4000
 
-	main.loop:
-		li rc, 65
-		li rd, 0x0F
-		call rd, draw_character
-		add ra, ra, 0x1
-		cmp ra, 4000
-		ble main.loop
+	push rk
+		call rk, gpu.print_slice
+	pop rk
+
+	/*main.loop:
+		li ra, 0x41
+		li rb, 0x0F
+		call rd, draw_console_character
+		add rc, rc, 1
+		cmp rc, 0x10
+		blt main.loop*/
 		
 	ret
 
+gpu.render_cstring: ; (charptr: ra)
+    push rb
+	    .loop:
+	        lbs rb, ra
+	        cmp rb, '\0'
+	        bez .end
+	        push ra
+	        	mov ra, rb
+	        	push rb
+	        		li rb, 0x0F
+	        		push rk
+	        			call rk, draw_console_character
+	        		pop rk 
+	        	pop rb 
+	        pop ra
+	        add ra, ra, 1
+	        bra .loop
+	    .end:
+    pop  rb
+    ret
+
+gpu.print_slice: ; (charptr: ra, len: rb)
+    push rc
+	    .loop:
+	        cmp rb, 0
+	        ble .end
+	        lbs rc, ra
+	        push ra
+	        	mov ra, rc
+	        	push rb
+	        		li rb, 0x0F
+	        		push rk
+	        			call rk, draw_console_character
+	        		pop rk 
+	        	pop rb 
+	        pop ra
+	        add ra, ra, 1
+	        sub rb, rb, 1
+	        bra .loop
+	    .end:
+    pop rc
+    ret
+
+draw_console_character: ;(char: ra, attrib: rb)
+	push ra
+		and ra, ra, 0x00FF
+		cmp ra, '\n'
+		bne .draw
+		.newline: ;ra = '\n'
+			push rc
+				li rc, CURSOR_POS
+				lqs rc, rc, 0 ; deref cursor_pos
+				;erase previous cursor
+				push rd
+					li rd, VGA_FRAMEBUFFER
+					shl rc, rc, 1
+						add rd, rd, rc ;rd = (VGA_FRAMEBUFFER + CURSOR_POS)
+						push re
+							li re, 0x0000
+							sq rd, 0, re
+						pop re
+					lsr rc, rc, 1
+				pop rd 
+
+				push rd
+					;determine offset to start of row
+					mov rd, rc
+					add rd, rd, 1
+					mod rd, rd, VGA_WIDTH
+					sub rc, rc, rd ; rc = rc - rc (mod VGA_WIDTH) 
+					add rc, rc, VGA_WIDTH ;move to next row
+
+					li rd, CURSOR_POS
+					sq rd, 0, rc
+				pop rd 
+			pop rc 
+			bra .draw_blink
+			ret
+
+		.draw:
+			push rc 
+				li rc, CURSOR_POS
+				lqs rc, rc, 0
+
+				xor ra, rc, ra ;xor swap, ra <-> rc
+				xor rc, ra, rc
+				xor ra, rc, ra
+				push rd
+					mov rd, rb
+					push rb
+						li rb, 0
+						push rk 
+							call rk, draw_character; ra = *cursor_pos, rb = 0, rc = (ra at call), rd = (rb at call)
+						pop rk
+					pop rb 
+				pop rd
+			pop rc
+
+		.draw_blink:
+			push rc 
+				li rc, CURSOR_POS
+				lqs rc, rc, 0
+				add rc, rc, 1
+				push ra
+					li ra, '_'
+
+					xor ra, rc, ra ;xor swap, ra <-> rc
+					xor rc, ra, rc
+					xor ra, rc, ra
+					push rb
+						li rb, 0x8F ; 0b10001111, blink black background with white text 
+						push rd
+							mov rd, rb
+							push rb
+								li rb, 0
+								push rk 
+									call rk, draw_character
+								pop rk
+							pop rb
+						pop rd
+					pop rb
+				pop ra
+			pop rc
+
+			.inc_cursor:
+				push rc
+					li rc, CURSOR_POS
+					lqs rc, rc, 0
+					add rc, rc, 1
+					push rd
+						li rd, CURSOR_POS
+						sq rd, 0, rc
+					pop rd	
+				pop rc
+	pop ra
+	ret
+
 draw_character: ; (x: ra, y: rb, char: rc, attrib: rd) -> ()
-	and rc, rc, 0x00FF ; trunc rc to char
-	and rd, rd, 0x00FF
-	push rg
-		mov rg, rd
-		shl rg, rg, 8
-		or rg, rc, rg ; rc = aacc
+	push rc
+		push rd
+			and rc, rc, 0x00FF ; trunc rc to char
+			and rd, rd, 0x00FF
+			push rg
+				mov rg, rd
+				shl rg, rg, 8
+				or rg, rc, rg ; rc = aacc
 
-		push re ;using re
-			umul re, rb, VGA_WIDTH
-			add re, re, ra
-			umul re, re, 2
-			;re contains offset into VGA_FRAMEBUFFER
-			push rf
-				li rf, VGA_FRAMEBUFFER
-				add re, re, rf
-			pop rf
-			sq re, 0, rg ; VGA_FRAMEBUFFER[rb * VGA_WIDTH + ra] = rg
+				push re ;using re
+					umul re, rb, VGA_WIDTH
+					add re, re, ra
+					umul re, re, 2
+					;re contains offset into VGA_FRAMEBUFFER
+					push rf
+						li rf, VGA_FRAMEBUFFER
+						add re, re, rf
+					pop rf
+					sq re, 0, rg ; VGA_FRAMEBUFFER[rb * VGA_WIDTH + ra] = rg
 
-		pop re
-	pop rg
+				pop re
+			pop rg
+		pop rd
+	pop rc
 	ret
 
 init_font: ; () -> ()

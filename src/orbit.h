@@ -26,7 +26,7 @@ typedef int8_t   i8;
 
 typedef double f64;
 typedef float f32;
-typedef _Float16 f16; // FUCK YOU KAYLA GET A BETTER GCC I DONT GIVE A SHIT ANYMORE
+typedef float f16; // FUCK YOU KAYLA GET A BETTER GCC I DONT GIVE A SHIT ANYMORE
 
 // #ifdef __F16CINTRIN_H
 // typedef _Float16 f16;
