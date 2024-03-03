@@ -51,9 +51,8 @@ void *gpuThread(void* argvp) {
 
 		gpu_draw();
 
-		//SDL_RenderCopy(gpu_renderer, gpu_framebuf_tex, NULL, NULL);
-
 		SDL_RenderPresent(gpu_renderer);
+		sched_yield();
 	}
 
 	comet.cpu.running = 0;
