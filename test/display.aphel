@@ -4,7 +4,7 @@ define display.width,  500
 define display.height, 500
 
 display.framebuffer:
-    d64 0x100000
+    d64 0x1000000
 
 display.clear: ; (RGB8 : ra) -> ()
     enter
@@ -14,6 +14,7 @@ display.clear: ; (RGB8 : ra) -> ()
     push rd
     push re
     push rf
+    push rg
 
     li rf, display.framebuffer
     lw rf, rf
@@ -41,20 +42,38 @@ display.clear: ; (RGB8 : ra) -> ()
     li   rd, display.width
     umul rd, rd, display.height
     mod  re, rd, 8
+    sub  rd, rd, re
 
+    li rg, 0
     .fast_fill:
-
         sw  rf, 0,  ra
         sw  rf, 8,  rb
         sw  rf, 16, rc
 
         add rf, rf, 24
-        sub rd, rd, 24
+        add rg, rg, 1
+        cmp rg, rd 
+        blt .fast_fill
 
-        cmp rd, 24
-        bge .fast_fill
+    li rg, 0
 
+    shl ra, ra, 40
+    lsr ra, ra, 40 // zero upper bits of ra
 
+    .short_fill:
+        cmp rg, re
+        blt .exit
+        sb rf, 0, ra
+        sb rf, 1, rc
+        sb rf, 2, rb 
+
+        add rf, rf, 3
+        add rg, rg, 1
+        bra .short_fill
+    
+    .exit:
+
+    pop rg
     pop rf
     pop re
     pop rd

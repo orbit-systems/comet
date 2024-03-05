@@ -6,10 +6,11 @@
 SDL_Window* gpu_window;
 SDL_Renderer* gpu_renderer;
 
-#define SCREEN_WIDTH 80 * 8
-#define SCREEN_HEIGHT 50 * 16
+#define SCREEN_WIDTH 500
+#define SCREEN_HEIGHT 500
 #define FONT_BUFF 0xF000
 #define SCREEN_BUFF 0xD000
+#define FRAME_BUFF 0x1000000
 
 u64 gpu_colours[16] = {
 	0x000000FF, 0x0000AAFF, 0x00AA00FF, 0x00AAAAFF,
@@ -67,6 +68,19 @@ void gpu_draw() {
 	int screen_buff_word;
 	float dot_width = 1; //(float)SCREEN_WIDTH / (float)(80 * 8);
 	float dot_height = 1; //(float)SCREEN_HEIGHT / (float)(50 * 16);
+
+	for (int i = 0; i < SCREEN_HEIGHT; i++) {
+		for (int j = 0; j < SCREEN_WIDTH; j++) {
+			u8 red, green, blue;
+			phys_read_u8(FRAME_BUFF + (i * SCREEN_WIDTH + j) * 3 + 0, &red);
+			phys_read_u8(FRAME_BUFF + (i * SCREEN_WIDTH + j) * 3 + 1, &green);
+			phys_read_u8(FRAME_BUFF + (i * SCREEN_WIDTH + j) * 3 + 2, &blue);
+			SDL_SetRenderDrawColor(gpu_renderer, red, green, blue, 0xFF);
+			SDL_RenderDrawPoint(gpu_renderer, j, i);
+		}
+	}
+
+	return;
 
 	for (int i = 0; i < 50; i++) {
 		//printf("\n");

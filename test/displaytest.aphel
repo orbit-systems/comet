@@ -4,7 +4,7 @@ include "test/display.aphel"
 
 main:
 
-    li   ra, 0x_CC_BB_AA
+    li   ra, 0x_FF_00_00
     call rk, display.clear
 
 
