@@ -10,7 +10,6 @@ SDL_Renderer* gpu_renderer;
 #define SCREEN_HEIGHT 500
 #define FONT_BUFF 0xF000
 #define SCREEN_BUFF 0xD000
-#define FRAME_BUFF 0x1000000
 
 u64 gpu_colours[16] = {
 	0x000000FF, 0x0000AAFF, 0x00AA00FF, 0x00AAAAFF,
@@ -31,6 +30,8 @@ typedef union {
 
 int drawGPUBuffer = 0;
 
+u64 GPUFrameBuffer = 0;
+
 
 void *gpuThread(void* argvp) {
 	gpu_init();
@@ -49,19 +50,16 @@ void *gpuThread(void* argvp) {
 		}
 		
 
-		if (gpuDrawBuffer == 1) {
+		if (drawGPUBuffer == 1) {
 			SDL_SetRenderDrawColor(gpu_renderer, 0, 0, 0, 0xFF);
 			SDL_RenderClear(gpu_renderer);
 
 			gpu_draw();
 
 			SDL_RenderPresent(gpu_renderer);
-			gpuDrawBuffer = 0;		
+			drawGPUBuffer = 0;		
 		}
 
-
-
-		
 		sched_yield();
 	}
 
@@ -73,8 +71,9 @@ void *gpuThread(void* argvp) {
 
 }
 
-void gpu_receive() {
-	gpuDrawBuffer = 1;
+void GPU_receive(u64 data) {
+	GPUFrameBuffer = data;
+	drawGPUBuffer = 1;
 }
 
 void gpu_draw() {
@@ -85,9 +84,9 @@ void gpu_draw() {
 	for (int i = 0; i < SCREEN_HEIGHT; i++) {
 		for (int j = 0; j < SCREEN_WIDTH; j++) {
 			u8 red, green, blue;
-			phys_read_u8(FRAME_BUFF + (i * SCREEN_WIDTH + j) * 3 + 0, &red);
-			phys_read_u8(FRAME_BUFF + (i * SCREEN_WIDTH + j) * 3 + 1, &green);
-			phys_read_u8(FRAME_BUFF + (i * SCREEN_WIDTH + j) * 3 + 2, &blue);
+			phys_read_u8(GPUFrameBuffer + (i * SCREEN_WIDTH + j) * 3 + 0, &red);
+			phys_read_u8(GPUFrameBuffer + (i * SCREEN_WIDTH + j) * 3 + 1, &green);
+			phys_read_u8(GPUFrameBuffer + (i * SCREEN_WIDTH + j) * 3 + 2, &blue);
 			SDL_SetRenderDrawColor(gpu_renderer, red, green, blue, 0xFF);
 			SDL_RenderDrawPoint(gpu_renderer, j, i);
 		}
