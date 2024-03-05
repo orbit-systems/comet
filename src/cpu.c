@@ -394,15 +394,19 @@ void run() {
     case 0x26: { // idivr
         u64 a = regval(ci.R.rs1);
         u64 b = regval(ci.R.rs2);
-        regval(ci.R.rde) = (i64)a / (i64)b;
-        } break;
-    case 0x27: { // idivi
-        if (regval(ci.E.rs2) == 0) {
+        if (b == 0) {
             push_interrupt(int_divide_by_zero);
             break;
         }
+        regval(ci.R.rde) = (i64)a / (i64)b;
+        } break;
+    case 0x27: { // idivi
         u64 a = regval(ci.M.rs1);
         u64 b = sign_extend(ci.M.imm, 16);
+        if (b == 0) {
+            push_interrupt(int_divide_by_zero);
+            break;
+        }
         regval(ci.M.rde) = (i64)a / (i64)b;
         } break;
     case 0x28: { // umulr
@@ -686,18 +690,26 @@ void run() {
         }
         } break;
     case 0x48: { // fdiv
-        if (*(f16*)&regval(ci.E.rs2) == 0) {
-            push_interrupt(int_divide_by_zero);
-            break;
-        }
         switch (ci.E.func) {
         case 0: {
+            if (*(f16*)&regval(ci.E.rs2) == 0) {
+                *(u16*)&regval(ci.E.rde) = 0x7C00;
+                break;
+            }
             *(f16*)&regval(ci.E.rde) = *(f16*)&regval(ci.E.rs1) / *(f16*)&regval(ci.E.rs2);
             } break;
         case 1: {
+            if (*(f32*)&regval(ci.E.rs2) == 0) {
+                *(u32*)&regval(ci.E.rde) = 0x7F800000;
+                break;
+            }
             *(f32*)&regval(ci.E.rde) = *(f32*)&regval(ci.E.rs1) / *(f32*)&regval(ci.E.rs2);
             } break;
         case 2: {
+            if (*(f64*)&regval(ci.E.rs2) == 0) {
+                *(u64*)&regval(ci.E.rde) = 0x7FF0000000000000ull;
+                break;
+            }
             *(f64*)&regval(ci.E.rde) = *(f64*)&regval(ci.E.rs1) / *(f64*)&regval(ci.E.rs2);
             } break;
         default:

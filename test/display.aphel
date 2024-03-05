@@ -1,0 +1,78 @@
+define display.port, 100
+
+define display.width,  500
+define display.height, 500
+
+display.framebuffer:
+    d64 0x100000
+
+display.clear: ; (RGB8 : ra) -> ()
+    enter
+    push ra
+    push rb
+    push rc
+    push rd
+    push re
+    push rf
+
+    li rf, display.framebuffer
+    lw rf, rf
+
+    shl ra, ra, 40
+    lsr ra, ra, 40 // zero upper bits of ra
+
+    shl rc, ra, 24
+    or  ra, rc, ra
+    shl rb, ra, 8
+    shl rc, ra, 16
+    shl rd, ra, 48
+    or  ra, ra, rd
+    shl rd, rd, 8
+    or  rb, rb, rd
+    lsr rd, rc, 48
+    or  rc, rc, rd
+    lsr rd, rd, 8
+    or  rb, rb, rd
+
+    ; ra = GRBGRBGR
+    ; rb = RBGRBGRB
+    ; rc = BGRBGRBG
+
+    li   rd, display.width
+    umul rd, rd, display.height
+    mod  re, rd, 8
+
+    .fast_fill:
+
+        sw  rf, 0,  ra
+        sw  rf, 8,  rb
+        sw  rf, 16, rc
+
+        add rf, rf, 24
+        sub rd, rd, 24
+
+        cmp rd, 24
+        bge .fast_fill
+
+
+    pop rf
+    pop re
+    pop rd
+    pop rc
+    pop rb
+    pop ra
+    leave
+    ret
+;
+
+display.update:
+    ; TODO waiting on kayla's gpu interface
+    ret
+
+display.rect:
+    ; TODO
+    ret
+
+display.line:
+    ; TODO
+    ret
