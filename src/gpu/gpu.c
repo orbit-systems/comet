@@ -29,6 +29,8 @@ typedef union {
 	};
 } RGBA;
 
+int drawGPUBuffer = 0;
+
 
 void *gpuThread(void* argvp) {
 	gpu_init();
@@ -47,12 +49,19 @@ void *gpuThread(void* argvp) {
 		}
 		
 
-		SDL_SetRenderDrawColor(gpu_renderer, 0, 0, 0, 0xFF);
-		SDL_RenderClear(gpu_renderer);
+		if (gpuDrawBuffer == 1) {
+			SDL_SetRenderDrawColor(gpu_renderer, 0, 0, 0, 0xFF);
+			SDL_RenderClear(gpu_renderer);
 
-		gpu_draw();
+			gpu_draw();
 
-		SDL_RenderPresent(gpu_renderer);
+			SDL_RenderPresent(gpu_renderer);
+			gpuDrawBuffer = 0;		
+		}
+
+
+
+		
 		sched_yield();
 	}
 
@@ -62,6 +71,10 @@ void *gpuThread(void* argvp) {
 	SDL_DestroyRenderer(gpu_renderer);
 
 
+}
+
+void gpu_receive() {
+	gpuDrawBuffer = 1;
 }
 
 void gpu_draw() {
