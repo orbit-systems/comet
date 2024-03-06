@@ -3,18 +3,13 @@ define STACK, 100000
 loc 0
 IVT:
     bra setup
+d32 0
+d64 interrupt_handler, 255
 
 loc 2048
 align 4
 
 setup:
-    li ra, IVT
-    li rb, interrupt_handler
-    .fill_IVT:
-        sw  ra, rb
-        add ra, ra, 8
-        cmp ra, 2048
-        blt .fill_IVT
 
     li  fp, STACK
     mov sp, fp

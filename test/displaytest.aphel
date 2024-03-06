@@ -4,10 +4,22 @@ include "test/display.aphel"
 
 main:
 
-    li   ra, 0x_FF_00_00
+    li ra, 0x1000000
+    li rf, display.framebuffer
+    sw rf, ra
+
+    out 10, ra
+
+    ; li   ra, 0x_FF_00_00
+    ; call rk, display.clear
+
+    li   ra, 0x00FF00
     call rk, display.clear
 
+    li   ra, 0xFF0000
+    call rk, display.clear
 
+    out 10, ra
 
     ret
 

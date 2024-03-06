@@ -32,7 +32,6 @@ int drawGPUBuffer = 0;
 
 u64 GPUFrameBuffer = 0;
 
-
 void *gpuThread(void* argvp) {
 	gpu_init();
 	int running = 1;
@@ -50,14 +49,15 @@ void *gpuThread(void* argvp) {
 		}
 		
 
-		if (drawGPUBuffer == 1) {
+		if (true) {
 			SDL_SetRenderDrawColor(gpu_renderer, 0, 0, 0, 0xFF);
 			SDL_RenderClear(gpu_renderer);
 
 			gpu_draw();
 
 			SDL_RenderPresent(gpu_renderer);
-			drawGPUBuffer = 0;		
+			drawGPUBuffer = 0;
+			printf("FIYASIFHDUFD");	
 		}
 
 		sched_yield();
@@ -74,6 +74,9 @@ void *gpuThread(void* argvp) {
 void GPU_receive(u64 data) {
 	GPUFrameBuffer = data;
 	drawGPUBuffer = 1;
+
+	// force the GPU thread to run
+	sched_yield();
 }
 
 void gpu_draw() {

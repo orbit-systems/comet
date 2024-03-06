@@ -7,7 +7,6 @@ display.framebuffer:
     d64 0x1000000
 
 display.clear: ; (RGB8 : ra) -> ()
-    enter
     push ra
     push rb
     push rc
@@ -80,7 +79,9 @@ display.clear: ; (RGB8 : ra) -> ()
     pop rc
     pop rb
     pop ra
-    leave
+
+    mov ri, ra
+
     ret
 ;
 
