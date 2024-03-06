@@ -28,8 +28,7 @@ typedef union {
 	};
 } RGBA;
 
-int drawGPUBuffer = 0;
-
+bool drawGPUBuffer = false;
 u64 GPUFrameBuffer = 0;
 
 void *gpuThread(void* argvp) {
@@ -49,15 +48,14 @@ void *gpuThread(void* argvp) {
 		}
 		
 
-		if (true) {
+		if (drawGPUBuffer) {
 			SDL_SetRenderDrawColor(gpu_renderer, 0, 0, 0, 0xFF);
 			SDL_RenderClear(gpu_renderer);
 
 			gpu_draw();
 
 			SDL_RenderPresent(gpu_renderer);
-			drawGPUBuffer = 0;
-			//printf("FIYASIFHDUFD");	
+			drawGPUBuffer = false;
 		}
 
 		sched_yield();
@@ -72,8 +70,9 @@ void *gpuThread(void* argvp) {
 }
 
 void GPU_receive(u64 data) {
+
 	GPUFrameBuffer = data;
-	drawGPUBuffer = 1;
+	drawGPUBuffer = true;
 
 	// force the GPU thread to run
 	sched_yield();

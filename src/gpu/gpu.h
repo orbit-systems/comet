@@ -13,3 +13,6 @@
 void *gpuThread(void* argvp);
 
 void gpu_init();
+
+extern bool drawGPUBuffer;
+extern u64 GPUFrameBuffer;
