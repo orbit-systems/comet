@@ -50,7 +50,7 @@ display.clear: ; (RGB8 : ra) -> ()
         sw  rf, 16, rc
 
         add rf, rf, 24
-        add rg, rg, 1
+        add rg, rg, 8
         cmp rg, rd 
         blt .fast_fill
 
@@ -61,7 +61,7 @@ display.clear: ; (RGB8 : ra) -> ()
 
     .short_fill:
         cmp rg, re
-        blt .exit
+        bge .exit
         sb rf, 0, ra
         sb rf, 1, rc
         sb rf, 2, rb 

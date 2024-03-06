@@ -57,7 +57,7 @@ void *gpuThread(void* argvp) {
 
 			SDL_RenderPresent(gpu_renderer);
 			drawGPUBuffer = 0;
-			printf("FIYASIFHDUFD");	
+			//printf("FIYASIFHDUFD");	
 		}
 
 		sched_yield();
