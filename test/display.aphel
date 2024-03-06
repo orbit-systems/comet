@@ -1,7 +1,7 @@
 define display.port, 100
 
-define display.width,  500
-define display.height, 500
+define display.width,  1000
+define display.height, 700
 
 display.framebuffer:
     d64 0x1000000
