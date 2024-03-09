@@ -2,7 +2,6 @@
 #include "cpu.h"
 #include "dev.h"
 #include "decode.h"
-#include "term.h"
 
 void forceinline push_stack(u64 data) {
     regval(r_sp) -= 8;
@@ -836,19 +835,5 @@ void run() {
 
     if (regval(r_sp) > regval(r_fp)) {
         push_interrupt(int_stack_underflow);
-    }
-
-    if (comet.flag_polling_rate != 0) {
-        if (comet.cpu.cycle % comet.flag_polling_rate == 0) { // every 4096 cycles
-            int c;
-            if (kbhit()) {
-                c = fgetc(stdin);
-                if (c == 3 || c == 28) { // ctrl-c or ctrl-backslash
-                    Exit();
-                }
-                if (c == '\r') c = '\n';
-                send_in(11, c); // send in on port 11
-            }
-        }
     }
 }

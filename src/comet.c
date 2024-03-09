@@ -13,7 +13,6 @@
 #include "mmu.h"
 #include "dev.h"
 #include "io.h"
-#include "term.h"
 #include "gpu/gpu.h"
 
 void print_help() {
@@ -120,8 +119,6 @@ int main(int argc, char *argv[]) {
         gettimeofday(&exec_begin, 0);
     }
 
-    term_setup(); //setup terminal
-
     //create gpu thread
     pthread_t gpu_thread_id;
     pthread_create(&gpu_thread_id, NULL, gpuThread, NULL);
@@ -130,6 +127,7 @@ int main(int argc, char *argv[]) {
     if (comet.flag_cycle_limit == 0){
         while (comet.cpu.running) {
             run();
+            // if (drawGPUBuffer) sched_yield();
         }
     } else {
         while (comet.cpu.running) {
@@ -138,7 +136,6 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    term_reset(); //unsetup terminal
 
     //destroy gpu thread
     pthread_join(gpu_thread_id, NULL);

@@ -44,13 +44,14 @@ void *gpuThread(void* argvp) {
 			if (e.type == SDL_QUIT)
 				break;
 		} 
-		
+
 		if (comet.cpu.running == false) {
 			break;
 		}
 		
 
 		if (drawGPUBuffer) {
+			// printf("SHITFUCKGARBAGETRUCK\n");
 
 			gpu_draw();
 
@@ -141,10 +142,12 @@ void gl_init() {
 		exit(-1);
 	}
 
+
 	gpu_program = glCreateProgram();
 	glAttachShader(gpu_program, vertexShaderID);
 	glAttachShader(gpu_program, fragmentShaderID);
 	glLinkProgram(gpu_program);
+
 
 	glViewport(0,0, SCREEN_WIDTH, SCREEN_HEIGHT);
 	
@@ -182,6 +185,7 @@ void GPU_receive(u64 data) {
 
 
 void gpu_draw() {
+
 	int screen_buff_word;
 	float dot_width = 1; //(float)SCREEN_WIDTH / (float)(80 * 8);
 	float dot_height = 1; //(float)SCREEN_HEIGHT / (float)(50 * 16);
@@ -221,35 +225,35 @@ void gpu_draw() {
 
 	return;
 
-	for (int i = 0; i < SCREEN_HEIGHT; i++) {
-		for (int j = 0; j < SCREEN_WIDTH; j++) {
-			u8 red, green, blue;
-			phys_read_u8(GPUFrameBuffer + (i * SCREEN_WIDTH + j) * 3 + 0, &red);
-			phys_read_u8(GPUFrameBuffer + (i * SCREEN_WIDTH + j) * 3 + 1, &green);
-			phys_read_u8(GPUFrameBuffer + (i * SCREEN_WIDTH + j) * 3 + 2, &blue);
-			SDL_SetRenderDrawColor(gpu_renderer, red, green, blue, 0xFF);
-			SDL_RenderDrawPoint(gpu_renderer, j, i);
-		}
-	}
+	// for (int i = 0; i < SCREEN_HEIGHT; i++) {
+	// 	for (int j = 0; j < SCREEN_WIDTH; j++) {
+	// 		u8 red, green, blue;
+	// 		phys_read_u8(GPUFrameBuffer + (i * SCREEN_WIDTH + j) * 3 + 0, &red);
+	// 		phys_read_u8(GPUFrameBuffer + (i * SCREEN_WIDTH + j) * 3 + 1, &green);
+	// 		phys_read_u8(GPUFrameBuffer + (i * SCREEN_WIDTH + j) * 3 + 2, &blue);
+	// 		SDL_SetRenderDrawColor(gpu_renderer, red, green, blue, 0xFF);
+	// 		SDL_RenderDrawPoint(gpu_renderer, j, i);
+	// 	}
+	// }
 
-	return;
+	// return;
 
-	for (int i = 0; i < 50; i++) {
-		//printf("\n");
-		for (int j = 0; j < 80; j++) {
-			phys_read_u16(SCREEN_BUFF + (i * 80 + j) * 2, &screen_buff_word);
-			for (int k = 0; k < 16; k++) {
-				//printf("%02x", char_slice);
-				for (int l = 0; l < 8; l++) {
-					gpu_use_colour(screen_buff_word, l, k);
-					SDL_RenderFillRect(gpu_renderer, &(SDL_Rect){(j*8 + l) * dot_width, (i*16 + k) * dot_height, dot_width, dot_height});
-				}
-				//printf("\n");
-			}
+	// for (int i = 0; i < 50; i++) {
+	// 	//printf("\n");
+	// 	for (int j = 0; j < 80; j++) {
+	// 		phys_read_u16(SCREEN_BUFF + (i * 80 + j) * 2, &screen_buff_word);
+	// 		for (int k = 0; k < 16; k++) {
+	// 			//printf("%02x", char_slice);
+	// 			for (int l = 0; l < 8; l++) {
+	// 				gpu_use_colour(screen_buff_word, l, k);
+	// 				SDL_RenderFillRect(gpu_renderer, &(SDL_Rect){(j*8 + l) * dot_width, (i*16 + k) * dot_height, dot_width, dot_height});
+	// 			}
+	// 			//printf("\n");
+	// 		}
 
-			//read_u64(0x2000 + character * 16, &font_buff_word)
-		}
-	}
+	// 		//read_u64(0x2000 + character * 16, &font_buff_word)
+	// 	}
+	// }
 }
 
 void gpu_use_colour(u16 vga_char, u8 bit, u8 slice) {
@@ -277,7 +281,7 @@ void gpu_use_colour(u16 vga_char, u8 bit, u8 slice) {
 
 void gpu_init() {
 	SDL_Init( SDL_INIT_VIDEO );
-	gpu_window = SDL_CreateWindow("Aphelion GPU", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, 0);
+	gpu_window = SDL_CreateWindow("Aphelion GPU", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_OPENGL);
 	gpu_renderer = SDL_CreateRenderer(gpu_window, -1, SDL_RENDERER_ACCELERATED);
 	gl_init();
 }
