@@ -18,7 +18,7 @@ LINK_FLAGS = -lm -flto -lpthread
 
 ifeq ($(OS),Windows_NT)
 	EXECUTABLE_NAME = comet.exe
-	LINK_FLAGS += -lws2_32 -lmingw32 -L. -lSDL2 -lglew32 -lopengl32 -lWs2_32 -lole32 -lcomctl32 -lgdi32 -lcomdlg32
+	LINK_FLAGS += -lws2_32 -lmingw32 -L. -lSDL2 -lglew32 -lopengl32 -lWs2_32 -lole32 -lcomctl32 -lgdi32 -lcomdlg32 -lSDL2_image
 	CFLAGS += -mconsole
 else
 	LINK_FLAGS += -lSDL2 -lGL -lGLEW -lSDL2_image
