@@ -78,6 +78,12 @@ void gl_init() {
 
 	gpu_gl_context = SDL_GL_CreateContext(gpu_window);
 
+	if (gpu_gl_context == NULL) {
+		printf("FUCK!: %s\n", SDL_GetError());
+	}
+
+	SDL_GL_MakeCurrent(gpu_window, gpu_gl_context);
+
 	GLenum err = glewInit();
 	if (err != GLEW_OK) {
 		printf("GLEW initialisation failure, error: %s\n", glewGetErrorString(err));
@@ -270,6 +276,7 @@ void gpu_use_colour(u16 vga_char, u8 bit, u8 slice) {
 }
 
 void gpu_init() {
+	SDL_Init( SDL_INIT_VIDEO );
 	gpu_window = SDL_CreateWindow("Aphelion GPU", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, 0);
 	gpu_renderer = SDL_CreateRenderer(gpu_window, -1, SDL_RENDERER_ACCELERATED);
 	gl_init();
