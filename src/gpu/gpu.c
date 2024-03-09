@@ -281,7 +281,7 @@ void gpu_use_colour(u16 vga_char, u8 bit, u8 slice) {
 
 void gpu_init() {
 	SDL_Init( SDL_INIT_VIDEO );
-	gpu_window = SDL_CreateWindow("Aphelion GPU", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_OPENGL);
+	gpu_window = SDL_CreateWindow("comet", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_OPENGL);
 	gpu_renderer = SDL_CreateRenderer(gpu_window, -1, SDL_RENDERER_ACCELERATED);
 	gl_init();
 }
