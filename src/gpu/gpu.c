@@ -283,5 +283,7 @@ void gpu_init() {
 	SDL_Init( SDL_INIT_VIDEO );
 	gpu_window = SDL_CreateWindow("comet", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_OPENGL);
 	gpu_renderer = SDL_CreateRenderer(gpu_window, -1, SDL_RENDERER_ACCELERATED);
+	SDL_Surface* icon = IMG_Load("src/img/comet_icon.bmp");
+	SDL_SetWindowIcon(gpu_window, icon);
 	gl_init();
 }

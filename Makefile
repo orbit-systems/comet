@@ -21,7 +21,7 @@ ifeq ($(OS),Windows_NT)
 	LINK_FLAGS += -lws2_32 -lmingw32 -L. -lSDL2 -lglew32 -lopengl32 -lWs2_32 -lole32 -lcomctl32 -lgdi32 -lcomdlg32
 	CFLAGS += -mconsole
 else
-	LINK_FLAGS += -lSDL2 -lGL -lGLEW
+	LINK_FLAGS += -lSDL2 -lGL -lGLEW -lSDL2_image
 endif
 
 all: build
