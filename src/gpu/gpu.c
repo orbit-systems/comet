@@ -15,8 +15,8 @@ SDL_GLContext* gpu_gl_context;
 // };
 
 
-#define SCREEN_WIDTH 700
-#define SCREEN_HEIGHT 700
+#define SCREEN_WIDTH  800
+#define SCREEN_HEIGHT 600
 // #define FONT_BUFF 0xF000
 // #define SCREEN_BUFF 0xD000
 
