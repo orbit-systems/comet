@@ -4,14 +4,15 @@ include "test/display.aphel"
 
 main:
 
-    li ra, 0x1000000
-    call rk, display.set_framebuffer
-
-    li   ra, 0x0261918
+    li ra, 0x0000000
+    out display.port, ra
+    ; li rb, display.framebuffer
+    ; call rk, display.set_framebuffer
 
     .loop:
 
-        call rk, display.clear
+        ; li   ra, 0x0261918
+        ; call rk, display.clear
         call rk, display.update
 
         bra .loop
@@ -26,3 +27,15 @@ align 8
 ;     d8 0, 2100000
 ; framebuffer_2:
 ;     d8 0, 2100000
+
+embed "VGA8.F16"
+embed "VGA8.F16"
+embed "VGA8.F16"
+embed "VGA8.F16"
+embed "VGA8.F16"
+embed "VGA8.F16"
+embed "VGA8.F16"
+embed "VGA8.F16"
+embed "VGA8.F16"
+embed "VGA8.F16"
+embed "VGA8.F16"
