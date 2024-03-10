@@ -1,10 +1,12 @@
-define display.port, 100
+define display.port, 10
 
 define display.width,  1000
 define display.height, 700
 
+define display.size, 2100000 ; 1000*700/100
+
 display.framebuffer:
-    d64 0x1000000
+    d64 0x0000000
 
 display.clear: ; (RGB8 : ra) -> ()
     push ra
@@ -85,9 +87,22 @@ display.clear: ; (RGB8 : ra) -> ()
     ret
 ;
 
-display.update:
-    ; TODO waiting on kayla's gpu interface
+display.set_framebuffer: ; (buf: ra) -> ()
+    push rb
+    li rb, display.framebuffer
+    sw rb, ra
+    pop rb
     ret
+;
+
+display.update: ; () -> ()
+    push ra
+    li ra, display.framebuffer
+    lw ra, ra
+    out display.port, ra
+    pop ra
+    ret
+;
 
 display.rect:
     ; TODO
@@ -95,4 +110,7 @@ display.rect:
 
 display.line:
     ; TODO
+    ret
+
+display.horiz_line:
     ret

@@ -13,9 +13,21 @@
 #include <SDL2/SDL_image.h>
 #include <GL/gl.h>
 
-void *gpuThread(void* argvp);
+extern bool gpu_is_drawing;
+extern u64  gpu_framebuf;
+
+typedef union {
+	u32 colour;
+	struct {
+		u8 a;
+		u8 b;
+		u8 g;
+		u8 r;
+	};
+} RGBA;
+
+void *gpu_thread(void* argvp);
 
 void gpu_init();
-
-extern bool drawGPUBuffer;
-extern u64 GPUFrameBuffer;
+void gpu_draw();
+void GPU_receive(u64 data);

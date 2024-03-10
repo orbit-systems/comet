@@ -121,13 +121,13 @@ int main(int argc, char *argv[]) {
 
     //create gpu thread
     pthread_t gpu_thread_id;
-    pthread_create(&gpu_thread_id, NULL, gpuThread, NULL);
+    pthread_create(&gpu_thread_id, NULL, gpu_thread, NULL);
 
 
     if (comet.flag_cycle_limit == 0){
         while (comet.cpu.running) {
             run();
-            // if (drawGPUBuffer) sched_yield();
+            // if (gpu_is_drawing) sched_yield();
         }
     } else {
         while (comet.cpu.running) {

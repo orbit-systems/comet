@@ -7,33 +7,23 @@ SDL_Window* gpu_window;
 SDL_Renderer* gpu_renderer;
 SDL_GLContext* gpu_gl_context;
 
+// u64 gpu_colours[16] = {
+// 	0x000000FF, 0x0000AAFF, 0x00AA00FF, 0x00AAAAFF,
+// 	0xAA0000FF, 0xAA00AAFF, 0xAA5500FF, 0xAAAAAAFF,
+// 	0x555555FF, 0x5555FFFF, 0x55FF55FF, 0x55FFFFFF,
+// 	0xFF5555FF, 0xFF55FFFF, 0xFFFF55FF, 0xFFFFFFFF
+// };
+
 
 #define SCREEN_WIDTH 1000
 #define SCREEN_HEIGHT 700
-#define FONT_BUFF 0xF000
-#define SCREEN_BUFF 0xD000
+// #define FONT_BUFF 0xF000
+// #define SCREEN_BUFF 0xD000
 
-u64 gpu_colours[16] = {
-	0x000000FF, 0x0000AAFF, 0x00AA00FF, 0x00AAAAFF,
-	0xAA0000FF, 0xAA00AAFF, 0xAA5500FF, 0xAAAAAAFF,
-	0x555555FF, 0x5555FFFF, 0x55FF55FF, 0x55FFFFFF,
-	0xFF5555FF, 0xFF55FFFF, 0xFFFF55FF, 0xFFFFFFFF
-};
+bool gpu_is_drawing = false;
+u64 gpu_framebuf = 0;
 
-typedef union {
-	u32 colour;
-	struct {
-		u8 a;
-		u8 b;
-		u8 g;
-		u8 r;
-	};
-} RGBA;
-
-bool drawGPUBuffer = false;
-u64 GPUFrameBuffer = 0;
-
-void *gpuThread(void* argvp) {
+void *gpu_thread(void* argvp) {
 	gpu_init();
 	int running = 1;
 
@@ -41,8 +31,18 @@ void *gpuThread(void* argvp) {
 
 	while (running) {
 		if ( SDL_PollEvent(&e) ) {
-			if (e.type == SDL_QUIT)
+			switch (e.type) {
+			case SDL_QUIT: 
+				comet.cpu.running = false;
 				break;
+			case SDL_TEXTINPUT:
+				printf("TEXT: %s\n", e.text.text);
+				TODO("text input");
+
+			default: 
+				// printf("EVENT\n");
+				break;
+			}
 		} 
 
 		if (comet.cpu.running == false) {
@@ -50,18 +50,18 @@ void *gpuThread(void* argvp) {
 		}
 		
 
-		if (drawGPUBuffer) {
+		if (gpu_is_drawing) {
 			// printf("SHITFUCKGARBAGETRUCK\n");
 
 			gpu_draw();
 
-			drawGPUBuffer = false;
+			gpu_is_drawing = false;
 		}
 
 		sched_yield();
 	}
 
-	comet.cpu.running = 0;
+	comet.cpu.running = false;
 }
 
 int gpu_vao;
@@ -69,7 +69,6 @@ int gpu_vbo;
 int gpu_ebo;
 int gpu_texture;
 int gpu_program;
-
 
 void gl_init() {
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
@@ -176,10 +175,11 @@ void gl_init() {
 
 void GPU_receive(u64 data) {
 
-	GPUFrameBuffer = data;
-	drawGPUBuffer = true;
 
-	// force the GPU thread to run
+	gpu_framebuf = data;
+	gpu_is_drawing = true;
+
+	// (running on the CPU thread) force the GPU thread to run
 	sched_yield();
 }
 
@@ -209,7 +209,7 @@ void gpu_draw() {
 	glUseProgram(gpu_program);
 
 	glBindTexture(GL_TEXTURE_2D, gpu_texture);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, SCREEN_WIDTH, SCREEN_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, ((u8*)comet.mmu.memory + GPUFrameBuffer));
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, SCREEN_WIDTH, SCREEN_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, ((u8*)comet.mmu.memory + gpu_framebuf));
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
@@ -224,38 +224,40 @@ void gpu_draw() {
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
 	return;
+	/* VGA text mode stuff that im scared to delete in case i want it later
+	for (int i = 0; i < SCREEN_HEIGHT; i++) {
+		for (int j = 0; j < SCREEN_WIDTH; j++) {
+			u8 red, green, blue;
+			phys_read_u8(gpu_framebuf + (i * SCREEN_WIDTH + j) * 3 + 0, &red);
+			phys_read_u8(gpu_framebuf + (i * SCREEN_WIDTH + j) * 3 + 1, &green);
+			phys_read_u8(gpu_framebuf + (i * SCREEN_WIDTH + j) * 3 + 2, &blue);
+			SDL_SetRenderDrawColor(gpu_renderer, red, green, blue, 0xFF);
+			SDL_RenderDrawPoint(gpu_renderer, j, i);
+		}
+	}
 
-	// for (int i = 0; i < SCREEN_HEIGHT; i++) {
-	// 	for (int j = 0; j < SCREEN_WIDTH; j++) {
-	// 		u8 red, green, blue;
-	// 		phys_read_u8(GPUFrameBuffer + (i * SCREEN_WIDTH + j) * 3 + 0, &red);
-	// 		phys_read_u8(GPUFrameBuffer + (i * SCREEN_WIDTH + j) * 3 + 1, &green);
-	// 		phys_read_u8(GPUFrameBuffer + (i * SCREEN_WIDTH + j) * 3 + 2, &blue);
-	// 		SDL_SetRenderDrawColor(gpu_renderer, red, green, blue, 0xFF);
-	// 		SDL_RenderDrawPoint(gpu_renderer, j, i);
-	// 	}
-	// }
+	return;
 
-	// return;
+	for (int i = 0; i < 50; i++) {
+		//printf("\n");
+		for (int j = 0; j < 80; j++) {
+			phys_read_u16(SCREEN_BUFF + (i * 80 + j) * 2, &screen_buff_word);
+			for (int k = 0; k < 16; k++) {
+				//printf("%02x", char_slice);
+				for (int l = 0; l < 8; l++) {
+					gpu_use_colour(screen_buff_word, l, k);
+					SDL_RenderFillRect(gpu_renderer, &(SDL_Rect){(j*8 + l) * dot_width, (i*16 + k) * dot_height, dot_width, dot_height});
+				}
+				//printf("\n");
+			}
 
-	// for (int i = 0; i < 50; i++) {
-	// 	//printf("\n");
-	// 	for (int j = 0; j < 80; j++) {
-	// 		phys_read_u16(SCREEN_BUFF + (i * 80 + j) * 2, &screen_buff_word);
-	// 		for (int k = 0; k < 16; k++) {
-	// 			//printf("%02x", char_slice);
-	// 			for (int l = 0; l < 8; l++) {
-	// 				gpu_use_colour(screen_buff_word, l, k);
-	// 				SDL_RenderFillRect(gpu_renderer, &(SDL_Rect){(j*8 + l) * dot_width, (i*16 + k) * dot_height, dot_width, dot_height});
-	// 			}
-	// 			//printf("\n");
-	// 		}
-
-	// 		//read_u64(0x2000 + character * 16, &font_buff_word)
-	// 	}
-	// }
+			//read_u64(0x2000 + character * 16, &font_buff_word)
+		}
+	} 
+	*/
 }
 
+/*
 void gpu_use_colour(u16 vga_char, u8 bit, u8 slice) {
 	u8 character = vga_char & 0x00FF;
 	u8 char_slice = 0;
@@ -275,9 +277,8 @@ void gpu_use_colour(u16 vga_char, u8 bit, u8 slice) {
 		//we use bgColour
 		SDL_SetRenderDrawColor(gpu_renderer, bgColourE.r, bgColourE.g, bgColourE.b, bgColourE.a);
 	}
-
-	
 }
+*/
 
 void gpu_init() {
 	SDL_Init( SDL_INIT_VIDEO );

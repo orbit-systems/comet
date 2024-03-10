@@ -4,29 +4,25 @@ include "test/display.aphel"
 
 main:
 
-    out 10, rb
+    li ra, 0x1000000
+    call rk, display.set_framebuffer
 
-    ; li   ra, 0x_FF_00_00
-    ; call rk, display.clear
+    li   ra, 0x0261918
 
-
-    li rb, 0x100000
-    li rf, display.framebuffer
-    sw rf, rb
-
-    li ra, 0x000000
-    li rc, 0x000201
     .loop:
-        out 10, rb
 
-        add ra, ra, rc
-
-        shl ra, ra, 40
-        lsr ra, ra, 40 // zero upper bits of ra
         call rk, display.clear
+        call rk, display.update
+
         bra .loop
 
     ret
 
 hello_text:
     utf8 "hello with includes!\n\0"
+
+align 8
+; framebuffer_1:
+;     d8 0, 2100000
+; framebuffer_2:
+;     d8 0, 2100000
