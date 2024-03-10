@@ -1,6 +1,6 @@
 define display.port, 10
 
-define display.width,  1000
+define display.width,  700
 define display.height, 700
 
 define display.size, 2100000 ; 1000*700/100
@@ -74,15 +74,15 @@ display.clear: ; (RGB8 : ra) -> ()
     
     .exit:
 
-    pop rg
-    pop rf
-    pop re
-    pop rd
-    pop rc
-    pop rb
-    pop ra
+        pop rg
+        pop rf
+        pop re
+        pop rd
+        pop rc
+        pop rb
+        pop ra
 
-    mov ri, ra
+        mov ri, ra
 
     ret
 ;
@@ -104,13 +104,84 @@ display.update: ; () -> ()
     ret
 ;
 
-display.rect:
-    ; TODO
-    ret
+display.rect: ; (rect_width: ra, rect_height: rb, x: rc, y: rd, color: re) -> ()
+    push ra
+    push rb
+    push rc
+    push rd
+    push re
+    push rf
+    push rg
+    push rh
+    push ri
+    push rj
+    push rk
+
+    li rf, 0
+    li rg, 0
+    li rh, 0
+    li ri, 0
+    li rj, 0
+    li rk, 0
+
+    // re = red
+    // rg = green
+    // rh = blue
+
+    lsr rg, re, 8
+    lsr rh, re, 16
+
+    umul ra, ra, 3
+    umul rc, rc, 3
+
+    li rf, display.framebuffer
+    lw rf, rf
+
+    outer:
+        cmp ri, rb
+        bgeu outer_end 
+        
+        add rk, rd, ri
+        umul rk, rk, display.width
+        umul rk, rk, 3
+        add rk, rk, rf
+        add rk, rk, rc
+        
+        li rj, 0
+        inner:
+            cmp rj, ra
+            bgeu inner_end
+
+            sb rk, 0, rj, re
+            sb rk, 1, rj, rg
+            sb rk, 2, rj, rh
+
+            add rj, rj, 3
+            bra inner
+
+        inner_end:
+            add ri, ri, 1
+            bra outer
+
+    outer_end:
+        pop rk
+        pop rj
+        pop ri
+        pop rh
+        pop rg
+        pop rf
+        pop re
+        pop rd
+        pop rc
+        pop rb
+        pop ra
+        ret
+;
+
 
 display.line:
     ; TODO
     ret
 
-display.horiz_line:
+display.horiz_line: ; (x: ra, y: rb, c:)
     ret

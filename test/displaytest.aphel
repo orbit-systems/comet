@@ -4,16 +4,29 @@ include "test/display.aphel"
 
 main:
 
-    li ra, 0x0000000
-    out display.port, ra
-    ; li rb, display.framebuffer
-    ; call rk, display.set_framebuffer
+    li ra, 0x1000000
+    call rk, display.set_framebuffer
+
+    li ra, 100
+    li rb, 100
+    li rc, 0
+    li rd, 0
+    li re, 0
 
     .loop:
 
-        ; li   ra, 0x0261918
+
+        ; li   ra, 0x261918
         ; call rk, display.clear
+
+        add rc, rc, 10
+        add rd, rd, 10
+
+        add  re, re, 0x010101
+        call rk, display.rect
+
         call rk, display.update
+
 
         bra .loop
 
@@ -27,5 +40,3 @@ align 8
 ;     d8 0, 2100000
 ; framebuffer_2:
 ;     d8 0, 2100000
-
-d64 0xFFFFFFFF, 12000

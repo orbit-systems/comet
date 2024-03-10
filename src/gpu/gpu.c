@@ -15,7 +15,7 @@ SDL_GLContext* gpu_gl_context;
 // };
 
 
-#define SCREEN_WIDTH 1000
+#define SCREEN_WIDTH 700
 #define SCREEN_HEIGHT 700
 // #define FONT_BUFF 0xF000
 // #define SCREEN_BUFF 0xD000
@@ -50,7 +50,7 @@ void *gpu_thread(void* argvp) {
 		}
 		
 
-		if (gpu_is_drawing) {
+		if (true) {
 			// printf("SHITFUCKGARBAGETRUCK\n");
 
 			gpu_draw();

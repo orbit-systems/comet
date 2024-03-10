@@ -415,17 +415,25 @@ void run() {
         } break;
     case 0x29: { // umuli
         u64 a = regval(ci.M.rs1);
-        u64 b = sign_extend(ci.M.imm, 16);
+        u64 b = zero_extend(ci.M.imm, 16);
         regval(ci.M.rde) = a * b;
         } break;
     case 0x2a: { // udivr
         u64 a = regval(ci.R.rs1);
         u64 b = regval(ci.R.rs2);
+        if (b == 0) {
+            push_interrupt(int_divide_by_zero);
+            break;
+        }
         regval(ci.R.rde) = a / b;
         } break;
     case 0x2b: { // udivi
         u64 a = regval(ci.M.rs1);
-        u64 b = sign_extend(ci.M.imm, 16);
+        u64 b = zero_extend(ci.M.imm, 16);
+        if (b == 0) {
+            push_interrupt(int_divide_by_zero);
+            break;
+        }
         regval(ci.M.rde) = a / b;
         } break;
     case 0x2c: { // remr

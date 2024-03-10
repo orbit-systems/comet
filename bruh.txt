@@ -1,0 +1,8 @@
+for (i = 0; i < rh; i++) {
+	off = pixels + disp_width*(y+i) + x
+	for (j = 0; j < rw; j+=3) {
+		mem[off + j]   = red
+		mem[off + j+1] = green
+		mem[off + j+2] = blue
+	}
+}
