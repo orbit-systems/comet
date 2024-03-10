@@ -6,7 +6,7 @@ define display.height, 700
 define display.size, 2100000 ; 1000*700/100
 
 display.framebuffer:
-    d64 0x0000000
+    d64 0x1000000
 
 display.clear: ; (RGB8 : ra) -> ()
     push ra

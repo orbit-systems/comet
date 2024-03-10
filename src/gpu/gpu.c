@@ -25,6 +25,7 @@ u64 gpu_framebuf = 0;
 
 void *gpu_thread(void* argvp) {
 	gpu_init();
+
 	int running = 1;
 
 	SDL_Event e;
@@ -51,8 +52,10 @@ void *gpu_thread(void* argvp) {
 		
 
 		if (gpu_is_drawing) {
+			sched_setscheduler(0, SCHED_FIFO, &(struct sched_param){.sched_priority = sched_get_priority_max(SCHED_FIFO)}); // lmfao
 			gpu_draw();
 			gpu_is_drawing = false;
+			sched_setscheduler(0, SCHED_OTHER, &(struct sched_param){.sched_priority = sched_get_priority_max(SCHED_OTHER)});
 		}
 
 		sched_yield();

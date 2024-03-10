@@ -124,16 +124,12 @@ int main(int argc, char *argv[]) {
     pthread_create(&gpu_thread_id, NULL, gpu_thread, NULL);
 
 
-    if (comet.flag_cycle_limit == 0){
-        while (comet.cpu.running) {
-            run();
-            // if (gpu_is_drawing) sched_yield();
-        }
-    } else {
-        while (comet.cpu.running) {
-            if (comet.flag_cycle_limit == comet.cpu.cycle) comet.cpu.running = false;
-            run();
-        }
+    if (comet.flag_cycle_limit == 0) while (comet.cpu.running) {
+        if (gpu_is_drawing) sched_yield();
+        run();
+    } else while (comet.cpu.running && comet.flag_cycle_limit != comet.cpu.cycle) {
+        if (gpu_is_drawing) sched_yield();
+        run();
     }
 
 
