@@ -117,6 +117,29 @@ display.rect: ; (rect_width: ra, rect_height: rb, x: rc, y: rd, color: re) -> ()
     push rj
     push rk
 
+    add rf, ra, rc
+    cmp rf, screen.width
+    bgeu .width_too_big
+    .check_height:
+    add rf, rb, rd
+    cmp rf, screen.height
+    bgeu .height_too_big
+    bra  .size_is_good
+
+    .width_too_big:
+        li rf, screen.width
+        sub rf, rf, ra
+        mov rc, ra
+        bra .check_height
+
+    .height_too_big:
+        li rf, screen.height
+        sub rf, rf, rb
+        mov rc, rb
+
+    .size_is_good:
+
+
     li rf, 0
     li rg, 0
     li rh, 0
