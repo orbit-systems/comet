@@ -28,14 +28,4 @@ align 8
 ; framebuffer_2:
 ;     d8 0, 2100000
 
-embed "VGA8.F16"
-embed "VGA8.F16"
-embed "VGA8.F16"
-embed "VGA8.F16"
-embed "VGA8.F16"
-embed "VGA8.F16"
-embed "VGA8.F16"
-embed "VGA8.F16"
-embed "VGA8.F16"
-embed "VGA8.F16"
-embed "VGA8.F16"
+d64 0xFFFFFFFF, 12000

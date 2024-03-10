@@ -193,15 +193,22 @@ void gpu_draw() {
 	//stream texture data to gpu
 
 	float vertices[16] = {
-		-1.0f,  1.0f, 0.0f, 1.0f,
-		 1.0f,  1.0f, 1.0f, 1.0f,
-		-1.0f, -1.0f, 0.0f, 0.0f,
-		 1.0f, -1.0f, 1.0f, 0.0f
+		-1.0f,  1.0f, 0.0f, 0.0f,
+		 1.0f,  1.0f, 1.0f, 0.0f,
+		-1.0f, -1.0f, 0.0f, 1.0f,
+		 1.0f, -1.0f, 1.0f, 1.0f
 	};
 	int elements[6] = {
 		0, 1, 2,
 		1, 3, 2
 	};
+
+	/*
+	 0--1
+	 | /|
+	 |/ |
+	 2--3
+	 */
 
 	SDL_GL_SwapWindow(gpu_window);
 	glClear(GL_COLOR_BUFFER_BIT);
