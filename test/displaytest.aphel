@@ -4,39 +4,61 @@ include "test/display.aphel"
 
 main:
 
-    li ra, 0x1000000
-    call rk, display.set_framebuffer
-
-    li ra, 100
-    li rb, 100
-    li rc, 0
-    li rd, 0
-    li re, 0
-
     .loop:
 
-
-        ; li   ra, 0x261918
-        ; call rk, display.clear
-
-        add rc, rc, 10
-        add rd, rd, 10
-
-        add  re, re, 0x010101
-        call rk, display.rect
-
+        call rk, swap_framebuffers
         call rk, display.update
 
+
+        li   ra, 0x261918
+        call rk, display.clear
+
+        li ra, 100
+        li rb, 100
+        li rc, 0
+        li rd, 0
+        li re, 0xFFFFFF
+        call rk, display.rect
 
         bra .loop
 
     ret
 
-hello_text:
-    utf8 "hello with includes!\n\0"
 
-align 8
-; framebuffer_1:
-;     d8 0, 2100000
-; framebuffer_2:
-;     d8 0, 2100000
+swap_framebuffers:
+    push ra
+    push rb
+    push rk
+
+    li ra, .current
+    lb ra, ra
+    cmp ra, 0
+    beq .zero
+    bra .one
+
+    .zero:
+        li rb, .current
+        li ra, 1
+        sb rb, ra
+
+        li ra, 0x1000000
+        call rk, display.set_framebuffer
+        bra .exit
+
+    .one:
+        li rb, .current
+        li ra, 0
+        sb rb, ra
+
+        li ra, 0x10000000
+        call rk, display.set_framebuffer
+        bra .exit
+
+    .exit:
+        pop rk
+        pop rb
+        pop ra
+        ret
+
+    .current:
+        d8 0

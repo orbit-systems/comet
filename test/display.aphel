@@ -117,28 +117,33 @@ display.rect: ; (rect_width: ra, rect_height: rb, x: rc, y: rd, color: re) -> ()
     push rj
     push rk
 
+    ; if (x + width > display_width) width = width  - (x + width)  % display_width
+
     add rf, ra, rc
-    cmp rf, screen.width
-    bgeu .width_too_big
-    .check_height:
+    cmp rf, display.width
+    bgt .correct_width
+    bra .test_height
+
+    .correct_width:
+        mod rf, rf, display.width
+        sub ra, ra, rf
+        cmp ra, 0
+        blt .outer_end
+
+    .test_height:
     add rf, rb, rd
-    cmp rf, screen.height
-    bgeu .height_too_big
-    bra  .size_is_good
+    cmp rf, display.height
+    bgt .correct_height
+    bra .do_draw
+        
+    .correct_height:
+        mod rf, rf, display.height
+        sub rb, rb, rf
+        cmp rb, 0
+        blt .outer_end
 
-    .width_too_big:
-        li rf, screen.width
-        sub rf, rf, ra
-        mov rc, ra
-        bra .check_height
 
-    .height_too_big:
-        li rf, screen.height
-        sub rf, rf, rb
-        mov rc, rb
-
-    .size_is_good:
-
+    .do_draw:
 
     li rf, 0
     li rg, 0
@@ -160,9 +165,9 @@ display.rect: ; (rect_width: ra, rect_height: rb, x: rc, y: rd, color: re) -> ()
     li rf, display.framebuffer
     lw rf, rf
 
-    outer:
+    .outer:
         cmp ri, rb
-        bgeu outer_end 
+        bgeu .outer_end 
         
         add rk, rd, ri
         umul rk, rk, display.width
@@ -171,22 +176,22 @@ display.rect: ; (rect_width: ra, rect_height: rb, x: rc, y: rd, color: re) -> ()
         add rk, rk, rc
         
         li rj, 0
-        inner:
+        .inner:
             cmp rj, ra
-            bgeu inner_end
+            bgeu .inner_end
 
             sb rk, 0, rj, re
             sb rk, 1, rj, rg
             sb rk, 2, rj, rh
 
             add rj, rj, 3
-            bra inner
+            bra .inner
 
-        inner_end:
+        .inner_end:
             add ri, ri, 1
-            bra outer
+            bra .outer
 
-    outer_end:
+    .outer_end:
         pop rk
         pop rj
         pop ri

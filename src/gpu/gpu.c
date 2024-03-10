@@ -50,11 +50,8 @@ void *gpu_thread(void* argvp) {
 		}
 		
 
-		if (true) {
-			// printf("SHITFUCKGARBAGETRUCK\n");
-
+		if (gpu_is_drawing) {
 			gpu_draw();
-
 			gpu_is_drawing = false;
 		}
 
