@@ -9,20 +9,22 @@ main:
     li   ra, 0x261918
     call rk, display.clear
 
+    li ra, 100
+    li rb, 100
+    li rc, 0
+    li rd, 0
+    li re, 0xFFFFFF
+    
+
     .loop:
 
-        li ra, 100
-        li rb, 100
-        li rc, 0
-        li rd, 0
-        li re, 0xFFFFFF
-        call rk, display.rect
+        add rc, rc, 1
+        add rd, rd, 3
+        add re, re, 1
 
-        li ra, 96
-        li rb, 96
-        li rc, 2
-        li rd, 2
-        li re, 0x261918
+        rem rc, rc, display.width
+        rem rd, rd, display.height
+
         call rk, display.rect
 
         call rk, swap_framebuffers

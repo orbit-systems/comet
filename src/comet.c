@@ -120,21 +120,21 @@ int main(int argc, char *argv[]) {
     }
 
     //create gpu thread
-    pthread_t gpu_thread_id;
-    pthread_create(&gpu_thread_id, NULL, gpu_thread, NULL);
-
+    pthread_t GPU_thread_id;
+    pthread_create(&GPU_thread_id, NULL, GPU_thread, NULL);
+	gpu.frame = malloc(SCREEN_WIDTH*SCREEN_HEIGHT*sizeof(pixel));
 
     if (comet.flag_cycle_limit == 0) while (comet.cpu.running) {
-        if (gpu_is_drawing) sched_yield();
+        // if (gpu_is_drawing) sched_yield();
         run();
     } else while (comet.cpu.running && comet.flag_cycle_limit != comet.cpu.cycle) {
-        if (gpu_is_drawing) sched_yield();
+        // if (gpu_is_drawing) sched_yield();
         run();
     }
 
 
     //destroy gpu thread
-    pthread_join(gpu_thread_id, NULL);
+    pthread_join(GPU_thread_id, NULL);
 
     if (comet.flag_benchmark) {
         gettimeofday(&exec_end, 0);
