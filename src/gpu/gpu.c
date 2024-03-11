@@ -188,9 +188,9 @@ void GPU_receive(u64 data) {
 }
 
 const float gpu_surface_vertices[16] = {
-    -1.0f,  1.0f, 0.0f, 0.0f,
+   -1.0f,  1.0f, 0.0f, 0.0f,
     1.0f,  1.0f, 1.0f, 0.0f,
-    -1.0f, -1.0f, 0.0f, 1.0f,
+   -1.0f, -1.0f, 0.0f, 1.0f,
     1.0f, -1.0f, 1.0f, 1.0f
 };
 const int gpu_surface_elements[6] = {
