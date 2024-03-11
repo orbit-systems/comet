@@ -3,9 +3,9 @@
 #include "../comet.h"
 #include "../mmu.h"
 
-// SDL_Window* gpu.window;
+// SDL_Window* comet.gpu.window;
 // SDL_Renderer* gpu_renderer;
-// SDL_GLContext* gpu.gl_ctx;
+// SDL_GLContext* comet.gpu.gl_ctx;
 
 // u64 gpu_colours[16] = {
 // 	0x000000FF, 0x0000AAFF, 0x00AA00FF, 0x00AAAAFF,
@@ -16,14 +16,13 @@
 // #define FONT_BUFF 0xF000
 // #define SCREEN_BUFF 0xD000
 
-GPU gpu;
 
 void init_GPU() {
     SDL_Init( SDL_INIT_VIDEO );
-    gpu.window = SDL_CreateWindow("comet", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_OPENGL);
-    gpu.renderer = SDL_CreateRenderer(gpu.window, -1, SDL_RENDERER_ACCELERATED);
+    comet.gpu.window = SDL_CreateWindow("comet", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_OPENGL);
+    comet.gpu.renderer = SDL_CreateRenderer(comet.gpu.window, -1, SDL_RENDERER_ACCELERATED);
     SDL_Surface* icon = IMG_Load("src/img/comet_icon.bmp");
-    SDL_SetWindowIcon(gpu.window, icon);
+    SDL_SetWindowIcon(comet.gpu.window, icon);
     gl_init();
 }
 
@@ -56,10 +55,10 @@ void *GPU_thread(void* argvp) {
         }
         
 
-        if (gpu.is_drawing) {
+        if (comet.gpu.is_drawing) {
             // sched_setscheduler(0, SCHED_FIFO, &(struct sched_param){.sched_priority = sched_get_priority_max(SCHED_FIFO)}); // lmfao
             GPU_draw();
-            gpu.is_drawing = false;
+            comet.gpu.is_drawing = false;
             // sched_setscheduler(0, SCHED_OTHER, &(struct sched_param){.sched_priority = sched_get_priority_max(SCHED_OTHER)});
         }
 
@@ -81,13 +80,13 @@ void gl_init() {
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
 
-    gpu.gl_ctx = SDL_GL_CreateContext(gpu.window);
+    comet.gpu.gl_ctx = SDL_GL_CreateContext(comet.gpu.window);
 
-    if (gpu.gl_ctx == NULL) {
+    if (comet.gpu.gl_ctx == NULL) {
         printf("FUCK!: %s\n", SDL_GetError());
     }
 
-    SDL_GL_MakeCurrent(gpu.window, gpu.gl_ctx);
+    SDL_GL_MakeCurrent(comet.gpu.window, comet.gpu.gl_ctx);
 
     GLenum err = glewInit();
     if (err != GLEW_OK) {
@@ -181,18 +180,18 @@ void gl_init() {
 void GPU_receive(u64 data) {
 
 
-    gpu.framebuf_addr = data;
-    gpu.is_drawing = true;
+    comet.gpu.framebuf_addr = data;
+    comet.gpu.is_drawing = true;
 
-    memcpy(gpu.frame, (void*)(comet.mmu.memory + gpu.framebuf_addr), SCREEN_WIDTH*SCREEN_HEIGHT*3);
 
+    memcpy(comet.gpu.frame, (void*)(comet.mmu.memory + comet.gpu.framebuf_addr), SCREEN_WIDTH*SCREEN_HEIGHT*3);
 }
 
 const float gpu_surface_vertices[16] = {
     -1.0f,  1.0f, 0.0f, 0.0f,
-        1.0f,  1.0f, 1.0f, 0.0f,
+    1.0f,  1.0f, 1.0f, 0.0f,
     -1.0f, -1.0f, 0.0f, 1.0f,
-        1.0f, -1.0f, 1.0f, 1.0f
+    1.0f, -1.0f, 1.0f, 1.0f
 };
 const int gpu_surface_elements[6] = {
     0, 1, 2,
@@ -214,13 +213,13 @@ void GPU_draw() {
      2--3
      */
 
-    SDL_GL_SwapWindow(gpu.window);
+    SDL_GL_SwapWindow(comet.gpu.window);
     glClear(GL_COLOR_BUFFER_BIT);
 
     glUseProgram(gpu_program);
 
     glBindTexture(GL_TEXTURE_2D, gpu_texture);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, SCREEN_WIDTH, SCREEN_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, gpu.frame);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, SCREEN_WIDTH, SCREEN_HEIGHT, 0, GL_RGB, GL_UNSIGNED_BYTE, comet.gpu.frame);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 

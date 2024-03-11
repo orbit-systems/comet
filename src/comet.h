@@ -4,11 +4,12 @@
 #include "orbit.h"
 #include <pthread.h>
 
-
 #if defined(_WIN32)
 #   include <winsock2.h>
 #   include <windows.h>
 #endif
+
+#include "gpu/gpu.h"
 
 typedef union {
     u8 opcode;
@@ -134,6 +135,8 @@ typedef struct emulator_s {
     IC ic; // interrupt controller
     MMU mmu; // memory management unit
     IOC ioc; // i/o controller
+
+    GPU gpu; // graphical output
 
     bool flag_debug;
     u64  flag_cycle_limit;

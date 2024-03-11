@@ -2,6 +2,7 @@
 #define GPU_H
 
 #include "../orbit.h"
+#include <pthread.h>
 
 #ifdef _WIN32
 #define SDL_MAIN_HANDLED
@@ -26,13 +27,12 @@ typedef struct GPU_s {
     SDL_Window*    window;
     SDL_Renderer*  renderer;
     SDL_GLContext* gl_ctx;
+    pthread_t      thread_id;
 
     u64  framebuf_addr;
     pixel* frame;
     bool is_drawing;
 } GPU;
-
-extern GPU gpu;
 
 void *GPU_thread(void* argvp);
 
