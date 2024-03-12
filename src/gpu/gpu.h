@@ -29,9 +29,9 @@ typedef struct GPU_s {
     SDL_GLContext* gl_ctx;
     pthread_t      thread_id;
 
-    u64  framebuf_addr;
+    u64    framebuf_addr;
     pixel* frame;
-    bool is_drawing;
+    bool   is_drawing;
 } GPU;
 
 void *GPU_thread(void* argvp);

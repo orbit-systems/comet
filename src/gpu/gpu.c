@@ -3,20 +3,6 @@
 #include "../comet.h"
 #include "../mmu.h"
 
-// SDL_Window* comet.gpu.window;
-// SDL_Renderer* gpu_renderer;
-// SDL_GLContext* comet.gpu.gl_ctx;
-
-// u64 gpu_colours[16] = {
-// 	0x000000FF, 0x0000AAFF, 0x00AA00FF, 0x00AAAAFF,
-// 	0xAA0000FF, 0xAA00AAFF, 0xAA5500FF, 0xAAAAAAFF,
-// 	0x555555FF, 0x5555FFFF, 0x55FF55FF, 0x55FFFFFF,
-// 	0xFF5555FF, 0xFF55FFFF, 0xFFFF55FF, 0xFFFFFFFF
-// };
-// #define FONT_BUFF 0xF000
-// #define SCREEN_BUFF 0xD000
-
-
 void init_GPU() {
     SDL_Init( SDL_INIT_VIDEO );
     comet.gpu.window = SDL_CreateWindow("comet", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_OPENGL);
@@ -30,11 +16,9 @@ void *GPU_thread(void* argvp) {
     
     init_GPU();
 
-    int running = 1;
-
     SDL_Event e;
 
-    while (running) {
+    while (true) {
         if ( SDL_PollEvent(&e) ) {
             switch (e.type) {
             case SDL_QUIT: 
@@ -56,13 +40,11 @@ void *GPU_thread(void* argvp) {
         
 
         if (comet.gpu.is_drawing) {
-            // sched_setscheduler(0, SCHED_FIFO, &(struct sched_param){.sched_priority = sched_get_priority_max(SCHED_FIFO)}); // lmfao
             GPU_draw();
             comet.gpu.is_drawing = false;
-            // sched_setscheduler(0, SCHED_OTHER, &(struct sched_param){.sched_priority = sched_get_priority_max(SCHED_OTHER)});
         }
 
-        // sched_yield();
+        sched_yield();
     }
 
     comet.cpu.running = false;
@@ -145,7 +127,6 @@ void gl_init() {
         exit(-1);
     }
 
-
     gpu_program = glCreateProgram();
     glAttachShader(gpu_program, vertexShaderID);
     glAttachShader(gpu_program, fragmentShaderID);
@@ -168,7 +149,7 @@ void gl_init() {
     GLint posAttrib = glGetAttribLocation(gpu_program, "position");
     glVertexAttribPointer(posAttrib, 2, GL_FLOAT, GL_FALSE, 4*sizeof(float), 0); 
     glEnableVertexAttribArray(posAttrib);
-    
+
     GLint texAttrib = glGetAttribLocation(gpu_program, "texcoord");
     glVertexAttribPointer(texAttrib, 2, GL_FLOAT, GL_FALSE, 4*sizeof(float), (void*)(2*sizeof(float))); //here
     glEnableVertexAttribArray(texAttrib);

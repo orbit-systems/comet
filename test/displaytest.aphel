@@ -27,6 +27,8 @@ main:
 
         call rk, display.rect
 
+        bra .loop
+
         call rk, swap_framebuffers
 
         bra .loop
