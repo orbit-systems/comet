@@ -7,7 +7,6 @@ SDL_Window* gpu_window;
 SDL_Renderer* gpu_renderer;
 SDL_GLContext* gpu_gl_context;
 
-
 #define SCREEN_WIDTH 1000
 #define SCREEN_HEIGHT 700
 #define FONT_BUFF 0xF000
