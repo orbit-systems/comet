@@ -5,9 +5,11 @@ define display.height, 600
 
 define display.size, 2100000 ; 1000*700/100
 
+align 8
 display.framebuffer:
     d64 0x0000000
 
+align 4
 display.clear: ; (RGB8 : ra) -> ()
     push ra
     push rb
@@ -206,6 +208,189 @@ display.rect: ; (rect_width: ra, rect_height: rb, x: rc, y: rd, color: re) -> ()
         ret
 ;
 
+display.char: ; (x: ra, y: rb, codepoint: rc)
+    push ra
+    push rb
+    push rc
+    push rd
+    push re
+    push rf
+    push rg
+    push rh
+    push ri
+    push rj
+    push rk
+
+
+    push ra
+    mov ra, rc
+    call rk, display.locate_codepoint
+    mov rc, ra
+    add rc, rc, 4
+    ; glyph location is now at rc
+    pop ra
+
+    umul ra, ra, 3
+    umul rb, rb, 3
+
+
+    /*
+    
+    u64 position = x + y*display_width + framebuffer
+
+    int i = 0
+    while (i < 12) {
+        
+        u8 row = [glyph_loc + i]
+        
+        u64 row_start = position + i*display_width
+
+        int j = 0
+        while (j < 18) {
+            pixel = row & 1
+            if (pixel != 0) {
+                [row_start + j]     = 0xFF
+                [row_start + j + 1] = 0xFF
+                [row_start + j + 2] = 0xFF
+            }
+            row = row >> 1
+            j += 3
+        }
+
+        i += 1
+    }
+    
+    */
+    li   rf, display.framebuffer
+    lw   rf, rf
+
+    li   re, display.width
+    umul rd, rb, re
+    add  rd, ra, rd
+    add  rd, rd, rf
+
+    ; rd = position
+    ; re = display.width
+
+    li ra, 0xFF
+
+    li ri, 0
+    .while_1_start:
+    cmp ri, 12
+    bgeu .while_1_end
+
+        lb rg, rc, 0, ri
+        ; rg = row = [glyph_loc + i]
+
+        umul rh, ri, re
+        umul rh, rh, 3
+        add  rh, rh, rd
+        ; rh = row_start = position + i*display_width
+
+        li rj, 0
+        .while_2_start:
+        cmp rj, 18
+        bgeu .while_2_end
+
+            and rb, rg, 1
+            cmp rb, 0
+            beq .skip_draw
+                sb rh, 0, rj, ra
+                sb rh, 1, rj, ra
+                sb rh, 2, rj, ra
+            .skip_draw:
+
+            lsr rg, rg, 1
+            add rj, rj, 3
+            bra .while_2_start
+        .while_2_end:
+
+
+        add ri, ri, 1
+        bra .while_1_start
+    .while_1_end:
+
+    pop rk
+    pop rj
+    pop ri
+    pop rh
+    pop rg
+    pop rf
+    pop re
+    pop rd
+    pop rc
+    pop rb
+    pop ra
+    ret
+;
+
+
+display.locate_codepoint: ; (codepoint: ra) -> (glyph_block_addr: ra)
+    push rb
+    push rc
+    push rd
+    push re
+    push ri
+    push rj
+
+
+    ; rb = font_bin + 16
+    ; rc = (font_bin_end - font_bin)/16 - 1
+    li   rb, display.font_io.start
+    li   rc, display.font_io.end
+    sub  rc, rc, rb;
+    udiv rc, rc, 16
+    sub  rc, rc, 1
+    add  rb, rb, 16
+
+    li   ri, 0        ; ri = L = 0
+    sub  rj, rc, 1   ; rj = R = bin_len-1
+
+
+    .while_L_less_eq_R:
+    cmp ri, rj
+    bgt .while_L_less_eq_R_end
+
+        add  rd, ri, rj
+        udiv rd, rd, 2 ; rd = M = (L + R) / 2
+    
+        li   re, 0 ; u32 c = *(u32*)(font.raw + M*16);
+        lh   re, rb, 0, rd, 4
+        
+        cmp  re, ra
+        blt  .less_than_codepoint
+        bgt  .greater_than_codepoint
+        ; equal
+        shl  rd, rd, 4
+        add  ra, rd, rb
+        bra  .return
+
+        .less_than_codepoint:
+            ; L = M + 1
+            add ri, rd, 1
+            bra .while_L_less_eq_R
+        .greater_than_codepoint:
+            ; R = M - 1
+            sub rj, rd, 1
+            bra .while_L_less_eq_R
+
+    bra .while_L_less_eq_R
+
+    .while_L_less_eq_R_end:
+        mov ra, rb
+        
+    .return:
+
+    pop rj
+    pop ri
+    pop re
+    pop rd
+    pop rc
+    pop rb
+    ret
+;
+
+
 
 display.line:
     ; TODO
@@ -213,3 +398,10 @@ display.line:
 
 display.horiz_line: ; (x: ra, y: rb, c:)
     ret
+
+
+align 16
+display.font_io.start:
+embed "test/io.abf"
+display.font_io.end:
+align 4

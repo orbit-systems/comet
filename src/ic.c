@@ -28,6 +28,7 @@ void push_interrupt_from_MMU(mmu_response res) {
 }
 
 void push_interrupt(u8 code) {
+
     if (code == 255) {
         comet.flag_debug = true;
         return;

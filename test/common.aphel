@@ -2,7 +2,7 @@ define STACK, 100000
 
 loc 0
 IVT:
-    bra setup
+bra setup
 d32 0
 d64 interrupt_handler, 255
 

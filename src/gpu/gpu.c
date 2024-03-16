@@ -160,6 +160,9 @@ void gl_init() {
 
 void GPU_receive(u64 data) {
 
+    while (comet.gpu.is_drawing) {
+        sched_yield();
+    }
 
     comet.gpu.framebuf_addr = data;
     comet.gpu.is_drawing = true;
