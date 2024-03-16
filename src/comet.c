@@ -120,8 +120,7 @@ int main(int argc, char *argv[]) {
     }
 
     //create gpu thread
-    pthread_create(&comet.gpu.thread_id, NULL, GPU_thread, NULL);
-	comet.gpu.frame = malloc(SCREEN_WIDTH*SCREEN_HEIGHT*sizeof(pixel));
+    pthread_create(&comet.gpu_thread_id, NULL, GPU_thread, NULL);
 
     if (comet.flag_cycle_limit == 0) while (comet.cpu.running) {
         // if (gpu_is_drawing) sched_yield();
@@ -133,7 +132,7 @@ int main(int argc, char *argv[]) {
 
 
     //destroy gpu thread
-    pthread_join(comet.gpu.thread_id, NULL);
+    pthread_join(comet.gpu_thread_id, NULL);
 
     if (comet.flag_benchmark) {
         gettimeofday(&exec_end, 0);

@@ -5,7 +5,11 @@ include "test/display.aphel"
 align 4
 main:
 
+    li ra, 10
     call rk, display.update
+
+    li ra, display.framebuffer
+    lw ra, ra
 
 
 

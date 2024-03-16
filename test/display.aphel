@@ -5,7 +5,7 @@ define display.height, 600
 
 align 8
 display.framebuffer:
-    d64 0x000000
+    d64 0x0
 
 align 4
 display.clear: ; (RGB8 : ra) -> ()

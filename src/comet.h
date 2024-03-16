@@ -136,7 +136,9 @@ typedef struct emulator_s {
     MMU mmu; // memory management unit
     IOC ioc; // i/o controller
 
-    GPU gpu; // graphical output
+    // GPU gpu; // graphical output
+
+    pthread_t gpu_thread_id;
 
     bool flag_debug;
     u64  flag_cycle_limit;

@@ -27,7 +27,6 @@ typedef struct GPU_s {
     SDL_Window*    window;
     SDL_Renderer*  renderer;
     SDL_GLContext* gl_ctx;
-    pthread_t      thread_id;
 
     u64    framebuf_addr;
     pixel* frame;
