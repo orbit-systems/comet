@@ -160,15 +160,14 @@ void gl_init() {
 
 void GPU_receive(u64 data) {
 
-    while (comet.gpu.is_drawing) {
-        sched_yield();
-    }
+    // while (comet.gpu.is_drawing) {
+    //     sched_yield();
+    // }
+
+    memcpy(comet.gpu.frame, (void*)(comet.mmu.memory + comet.gpu.framebuf_addr), SCREEN_WIDTH*SCREEN_HEIGHT*3);
 
     comet.gpu.framebuf_addr = data;
     comet.gpu.is_drawing = true;
-
-
-    memcpy(comet.gpu.frame, (void*)(comet.mmu.memory + comet.gpu.framebuf_addr), SCREEN_WIDTH*SCREEN_HEIGHT*3);
 }
 
 const float gpu_surface_vertices[16] = {

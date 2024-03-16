@@ -3,11 +3,9 @@ define display.port, 10
 define display.width,  800
 define display.height, 600
 
-define display.size, 2100000 ; 1000*700/100
-
 align 8
 display.framebuffer:
-    d64 0x0000000
+    d64 0x000000
 
 align 4
 display.clear: ; (RGB8 : ra) -> ()
@@ -395,13 +393,14 @@ display.locate_codepoint: ; (codepoint: ra) -> (glyph_block_addr: ra)
 display.line:
     ; TODO
     ret
+;
 
 display.horiz_line: ; (x: ra, y: rb, c:)
     ret
-
+;
 
 align 16
 display.font_io.start:
-embed "test/io.abf"
+; embed "test/io.abf"
 display.font_io.end:
 align 4

@@ -1,4 +1,3 @@
-include "test/display.aphel"
 
 align 8
 term.cursor_x:
@@ -65,3 +64,6 @@ term.print_char: ; (codepoint: ra)
     pop ra
 
     ret
+;
+
+include "test/display.aphel"

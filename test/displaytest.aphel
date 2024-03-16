@@ -1,18 +1,23 @@
 include "test/common.aphel"
 
+include "test/display.aphel"
+
 align 4
 main:
 
-    li ra, 0x1000000
-    call rk, display.set_framebuffer
-
     call rk, display.update
 
-    li ra, 0xFFFFFF
-    call rk, display.clear
 
-    call rk, display.update
+
+
+    .loop:
+        add rz, rz, rz
+        sub rz, rz, rz
+        umul rz, rz, rz
+        bra .loop
+
     ret
+;
 
 align 8
-include "test/term.aphel"
+; include "test/term.aphel"
