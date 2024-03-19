@@ -1,7 +1,7 @@
 // ╭───────╮
 // │ comet │ the Aphelion ISA reference emulator ☄️
 // ╰───────╯
-// by kaylatheegg, spsandwichman
+// by spsandwichman & kaylatheegg
 
 // using aphelion v0.4
 
@@ -120,7 +120,7 @@ int main(int argc, char *argv[]) {
     }
 
     //create gpu thread
-    pthread_create(&comet.gpu_thread_id, NULL, GPU_thread, NULL);
+    pthread_create(&comet.gpu_thread_id, NULL, gpu_thread, NULL);
 
     if (comet.flag_cycle_limit == 0) while (comet.cpu.running) {
         // if (gpu_is_drawing) sched_yield();

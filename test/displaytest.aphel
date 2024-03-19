@@ -5,16 +5,16 @@ include "test/display.aphel"
 align 4
 main:
 
-    li ra, 10
+    li ra, 0
     call rk, display.update
-
-    li ra, display.framebuffer
-    lw ra, ra
-
 
 
 
     .loop:
+
+    call rk, display.update
+
+
         add rz, rz, rz
         sub rz, rz, rz
         umul rz, rz, rz
