@@ -22,6 +22,7 @@ typedef int64_t  i64;
 typedef int32_t  i32;
 typedef int16_t  i16;
 typedef int8_t   i8;
+typedef unsigned int uint;
 
 typedef double f64;
 typedef float f32;

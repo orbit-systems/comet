@@ -12,6 +12,7 @@
 #include "gpu/gpu.h"
 
 typedef union {
+    u32 raw;
     u8 opcode;
     struct {
         u32 opcode : 8;
