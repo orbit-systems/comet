@@ -8,6 +8,6 @@ extern char SCRATCH[50];
 
 extern char* reg[16];
 
-char* pnemonic(u32 raw);
+char* mnemonic(u32 raw);
 
 int arglist_str(char* buf, u32 raw);

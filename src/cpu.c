@@ -48,7 +48,7 @@ void run() {
         printf("\tri: %-16llx rj: %-16llx rk: %-16llx\n", regval(r_ri), regval(r_rj), regval(r_rk));
         printf("\tsp: %-16llx fp: %-16llx ip: %-16llx st: %016llx\n", regval(r_sp), regval(r_fp), regval(r_ip), regval(r_st));
     
-        char* name = pnemonic(current_instr.raw);
+        char* name = mnemonic(current_instr.raw);
         static char arglist[50] = {0};
         if (name == NULL) {
             printf("[invalid]");

@@ -27,7 +27,7 @@ char* reg[] = {
 // i KNOW theres a better way to do it
 // do NOT @ me on discord to talk about this
 // if you wanna do it better, submit a pr or smth lol
-char* pnemonic(u32 raw) {
+char* mnemonic(u32 raw) {
     instruction ci;
     ci.raw = raw;
 
@@ -270,7 +270,7 @@ int arglist_str(char* buf, u32 raw) {
     case 0x05: // ini
         return sprintf(buf, "%s, %u",  reg[ci.M.rde], ci.M.imm);
     case 0x06: // jal
-        return sprintf(buf, "%s, %d",  reg[ci.M.rde], (i32)ci.M.imm);
+        return sprintf(buf, "%s, %d",  reg[ci.M.rs1], (i32)ci.M.imm);
     case 0x07: // jalr
         return sprintf(buf, "%s, %d, %d",  reg[ci.M.rde], (i32)ci.M.imm, reg[ci.M.rs1]);
     case 0x08: // ret
@@ -392,15 +392,6 @@ int arglist_str(char* buf, u32 raw) {
     case 0x4c: // fmax
     case 0x4d: // fsat
     case 0x4e: // fcnv
-        // switch (ci.E.func) {
-        // case 0b0001: // .32.16
-        // case 0b0010: // .64.16
-        // case 0b0100: // .16.32
-        // case 0b0110: // .64.32
-        // case 0b1000: // .16.64
-        // case 0b1001: // .32.64
-        // default:
-        // }
     case 0x4f: // fnan
         return sprintf(buf, "%s, %s", reg[ci.E.rde], reg[ci.E.rs1]);
     case 0x45: // fadd
