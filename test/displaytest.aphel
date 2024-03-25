@@ -14,7 +14,6 @@ main:
 
     call rk, display.update
 
-
         add rz, rz, rz
         sub rz, rz, rz
         umul rz, rz, rz

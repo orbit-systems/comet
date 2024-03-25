@@ -2,6 +2,7 @@
 #include "cpu.h"
 #include "dev.h"
 #include "decode.h"
+#include "disasm.h"
 
 void forceinline push_stack(u64 data) {
     regval(r_sp) -= 8;
@@ -42,12 +43,20 @@ void run() {
     regval(r_ip) += 4;
 
     if (comet.flag_debug) {
-        u64 func = 0;
-        printf("%s", ins_names[current_instr.opcode * 0x10 + (u8)func]);
         printf("\tra: %-16llx rb: %-16llx rc: %-16llx rd: %-16llx\n", regval(r_ra), regval(r_rb), regval(r_rc), regval(r_rd));
         printf("\tre: %-16llx rf: %-16llx rg: %-16llx rh: %-16llx\n", regval(r_re), regval(r_rf), regval(r_rg), regval(r_rh));
         printf("\tri: %-16llx rj: %-16llx rk: %-16llx\n", regval(r_ri), regval(r_rj), regval(r_rk));
         printf("\tsp: %-16llx fp: %-16llx ip: %-16llx st: %016llx\n", regval(r_sp), regval(r_fp), regval(r_ip), regval(r_st));
+    
+        char* name = pnemonic(current_instr.raw);
+        static char arglist[50] = {0};
+        if (name == NULL) {
+            printf("[invalid]");
+        } else {
+            memset(arglist, 0, 50);
+            arglist_str(arglist, current_instr.raw);
+            printf("\n%s %s\n\n", name, arglist);
+        }
     }
     
 
