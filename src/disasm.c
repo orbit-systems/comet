@@ -264,15 +264,15 @@ int arglist_str(char* buf, u32 raw) {
     case 0x02: // outr
         return sprintf(buf, "%s, %s", reg[ci.M.rde], reg[ci.M.rs1]);
     case 0x03: // outi
-        return sprintf(buf, "%s, %ux", reg[ci.M.rs1], ci.M.imm);
+        return sprintf(buf, "%s, %u", reg[ci.M.rs1], ci.M.imm);
     case 0x04: // inr
         return sprintf(buf, "%s, %s",  reg[ci.M.rde], reg[ci.M.rs1]);
     case 0x05: // ini
-        return sprintf(buf, "%s, x%ux",  reg[ci.M.rde], ci.M.imm);
+        return sprintf(buf, "%s, %u",  reg[ci.M.rde], ci.M.imm);
     case 0x06: // jal
-        return sprintf(buf, "%s, x%dx",  reg[ci.M.rde], (i32)ci.M.imm);
+        return sprintf(buf, "%s, %d",  reg[ci.M.rde], (i32)ci.M.imm);
     case 0x07: // jalr
-        return sprintf(buf, "%s, %d, x%x",  reg[ci.M.rde], (i32)ci.M.imm, reg[ci.M.rs1]);
+        return sprintf(buf, "%s, %d, %d",  reg[ci.M.rde], (i32)ci.M.imm, reg[ci.M.rs1]);
     case 0x08: // ret
         return 0;
     case 0x09: // retr
