@@ -78,12 +78,6 @@ void gl_init() {
 
 	SDL_GL_MakeCurrent(gpu_window, gpu_gl_context);
 
-	GLenum err = glewInit();
-	if (err != GLEW_OK) {
-		printf("GLEW initialisation failure, error: %s\n", glewGetErrorString(err));
-		exit(-1);
-	}
-
 	glEnable(GL_TEXTURE_2D);
 
 	//create gpu shader
