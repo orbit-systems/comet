@@ -5,7 +5,7 @@
 bool init_MMU() {
     if (comet.mmu.mem_max == 0) comet.mmu.mem_max = MEM_DEFAULT_SIZE - 1;
     comet.mmu.memory = malloc(comet.mmu.mem_max + 1);
-    memset(comet.mmu.memory, 0, comet.mmu.mem_max + 1);
+    if (comet.mmu.memory) memset(comet.mmu.memory, 0, comet.mmu.mem_max + 1);
     return comet.mmu.memory != NULL;
 }
 
