@@ -1,3 +1,5 @@
+/subprojects/*
+!/subprojects/*.wrap
 *.exe
 build/*
 build/
