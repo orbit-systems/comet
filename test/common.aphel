@@ -2,8 +2,7 @@ define STACK, 100000
 define IVT, 0
 
 loc 0
-    bra common.setup
-
+bra common.setup
 loc 2048
 align 4
 

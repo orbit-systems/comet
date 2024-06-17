@@ -1,55 +1,58 @@
-SRCPATHS = src/*.c
+SRCPATHS = \
+	src/*.c \
+	src/devices/*.c \
+
+COMPONENTS = \
+	gpu \
+
+COMPONENTS := $(shell echo $(COMPONENTS) | tr A-Z a-z)
+SRCPATHS += $(foreach component, $(COMPONENTS), src/devices/$(component)/*.c) 
+CFLAGS += $(foreach component, $(COMPONENTS), -Isrc/devices/$(component))
+CFLAGS += $(foreach component, $(COMPONENTS), -D$(component)_component)
 SRC = $(wildcard $(SRCPATHS))
 OBJECTS = $(SRC:src/%.c=build/%.o)
 
-
-
 EXECUTABLE_NAME = comet
+ECHO = echo
+
+ifeq ($(OS),Windows_NT)
+	EXECUTABLE_NAME = $(EXECUTABLE_NAME).exe
+else
+	ECHO = /usr/bin/echo
+	# JANK FIX FOR SANDWICH'S DUMB ECHO ON HIS LINUX MACHINE
+endif
 
 CC = gcc
 LD = gcc
 
-DEBUGFLAGS = -ggdb -Og
+INCLUDEPATHS = -Isrc/ -Isrc/devices
+DEBUGFLAGS = -lm -pg -g 
 ASANFLAGS = -fsanitize=undefined -fsanitize=address
-DONTBEAFUCKINGIDIOT = -Werror -Wall -Wextra -pedantic -Wno-missing-field-initializers -Wno-unused-result
-CFLAGS = -O3 -fno-strict-aliasing -flto
-SHUTTHEFUCKUP = -Wno-unknown-warning-option -Wno-incompatible-pointer-types-discards-qualifiers -Wno-initializer-overrides -Wno-discarded-qualifiers
-LINK_FLAGS = -lm -flto
+CFLAGS += -Wincompatible-pointer-types -Wno-discarded-qualifiers -lm -Wno-deprecated-declarations -Wreturn-type
+CFLAGS += -lGL -lSDL2 -lSDL2_image -lGLEW
+OPT = -O2
 
-ifeq ($(OS),Windows_NT)
-	EXECUTABLE_NAME = comet.exe
-	LINK_FLAGS += -lws2_32
-	CFLAGS += -mconsole
-endif
-
-all: build
+FILE_NUM = 0
 
 build/%.o: src/%.c
-	@echo compiling $<
-	@$(CC) -c -o $@ $< $(CFLAGS) -MD
+	$(eval FILE_NUM=$(shell echo $$(($(FILE_NUM)+1))))
+	$(shell $(ECHO) 1>&2 -e "\e[0m[\e[32m$(FILE_NUM)/$(words $(SRC))\e[0m]\t Compiling \e[1m$<\e[0m")
+	@$(CC) -c -o $@ $< $(INCLUDEPATHS) $(CFLAGS) $(OPT)
 
 build: $(OBJECTS)
-	@echo linking with $(LD)
-	@$(CC) $(OBJECTS) -o $(EXECUTABLE_NAME) $(LINK_FLAGS)
-	@echo $(EXECUTABLE_NAME) built
+	@echo Linking with $(LD)...
+	@$(LD) $(OBJECTS) -o $(EXECUTABLE_NAME) $(CFLAGS)
+	@echo Successfully built: $(EXECUTABLE_NAME)
 
-test: build
-	@echo ""
-	./$(EXECUTABLE_NAME) test/example.bin -max-cycles:700000000 -bench
-
-dbgbuild/%.o: src/%.c
-	@$(CC) -c -o $@ $< -Isrc/ -MD $(DEBUGFLAGS)
-
-dbgbuild: $(OBJECTS)
-	@$(LD) $(OBJECTS) -o $(EXECUTABLE_NAME) $(DEBUGFLAGS)
+debug: CFLAGS += $(DEBUGFLAGS)
+debug: OPT = -O0
+debug: build
 
 clean:
-	@rm -rf build
-	@mkdir build
+	@rm -rf build/
+	@mkdir build/
+	@mkdir -p $(dir $(OBJECTS))
 
-printbuildinfo:
-	@echo using $(CC) with flags $(CFLAGS)
-
-new: clean printbuildinfo build
+cleanbuild: clean build
 
 -include $(OBJECTS:.o=.d)

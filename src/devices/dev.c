@@ -9,7 +9,7 @@ void (*dev_receive_table[NUM_PORTS])(u64) = {
     [IOC_PORT] = IOC_receive,
     [MMU_PORT] = MMU_receive,
     [SYSTIMER_PORT] = SYSTIMER_receive,
-    [10] = TTY_receive,
+    [GPU_PORT] = GPU_receive,
 };
 
 void dev_receive() {

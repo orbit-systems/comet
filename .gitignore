@@ -4,9 +4,10 @@ build/
 *.out
 *.ps1
 *.bin
-
+.gitignore
 *.sublime*
-
+*.dll
+luna
 comet
 cometc
 .vscode

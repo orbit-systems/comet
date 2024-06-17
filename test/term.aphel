@@ -1,0 +1,69 @@
+
+align 8
+term.cursor_x:
+    d64 0
+term.cursor_y:
+    d64 0
+
+
+align 4
+term.print_char: ; (codepoint: ra)
+    push ra
+    push rb
+    push rc
+    push rd
+    push re
+    push ri
+    push rj
+    push rk
+
+
+    mov rc, ra
+
+    li ri, term.cursor_x
+    li rj, term.cursor_y
+    lw ra, ri
+    lw rb, rj
+
+    add ra, ra, 6
+    li re, display.width
+    cmp ra, re
+    blt .skip
+
+        li ra, 0
+        add rb, rb, 12
+        add ra, ra, 6
+
+    .skip:
+
+    add rb, rb, 12
+    li re, display.height
+    cmp rb, re
+    blt .skip_2
+
+        li ra, 6
+        li rb, 12
+
+    .skip_2:
+
+    sub rb, rb, 12
+    sub ra, ra, 6
+    call rk, display.char
+    add ra, ra, 6
+
+    sw ri, ra
+    sw rj, rb
+
+    pop rk
+    pop rj
+    pop ri
+    pop re
+    pop rd
+    pop rc
+    pop rb
+    pop ra
+
+    ret
+;
+
+include "test/display.aphel"

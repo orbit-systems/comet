@@ -1,7 +1,7 @@
 // ╭───────╮
 // │ comet │ the Aphelion ISA reference emulator ☄️
 // ╰───────╯
-// by kaylatheegg, spsandwichman
+// by spsandwichman & kaylatheegg
 
 // using aphelion v0.4
 
@@ -11,9 +11,9 @@
 #include "comet.h"
 #include "cpu.h"
 #include "mmu.h"
-#include "dev.h"
+#include "devices/dev.h"
 #include "io.h"
-#include "term.h"
+#include "devices/gpu/gpu.h"
 
 void print_help() {
     printf("\nusage: comet (path) [flags]\n");
@@ -107,8 +107,6 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
-    
-
     fclose(bin_file);
 
     comet.cpu.registers[r_ip] = 0x0;
@@ -121,22 +119,21 @@ int main(int argc, char *argv[]) {
         gettimeofday(&exec_begin, 0);
     }
 
-    term_setup(); //setup terminal
+    //create gpu thread
+    pthread_create(&comet.gpu_thread_id, NULL, gpu_thread, NULL);
 
-    if (comet.flag_cycle_limit == 0){
-        while (comet.cpu.running) {
-            // printf("\n\nWOAH\n\n");
-            run();
-        }
-    } else {
-        while (comet.cpu.running) {
-            if (comet.flag_cycle_limit == comet.cpu.cycle) comet.cpu.running = false;
-            run();
-        }
+    if (comet.flag_cycle_limit == 0) while (comet.cpu.running) {
+        // if (gpu_is_drawing) sched_yield();
+        run();
+    } else while (comet.cpu.running && comet.flag_cycle_limit != comet.cpu.cycle) {
+        // if (gpu_is_drawing) sched_yield();
+        run();
     }
 
-    term_reset(); //unsetup terminal
-    
+
+    //destroy gpu thread
+    pthread_join(comet.gpu_thread_id, NULL);
+
     if (comet.flag_benchmark) {
         gettimeofday(&exec_end, 0);
         long seconds = exec_end.tv_sec - exec_begin.tv_sec;

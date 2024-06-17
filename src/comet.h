@@ -2,6 +2,7 @@
 #define COMET_H
 
 #include "orbit.h"
+#include <pthread.h>
 
 #if defined(_WIN32)
 #   include <winsock2.h>
@@ -9,6 +10,7 @@
 #endif
 
 typedef union {
+    u32 raw;
     u8 opcode;
     struct {
         u32 opcode : 8;
@@ -132,6 +134,10 @@ typedef struct emulator_s {
     IC ic; // interrupt controller
     MMU mmu; // memory management unit
     IOC ioc; // i/o controller
+
+    // GPU gpu; // graphical output
+
+    pthread_t gpu_thread_id;
 
     bool flag_debug;
     u64  flag_cycle_limit;

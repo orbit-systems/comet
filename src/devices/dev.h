@@ -20,5 +20,5 @@ void MMU_receive(u64 data);
 void SYSTIMER_receive(u64 data);
 
 // some custom devices
-#define TTY_PORT 10
-void TTY_receive(u64 data);
+#define GPU_PORT 10
+void GPU_receive(u64 data);
