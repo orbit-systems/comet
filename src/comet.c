@@ -11,9 +11,9 @@
 #include "comet.h"
 #include "cpu.h"
 #include "mmu.h"
-#include "dev.h"
+#include "devices/dev.h"
 #include "io.h"
-#include "gpu/gpu.h"
+#include "devices/gpu/gpu.h"
 
 void print_help() {
     printf("\nusage: comet (path) [flags]\n");

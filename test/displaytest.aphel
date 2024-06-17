@@ -2,22 +2,30 @@ include "test/common.aphel"
 
 include "test/display.aphel"
 
-align 4
 main:
 
-    li ra, 0
-    call rk, display.update
+    out 10, rb
 
+    ; li   ra, 0x_FF_00_00
+    ; call rk, display.clear
 
+    li rb, 0x100000
+    li rf, display.framebuffer
+    sw rf, rb
 
+    li ra, 0x000000
+    li rc, 0x000201
     .loop:
+        out 10, rb
 
-    call rk, display.update
+        add ra, ra, rc
 
+        shl ra, ra, 40
+        lsr ra, ra, 40 // zero upper bits of ra
+        call rk, display.clear
         bra .loop
 
     ret
-;
 
-align 8
-; include "test/term.aphel"
+hello_text:
+    utf8 "hello with includes!\n\0"

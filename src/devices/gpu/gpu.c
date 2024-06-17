@@ -1,7 +1,7 @@
 #include "gpu.h"
-#include "../orbit.h"
-#include "../comet.h"
-#include "../mmu.h"
+#include "orbit.h"
+#include "comet.h"
+#include "mmu.h"
 
 SDL_Window* gpu_window;
 SDL_Renderer* gpu_renderer;

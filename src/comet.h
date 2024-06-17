@@ -9,8 +9,6 @@
 #   include <windows.h>
 #endif
 
-#include "gpu/gpu.h"
-
 typedef union {
     u32 raw;
     u8 opcode;
