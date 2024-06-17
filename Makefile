@@ -2,19 +2,17 @@ SRCPATHS = src/*.c src/gpu/*.c
 SRC = $(wildcard $(SRCPATHS))
 OBJECTS = $(SRC:src/%.c=build/%.o)
 
-
-
 EXECUTABLE_NAME = comet
 
 CC = gcc
 LD = gcc
 
-DEBUGFLAGS = -ggdb -Og
+DEBUGFLAGS = -ggdb -Og 
 ASANFLAGS = -fsanitize=undefined -fsanitize=address
 DONTBEAFUCKINGIDIOT = -Werror -Wall -Wextra -pedantic -Wno-missing-field-initializers -Wno-unused-result
-CFLAGS = -O3 -flto -fno-strict-aliasing
+CFLAGS = -O3 -flto -fno-strict-aliasing $(ASANFLAGS)
 SHUTTHEFUCKUP = -Wno-unknown-warning-option -Wno-incompatible-pointer-types-discards-qualifiers -Wno-initializer-overrides -Wno-discarded-qualifiers
-LINK_FLAGS = -lm -flto -lpthread
+LINK_FLAGS = -lm -flto -lpthread $(ASANFLAGS)
 
 ifeq ($(OS),Windows_NT)
 	EXECUTABLE_NAME = comet.exe
