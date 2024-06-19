@@ -5,6 +5,20 @@ SRCPATHS = \
 COMPONENTS = \
 	gpu \
 
+CC = gcc
+LD = gcc
+
+EXECUTABLE_NAME = comet
+LIBRARY_FLAGS = -lGL -lSDL2 -lSDL2_image -lGLEW -lm
+
+INCLUDEPATHS = -Isrc/ -Isrc/devices
+DEBUGFLAGS = -pg -g 
+ASANFLAGS = -fsanitize=undefined -fsanitize=address
+OPT = -O2
+CFLAGS += -Wincompatible-pointer-types -Wno-discarded-qualifiers -Wno-deprecated-declarations -Wreturn-type
+CFLAGS += $(LIBRARY_FLAGS) 
+
+
 COMPONENTS := $(shell echo $(COMPONENTS) | tr A-Z a-z)
 SRCPATHS += $(foreach component, $(COMPONENTS), src/devices/$(component)/*.c) 
 CFLAGS += $(foreach component, $(COMPONENTS), -Isrc/devices/$(component))
@@ -12,7 +26,6 @@ CFLAGS += $(foreach component, $(COMPONENTS), -D$(component)_component)
 SRC = $(wildcard $(SRCPATHS))
 OBJECTS = $(SRC:src/%.c=build/%.o)
 
-EXECUTABLE_NAME = comet
 ECHO = echo
 
 ifeq ($(OS),Windows_NT)
@@ -21,16 +34,6 @@ else
 	ECHO = /usr/bin/echo
 	# JANK FIX FOR SANDWICH'S DUMB ECHO ON HIS LINUX MACHINE
 endif
-
-CC = gcc
-LD = gcc
-
-INCLUDEPATHS = -Isrc/ -Isrc/devices
-DEBUGFLAGS = -lm -pg -g 
-ASANFLAGS = -fsanitize=undefined -fsanitize=address
-CFLAGS += -Wincompatible-pointer-types -Wno-discarded-qualifiers -lm -Wno-deprecated-declarations -Wreturn-type
-CFLAGS += -lGL -lSDL2 -lSDL2_image -lGLEW
-OPT = -O2
 
 FILE_NUM = 0
 
