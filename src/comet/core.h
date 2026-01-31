@@ -1,0 +1,34 @@
+#ifndef CORE_H
+#define CORE_H
+
+#include "common/type.h"
+
+/// Lock definition from v6 spec 
+typedef struct {
+    bool locked;
+    u8 width;
+    u64 address;
+} AtomicLock;
+
+/// CPU Core 
+typedef struct {
+    /// Register file 
+    u64 regfile[32];
+    
+    /// Control registers 
+    u64 control_reg[24];
+    
+    /// Current lock
+    AtomicLock current_lock;
+} CpuCore;
+
+/// Create a new `cpu_core` structure, and initialise it
+CpuCore* core_init(void);
+
+/// All types of errors that the core can return
+typedef enum: u8 {
+    ERROR_NONE,
+    ERROR_CORE_INVALID,
+} CpuError;
+
+#endif /* CORE_H */

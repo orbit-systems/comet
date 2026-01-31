@@ -7,9 +7,9 @@ build/
 .gitignore
 *.sublime*
 *.dll
-luna
-comet
-cometc
+bin/*
 .vscode
 .idea
 *.a
+compile_commands.json
+.cache/*

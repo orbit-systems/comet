@@ -11,7 +11,7 @@ COMET_OBJECTS = $(COMET_SRC:src/%.c=$(BUILD_DIR)/%.o)
 CC = gcc
 LD = gcc
 
-INCLUDEPATHS = -Iinclude/ -Icommon/include/
+INCLUDEPATHS = -Iinclude/ -Icommon/include -Isrc/aphelion/
 ASANFLAGS = -fsanitize=undefined -fsanitize=address
 CFLAGS = -std=gnu2x -fwrapv -fno-strict-aliasing
 WARNINGS = \
@@ -66,4 +66,4 @@ clean:
 # very good highly recommended ʕ·ᴥ·ʔ
 .PHONY: bear-gen-cc
 bear-gen-cc: clean
-	bear -- $(MAKE) all iron-test
+	bear -- $(MAKE) all
