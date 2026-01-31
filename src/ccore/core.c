@@ -5,7 +5,6 @@
 #include "core.h"
 #include "aphelion.h"
 
-
 CpuCore* core_init(void) {
     CpuCore* new_core = malloc(sizeof(*new_core));
     memset(new_core, 0, sizeof(*new_core));
@@ -13,7 +12,12 @@ CpuCore* core_init(void) {
     return new_core;
 }
 
-CpuError core_modify_register(CpuCore* core, AphelGpr reg_idx, u64 value) {
+CpuError core_enqueue_message(CpuCore* core, SystemMessage message) {
+    vec_append(&core->messages, message);
+    return ERROR_NONE;
+}
+
+CpuError core_write_register(CpuCore* core, AphelGpr reg_idx, u64 value) {
     assert(reg_idx < GPR_COUNT && "Register index larger than Aphelion register file!");
 
     switch(reg_idx) {
@@ -29,5 +33,6 @@ CpuError core_modify_register(CpuCore* core, AphelGpr reg_idx, u64 value) {
 }
 
 CpuError core_execute_instruction(CpuCore* core, u64 instruction) {
+
     return ERROR_NONE;
 }

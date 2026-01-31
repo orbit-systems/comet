@@ -1,9 +1,11 @@
 # common config
 
 BUILD_DIR = build
+CORE = ccore
 
 COMET_CORE_SRC_PATHS = \
-	src/comet/*.c
+	src/comet/*.c \
+	src/$(CORE)/*.c
 
 COMET_SRC = $(wildcard $(COMET_CORE_SRC_PATHS))
 COMET_OBJECTS = $(COMET_SRC:src/%.c=$(BUILD_DIR)/%.o)
@@ -11,17 +13,18 @@ COMET_OBJECTS = $(COMET_SRC:src/%.c=$(BUILD_DIR)/%.o)
 CC = gcc
 LD = gcc
 
-INCLUDEPATHS = -Iinclude/ -Icommon/include -Isrc/aphelion/
+INCLUDEPATHS = -Isrc/comet -Icommon/include -Isrc/aphelion/ -Isrc/$(CORE)
 ASANFLAGS = -fsanitize=undefined -fsanitize=address
 CFLAGS = -std=gnu2x -fwrapv -fno-strict-aliasing
 WARNINGS = \
 	-Wall -Wimplicit-fallthrough -Wmaybe-uninitialized \
 	-Wno-override-init -Wno-enum-compare -Wno-unused -Wno-enum-conversion -Wno-discarded-qualifiers -Wno-strict-aliasing
 
-ALLFLAGS = $(CFLAGS) $(WARNINGS) -MD
+ALLFLAGS = $(CFLAGS) $(WARNINGS) -D$(CORE) -MD
 OPT = -g3 -O0
 
 LDFLAGS =
+
 
 ifneq ($(OS),Windows_NT)
 	CFLAGS += -rdynamic
