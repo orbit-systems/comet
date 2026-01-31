@@ -1,61 +1,69 @@
-SRCPATHS = \
-	src/*.c \
-	src/devices/*.c \
+# common config
 
-COMPONENTS = \
-	gpu \
+BUILD_DIR = build
+
+COMET_CORE_SRC_PATHS = \
+	src/comet/*.c
+
+COMET_SRC = $(wildcard $(COMET_CORE_SRC_PATHS))
+COMET_OBJECTS = $(COMET_SRC:src/%.c=$(BUILD_DIR)/%.o)
 
 CC = gcc
 LD = gcc
 
-EXECUTABLE_NAME = comet
-LIBRARY_FLAGS = -lGL -lSDL2 -lSDL2_image -lGLEW -lm
-
-INCLUDEPATHS = -Isrc/ -Isrc/devices
-DEBUGFLAGS = -pg -g 
+INCLUDEPATHS = -Iinclude/ -Icommon/include/
 ASANFLAGS = -fsanitize=undefined -fsanitize=address
-OPT = -O2
-CFLAGS += -Wincompatible-pointer-types -Wno-discarded-qualifiers -Wno-deprecated-declarations -Wreturn-type
-CFLAGS += $(LIBRARY_FLAGS) 
+CFLAGS = -std=gnu2x -fwrapv -fno-strict-aliasing
+WARNINGS = \
+	-Wall -Wimplicit-fallthrough -Wmaybe-uninitialized \
+	-Wno-override-init -Wno-enum-compare -Wno-unused -Wno-enum-conversion -Wno-discarded-qualifiers -Wno-strict-aliasing
 
+ALLFLAGS = $(CFLAGS) $(WARNINGS) -MD
+OPT = -g3 -O0
 
-COMPONENTS := $(shell echo $(COMPONENTS) | tr A-Z a-z)
-SRCPATHS += $(foreach component, $(COMPONENTS), src/devices/$(component)/*.c) 
-CFLAGS += $(foreach component, $(COMPONENTS), -Isrc/devices/$(component))
-CFLAGS += $(foreach component, $(COMPONENTS), -D$(component)_component)
-SRC = $(wildcard $(SRCPATHS))
-OBJECTS = $(SRC:src/%.c=build/%.o)
+LDFLAGS =
 
-ECHO = echo
-
-ifeq ($(OS),Windows_NT)
-	EXECUTABLE_NAME = $(EXECUTABLE_NAME).exe
-else
-	ECHO = /usr/bin/echo
-	# JANK FIX FOR SANDWICH'S DUMB ECHO ON HIS LINUX MACHINE
+ifneq ($(OS),Windows_NT)
+	CFLAGS += -rdynamic
 endif
 
-FILE_NUM = 0
+ifdef ASAN_ENABLE
+	CFLAGS += $(ASANFLAGS)
+	LDFLAGS += $(ASANFLAGS)
+endif
 
-build/%.o: src/%.c
-	$(eval FILE_NUM=$(shell echo $$(($(FILE_NUM)+1))))
-	$(shell $(ECHO) 1>&2 -e "\e[0m[\e[32m$(FILE_NUM)/$(words $(SRC))\e[0m]\t Compiling \e[1m$<\e[0m")
-	@$(CC) -c -o $@ $< $(INCLUDEPATHS) $(CFLAGS) $(OPT)
+# libcommon config
+export COMMON_OUT_DIR=../$(BUILD_DIR)
 
-build: $(OBJECTS)
-	@echo Linking with $(LD)...
-	@$(LD) $(OBJECTS) -o $(EXECUTABLE_NAME) $(CFLAGS)
-	@echo Successfully built: $(EXECUTABLE_NAME)
+.PHONY: all
+all: comet common
 
-debug: CFLAGS += $(DEBUGFLAGS)
-debug: OPT = -O0
-debug: build
+$(BUILD_DIR)/%.o: src/%.c
+	$(shell echo 1>&2 "Compiling $<")
+	@$(CC) -c -o $@ $< -MD $(INCLUDEPATHS) $(ALLFLAGS) $(OPT)
 
+.PHONY: comet
+comet: bin/comet
+bin/comet: bin/libcommon.a $(COMET_OBJECTS)
+	@$(LD) $(LDFLAGS) $(COMET_OBJECTS) -o bin/comet -Lbin -lcommon
+
+bin/libcommon.a:
+	$(MAKE) -C common
+	cp $(BUILD_DIR)/libcommon.a bin/libcommon.a
+
+.PHONY: clean
 clean:
-	@rm -rf build/
-	@mkdir build/
-	@mkdir -p $(dir $(OBJECTS))
+	$(MAKE) -C common clean
+	@rm -rf $(BUILD_DIR)/
+	@rm -rf bin/
+	@mkdir $(BUILD_DIR)/
+	@mkdir bin/
+	@mkdir -p $(dir $(COMET_OBJECTS))
 
-cleanbuild: clean build
+-include $(COMET_OBJECTS:.o=.d)
 
--include $(OBJECTS:.o=.d)
+# generate compile commands with bear if u got it!!! 
+# very good highly recommended ʕ·ᴥ·ʔ
+.PHONY: bear-gen-cc
+bear-gen-cc: clean
+	bear -- $(MAKE) all iron-test

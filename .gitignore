@@ -12,3 +12,4 @@ comet
 cometc
 .vscode
 .idea
+*.a
