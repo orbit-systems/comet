@@ -5,7 +5,7 @@
 
 #include "common/type.h"
 #include "common/vec.h"
-#include "system.h"
+#include "message.h"
 #include "aphelion.h"
 #include "mmu.h"
 
@@ -35,6 +35,9 @@ typedef struct {
 
     /// Current messages for the core
     Vec(SystemMessage) messages;
+
+    /// Is the CPU core running?
+    bool running;
 } CpuCore;
 
 /// All types of errors that the core can return
@@ -49,5 +52,7 @@ CpuCore* core_init(void);
 CpuError core_enqueue_message(CpuCore* core, SystemMessage message);
 CpuError core_write_register(CpuCore* core, AphelGpr reg_idx, u64 value); 
 CpuError core_execute_instruction(CpuCore* core, u64 instruction);
+
+void* core_thread_main(void* arguments);
 
 #endif /* CORE_H */

@@ -13,3 +13,4 @@ bin/*
 *.a
 compile_commands.json
 .cache/*
+.gdb_history

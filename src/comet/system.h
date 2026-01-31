@@ -3,23 +3,11 @@
 
 #include <pthread.h>
 
-#include "common/type.h"
 #include "common/vec.h"
 #include "physmem.h"
+#include "message.h"
+#include "core.h"
 
-typedef enum: u8 {
-    MSG_OK,
-    MSG_STORE_OK,
-    MSG_STORE_BAD_ADDR,
-    MSG_LOAD_OK,
-    MSG_LOAD_BAD_ADDR,
-} SystemMessageType;
-
-typedef struct {
-    SystemMessageType type;
-    void* data;
-    u64 length;
-} SystemMessage;
 
 typedef struct {
     /// Queue lock on messages
@@ -30,6 +18,21 @@ typedef struct {
 
     /// Physical memory unit
     PhysMemUnit* phys_mem;
+
+    /// CPU core
+    CpuCore* core;
 } System;
+
+/// Initialise the system
+int system_init(void);
+
+/// Enqueue a message to the system
+int system_enqueue_message(SystemMessage message);
+
+/// Install a core into the system
+int system_install_core(CpuCore* core);
+
+/* TODO: remove this */
+int system_process_message(void);
 
 #endif // SYSTEM_H
