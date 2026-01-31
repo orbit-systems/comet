@@ -1,6 +1,8 @@
 #ifndef CORE_H
 #define CORE_H
 
+#include <pthread.h>
+
 #include "common/type.h"
 #include "common/vec.h"
 #include "system.h"
@@ -27,6 +29,9 @@ typedef struct {
 
     /// Current lock
     AtomicLock current_lock;
+
+    /// Lock for the messages
+    pthread_mutex_t message_lock;
 
     /// Current messages for the core
     Vec(SystemMessage) messages;

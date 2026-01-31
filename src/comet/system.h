@@ -1,6 +1,8 @@
 #ifndef SYSTEM_H
 #define SYSTEM_H
 
+#include <pthread.h>
+
 #include "common/type.h"
 #include "common/vec.h"
 #include "physmem.h"
@@ -20,6 +22,9 @@ typedef struct {
 } SystemMessage;
 
 typedef struct {
+    /// Queue lock on messages
+    pthread_mutex_t message_lock;
+
     /// Current queue of messages
     Vec(SystemMessage) messages;
 
