@@ -1,10 +1,12 @@
 #include <assert.h>
+#include <inttypes.h>
 
 #include "comet.h"
 #include "system.h"
 #include "core.h"
 #include "lock.h"
 #include "message.h"
+#include "physmem.h"
 
 static System current_system;
 
@@ -17,28 +19,43 @@ char* message_str[] = {
 /// Dequeue a message from the system message queue
 static SystemMessage system_dequeue_message(void) {
     SystemMessage new_msg;
-    new_msg.type = MSG_REMOVED;
+    new_msg.type = MSG_NONE;
+    new_msg.data = NULL;
     comet_lock(&current_system.message_lock);
-    // TODO: Fix this terribleness
     {
-        for (size_t i = 0; i < vec_len(current_system.messages); i++) {
-            if (current_system.messages[i].type != MSG_REMOVED) {
-                new_msg = current_system.messages[i];
-                current_system.messages[i].type = MSG_REMOVED;
-            }
+        if (vec_len(current_system.messages) != 0) {
+            new_msg = current_system.messages[0];
+            vec_remove_ordered(&current_system.messages, 0);
         }
     }
     comet_unlock(&current_system.message_lock);
 
-    DPRINTF("Dequeued message: %s\n", message_str[new_msg.type]);
+    if (new_msg.type != MSG_NONE)
+        DPRINTF("Dequeued message: %s\n", message_str[new_msg.type]);
 
     return new_msg;
 }
 
 int system_init(void) {
     current_system.messages = vec_new(SystemMessage, 1);
+    current_system.running = true;
     pthread_mutex_init(&current_system.message_lock, NULL);
+
+    /* Create physical memory unit */
+    current_system.phys_mem = physmem_init();
+
+    /* Create 1MB at 0x0 */
+    physmem_create_block(current_system.phys_mem, 1 << 20, 0);
+
     return 0;
+}
+
+bool system_is_running(void) {
+    return current_system.running;
+}
+
+PhysMemUnit* system_get_pmu(void) {
+    return current_system.phys_mem;
 }
 
 int system_install_core(CpuCore* core) {
@@ -57,21 +74,45 @@ int system_enqueue_message(SystemMessage message) {
     return 0;
 }
 
+void* system_thread_main(void* data) {
+    (void)data;
+
+    while (current_system.running) {
+        system_process_message();
+        sched_yield();
+    }
+
+    return NULL;
+}
 
 int system_process_message(void) {
     SystemMessage new_msg = system_dequeue_message();
+
     switch (new_msg.type) {
     case MSG_CORE_LOAD:
-        /* Enqueue core load message */
-        /* TODO: make this real */
-        u64* data = malloc(sizeof(*data));
-        *data = 0xDEADBEEF;
+        /* Get information from the message */
+        SystemMessageCoreLoad load = *(SystemMessageCoreLoad*)new_msg.data;
+        DPRINTF("Processing core load, addr: %"PRIx64", size: %"PRIx64"\n", load.addr, load.size);
+        SystemMessage load_resp = physmem_read(current_system.phys_mem, load.addr, load.size);
+        DPRINTF("Got core load, resp: %s\n", message_str[load_resp.type]);
+        
+        core_enqueue_message(current_system.core, load_resp);
+
         break;
-    case MSG_REMOVED:
+
+    case MSG_CORE_STOP:
+        current_system.running = false;
         break;
+
+    case MSG_NONE:
+        break;
+
     default:
         assert(0 && "Got unhandled message!");
     }
+
+    if (new_msg.data != NULL)
+        rca_free(new_msg.data);
     
     return 0;
 }

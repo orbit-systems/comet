@@ -18,6 +18,8 @@ typedef struct {
 
 /// CPU Core 
 typedef struct {
+    /// CORE INTERNALS
+
     /// Register file 
     u64 regfile[32];
     
@@ -30,14 +32,29 @@ typedef struct {
     /// Current lock
     AtomicLock current_lock;
 
+    /// Core ID
+    u64 core_id;
+
+    /// Is the CPU core running?
+    bool running;
+    
+    /// Is the core currently spinning for execution?
+    bool is_waiting_load_ok;
+
+    /// Will IP increment at the start of the core tick?
+    bool will_inc;
+
+    /// SYSTEM MANAGEMENT
+
+    // TODO: change this to cache
+    /// System response contents from LOAD_OK
+    u64 loaded_value;
+
     /// Lock for the messages
     pthread_mutex_t message_lock;
 
     /// Current messages for the core
     Vec(SystemMessage) messages;
-
-    /// Is the CPU core running?
-    bool running;
 } CpuCore;
 
 /// All types of errors that the core can return
@@ -49,10 +66,13 @@ typedef enum: u8 {
 /// Create a new `cpu_core` structure, and initialise it
 CpuCore* core_init(void);
 
+/// Enqueue a message onto the core message queue 
 CpuError core_enqueue_message(CpuCore* core, SystemMessage message);
-CpuError core_write_register(CpuCore* core, AphelGpr reg_idx, u64 value); 
-CpuError core_execute_instruction(CpuCore* core, u64 instruction);
 
+/// Core thread entry point
 void* core_thread_main(void* arguments);
+
+#define WAIT_ON_MESSAGE_TYPE(type, core) \
+        while (core_process_message((core)) != (type)) sched_yield();
 
 #endif /* CORE_H */

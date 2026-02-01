@@ -48,11 +48,36 @@ typedef enum AphelGpr : u8 {
 
 /// Aphelion control register.
 typedef enum AphelCtrl : u8 {
-     #define CTRL(variant, name) CTRL_##variant,
+    #define CTRL(variant, name) CTRL_##variant,
         APHEL_CTRLS
     #undef CTRL
     CTRL_COUNT
 } AphelCtrl;
+
+#define APHEL_INTS \
+    INT(EXTERNL) \
+    INT(BREAKPT) \
+    INT(SYSCALL) \
+    INT(INVALID) \
+    INT(BUSR) \
+    INT(BUSW) \
+    INT(BUSX) \
+    INT(ACCESSR) \
+    INT(ACCESSW) \
+    INT(ACCESSX) \
+    INT(UALIGNR) \
+    INT(UALIGNW) \
+    INT(UALIGNX) \
+    INT(VATFAIL) \
+    INT(RES1) \
+    INT(RES2) 
+
+typedef enum: u8 {
+    #define INT(int) INT_##int,
+        APHEL_INTS
+    #undef INT
+    INT_COUNT
+} AphelInterrupt;
 
 /// Aphelion instruction format.
 typedef enum : u8 {
@@ -164,14 +189,40 @@ static inline AphelFmt fmt_from_op(AphelOpcode opcode) {
     return (AphelFmt)((opcode) & 0b11);
 }
 
-/// An 'assembled' but unencoded Aphelion instruction.
+/// Decoded aphelion instruction
 typedef struct {
-    AphelOpcode op;
-    AphelGpr r1;
-    AphelGpr r2;
-    AphelGpr r3;
-    i32 imm;
-} AphelInst;
+    union {
+        struct {
+            u32 op: 8;
+            u32 r1: 5;
+            u32 imm: 19;
+        } fmtA;
+        struct {
+            u32 op: 8;
+            u32 r1: 5;
+            u32 r2: 5;
+            u32 imm: 14;
+        } fmtB;
+        struct {
+            u32 op: 8;
+            u32 r1: 5;
+            u32 r2: 5;
+            u32 r3: 5;
+            u32 imm: 9;
+        } fmtC;
+        struct {
+            u8 fmt : 2;
+            u8 min : 3;
+            u8 maj : 3;
+            u8 res;
+            u8 res1;
+            u8 res2;
+        } op;
+        u32 inst;
+    };
+} AphelDecodedInst;
+
+static_assert(sizeof(AphelDecodedInst) == 4);
 
 /// Name for an opcode. If an opcode is not present, gives `nullptr`.
 extern const char* const op_name[256];
@@ -181,5 +232,8 @@ extern const char* const gpr_name[32];
 
 /// Name for a control register
 extern const char* const ctrl_name[32];
+
+/// Name for an interrupt
+extern const char* const int_name[16];
 
 #endif // APHELION_H

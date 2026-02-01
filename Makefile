@@ -5,15 +5,17 @@ CORE = ccore
 
 COMET_CORE_SRC_PATHS = \
 	src/comet/*.c \
+	src/util/*.c \
+	src/aphelion/*.c \
 	src/$(CORE)/*.c
 
 COMET_SRC = $(wildcard $(COMET_CORE_SRC_PATHS))
 COMET_OBJECTS = $(COMET_SRC:src/%.c=$(BUILD_DIR)/%.o)
 
-CC = gcc
-LD = gcc
+CC ?= gcc
+LD ?= gcc
 
-INCLUDEPATHS = -Isrc/comet -Icommon/include -Isrc/aphelion/ -Isrc/$(CORE)
+INCLUDEPATHS = -Icommon/include -Isrc/aphelion -Isrc/comet -Isrc/$(CORE) -Isrc/util 
 ASANFLAGS = -fsanitize=undefined -fsanitize=address
 CFLAGS = -std=gnu2x -fwrapv -fno-strict-aliasing
 WARNINGS = \
@@ -23,8 +25,7 @@ WARNINGS = \
 ALLFLAGS = $(CFLAGS) $(WARNINGS) -D$(CORE) -MD
 OPT = -g3 -O0
 
-LDFLAGS =
-
+LDFLAGS = -lpthread
 
 ifneq ($(OS),Windows_NT)
 	CFLAGS += -rdynamic
@@ -55,7 +56,7 @@ bin/libcommon.a:
 	cp $(BUILD_DIR)/libcommon.a bin/libcommon.a
 
 .PHONY: clean
-clean:
+clean:	
 	$(MAKE) -C common clean
 	@rm -rf $(BUILD_DIR)/
 	@rm -rf bin/

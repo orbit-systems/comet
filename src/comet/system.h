@@ -21,6 +21,9 @@ typedef struct {
 
     /// CPU core
     CpuCore* core;
+
+    /// Is the system running?
+    bool running;
 } System;
 
 /// Initialise the system
@@ -34,5 +37,14 @@ int system_install_core(CpuCore* core);
 
 /* TODO: remove this */
 int system_process_message(void);
+
+/// Is the system currently running?
+bool system_is_running(void);
+
+/// Main entry for the system thread
+void* system_thread_main(void* data); 
+
+/// Get the physical memory unit for the system
+PhysMemUnit* system_get_pmu(void);
 
 #endif // SYSTEM_H

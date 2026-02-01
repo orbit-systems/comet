@@ -11,6 +11,62 @@
 #include "lock.h"
 #include "common/vec.h"
 #include "message.h"
+#include "system.h"
+
+/// Trigger interrupt in the core
+static void core_trigger_interrupt(CpuCore* core, AphelInterrupt interrupt) {
+    assert(interrupt <= INT_COUNT && "Out of bounds interrupt!");
+
+    DPRINTF("Firing interrupt: %s\n", int_name[interrupt]);
+
+    switch(interrupt) {
+    case INT_INVALID:
+    case INT_BUSR:
+    case INT_BUSW:
+    case INT_BUSX:
+        /* Force jump to 0x0 */
+        core->regfile[GPR_IP] = 0;
+        core->will_inc = false;
+        break;
+
+    default:
+        assert(0 && "Unhandled interrupt!");
+    }
+}
+
+/// Sign extend value to 64 bits
+static u64 core_sign_extend(u64 original, u64 size) {
+    if (size == 64) return original;
+    u64 mask = 1U << (size - 1); 
+
+    u64 zero_above = original & ((1U << size) - 1);
+    return (zero_above ^ mask) - mask;
+}
+
+/// Execute an instruction on the core
+static CpuError core_execute_instruction(CpuCore* core, u32 instruction) {
+    AphelDecodedInst inst;
+    inst.inst = instruction;
+    DPRINTF("Got inst: %"PRIx32", op: %s\n", instruction, op_name[inst.fmtA.op]);
+
+    switch (inst.fmtA.op) {
+    case OP_BZ: // FmtA
+        u8 r1 = inst.fmtA.r1;
+        printf("IMM: %"PRIx32"\n", inst.fmtA.imm);
+        if (core->regfile[r1] == 0) {
+            DPRINTF("Updating IP to %"PRIx64"\n", core->regfile[GPR_IP] + (core_sign_extend(inst.fmtA.imm, 19) << 2));
+            core->regfile[GPR_IP] = core->regfile[GPR_IP] + (core_sign_extend(inst.fmtA.imm, 19) << 2);
+        }
+        break;
+    default:
+        WPRINTF("Unknown opcode: 0x%02x\n", inst.fmtA.op);
+        core_trigger_interrupt(core, INT_INVALID);
+        /* TODO: remove this */
+        return ERROR_CORE_INVALID;
+    }
+
+    return ERROR_NONE;
+}
 
 CpuCore* core_init(void) {
     CpuCore* new_core = malloc(sizeof(*new_core));
@@ -36,20 +92,20 @@ CpuError core_enqueue_message(CpuCore* core, SystemMessage message) {
 
 SystemMessage core_dequeue_message(CpuCore* core) {
     SystemMessage new_msg;
-    new_msg.type = MSG_REMOVED;
+    new_msg.type = MSG_NONE;
+    new_msg.data = NULL;
     comet_lock(&core->message_lock);
-    // TODO: Fix this terribleness
     {
-        for (size_t i = 0; i < vec_len(core->messages); i++) {
-            if (core->messages[i].type != MSG_REMOVED) {
-                new_msg = core->messages[i];
-                core->messages[i].type = MSG_REMOVED;
-            }
+        if (vec_len(core->messages) != 0) {
+            new_msg = core->messages[0];
+            vec_remove_ordered(&core->messages, 0);
         }
     }
     comet_unlock(&core->message_lock);
 
-    DPRINTF("Dequeued message: %s\n", message_str[new_msg.type]);
+    if (new_msg.type != MSG_NONE) 
+        DPRINTF("Dequeued message: %s\n", message_str[new_msg.type]);
+    
     return new_msg;
 }
 
@@ -68,38 +124,111 @@ CpuError core_write_register(CpuCore* core, AphelGpr reg_idx, u64 value) {
     return ERROR_NONE;
 }
 
+SystemMessageType core_process_message(CpuCore* core) {
+    SystemMessage curr_msg = core_dequeue_message(core);
+
+    switch (curr_msg.type) {
+    case MSG_SYS_STOP:
+        DPRINTF("Stopping core\n");
+        core->running = false;
+        break;
+
+    case MSG_SYS_LOAD_OK:
+        /* Get information about message and free */
+        u32 data = *(u32*)curr_msg.data;
+
+        /* Store loaded information inside the core */
+        /* TODO: Store this inside of D$ */
+        core->loaded_value = data;
+        break;
+
+    case MSG_SYS_LOAD_BAD_ADDR:
+        /* Trigger an interrupt! */
+        if (core->is_waiting_load_ok) {
+            /* Trigger a BUSX interrupt */
+            core_trigger_interrupt(core, INT_BUSX);
+        } else {
+            core_trigger_interrupt(core, INT_BUSR);
+        }
+
+        assert(curr_msg.data != NULL && "Expected MSG_SYS_BAD_LOAD_ADDR's data field to be non-null!");
+
+        /* Write to intval */
+        core->control_reg[CTRL_INTVAL] = *(u64*)curr_msg.data;
+        break;
+        
+    case MSG_NONE:
+        break;
+
+    default:
+        assert(0 && "Got unhandled message!");
+    }
+
+    if (curr_msg.data != NULL)
+        rca_free(curr_msg.data);
+
+    return curr_msg.type;
+}
+
 void* core_thread_main(void* arguments) {
     DPRINTF("Running core\n");
     CpuCore* core = (CpuCore*)arguments;
     while (core->running) {
-        SystemMessage curr_msg = core_dequeue_message(core);
-        switch (curr_msg.type) {
-        case MSG_SYS_STOP:
-            DPRINTF("Stopping core\n");
-            core->running = false;
-            break;
-        case MSG_SYS_LOAD_OK:
-            /* Get information about message and free */
-            u64 data = *(u64*)curr_msg.data;
-            printf("Got data: %"PRIx64"\n", data);
-            free(curr_msg.data);
-            /* Spoof stop message */
-            core_enqueue_message(core, (SystemMessage){.type = MSG_SYS_STOP});
-            break;
-
-        case MSG_REMOVED:
-            break;
-        default:
-            assert(0 && "Got unhandled message!");
+        /* Get instruction from main memory */
+        if (core->will_inc == false) {
+            core->will_inc = true;
+        } else {
+            core->regfile[GPR_IP] += 4;
         }
+
+        SystemMessageCoreLoad load = (SystemMessageCoreLoad){.addr = core->regfile[GPR_IP], .size = 4};
+        system_enqueue_message(CREATE_MESSAGE(MSG_CORE_LOAD, load, sizeof(load)));
+        
+        u32 instruction = 0;
+        bool bad_load = false;
+        /* Process messages until LOAD_OK occurs */
+        core->is_waiting_load_ok = true;
+        DPRINTF("Waiting on LOAD_OK\n");
+        while (core->is_waiting_load_ok) {
+            SystemMessageType curr_msg = core_process_message(core);
+            switch (curr_msg) {
+            case MSG_SYS_LOAD_BAD_ADDR:
+                core->is_waiting_load_ok = false;
+                bad_load = true;
+                break;
+            case MSG_SYS_LOAD_OK:
+                core->is_waiting_load_ok = false;
+                break;
+            default:
+                break;
+            }
+        }
+
+        /* Skip rest of the CPU kick, continue to next inst */
+        if (bad_load == true) 
+            continue;
+
+        instruction = core->loaded_value;
+
+        switch (core_execute_instruction(core, instruction)) {
+            case ERROR_NONE:
+                break;
+
+            case ERROR_CORE_INVALID:
+                WPRINTF("Invalid core state detected, stopping execution!\n");
+                core->running = false;
+                break;
+
+            default:
+                assert(0 && "Unhandled core error\n");
+        }
+
         sched_yield();
     }
 
+    /* Core is no longer running, signal to the harness to stop */
+    /* TODO: This isn't always required, since the aphelion core could be halted. Change this for SMP */
+    system_enqueue_message(CREATE_MESSAGE(MSG_CORE_STOP, NULL, 0));
+
     return NULL;
-}
-
-
-CpuError core_execute_instruction(CpuCore* core, u64 instruction) {
-
-    return ERROR_NONE;
 }

@@ -105,3 +105,9 @@ const char* const ctrl_name[32] = {
         APHEL_CTRLS
     #undef CTRL
 };
+
+const char* const int_name[16] = {
+    #define INT(int) [INT_##int] = #int,
+        APHEL_INTS
+    #undef INT
+};
