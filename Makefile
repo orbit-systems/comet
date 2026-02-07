@@ -13,7 +13,7 @@ COMET_SRC = $(wildcard $(COMET_CORE_SRC_PATHS))
 COMET_OBJECTS = $(COMET_SRC:src/%.c=$(BUILD_DIR)/%.o)
 
 CC ?= gcc
-LD ?= gcc
+LD = $(CC)
 
 INCLUDEPATHS = -Icommon/include -Isrc/aphelion -Isrc/comet -Isrc/$(CORE) -Isrc/util 
 ASANFLAGS = -fsanitize=undefined -fsanitize=address

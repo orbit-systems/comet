@@ -224,6 +224,19 @@ typedef struct {
 
 static_assert(sizeof(AphelDecodedInst) == 4);
 
+/// STAT E flag mask
+#define STAT_E_MASK 1 << 0
+
+/// STAT U flag mask
+#define STAT_U_MASK 1 << 1
+
+/// STAT V flag mask
+#define STAT_V_MASK 1 << 2
+
+static inline bool aphel_is_valid_ctrl(u32 ctrl) {
+    return ctrl < CTRL_COUNT;
+}
+
 /// Name for an opcode. If an opcode is not present, gives `nullptr`.
 extern const char* const op_name[256];
 
