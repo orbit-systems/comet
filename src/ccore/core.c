@@ -4,6 +4,7 @@
 #include <assert.h>
 #include <pthread.h>
 #include <inttypes.h>
+#include <stdbit.h>
 
 #include "core.h"
 #include "comet.h"
@@ -338,7 +339,7 @@ static CpuError core_execute_instruction(CpuCore* core, u32 instruction) {
     }
     
     case OP_CSB: // fmtB
-        core_write_register(core, inst.fmtB.r1, __builtin_stdc_count_ones(core_read_register(core, inst.fmtB.r2)));
+        core_write_register(core, inst.fmtB.r1, stdc_count_ones(core_read_register(core, inst.fmtB.r2)));
         break;
 
     case OP_CTZ: // fmtB
@@ -347,7 +348,7 @@ static CpuError core_execute_instruction(CpuCore* core, u32 instruction) {
             core_write_register(core, inst.fmtB.r1, 0);
             break;
         }
-        core_write_register(core, inst.fmtB.r1, __builtin_stdc_trailing_zeros(core_read_register(core, inst.fmtB.r2)));
+        core_write_register(core, inst.fmtB.r1, stdc_trailing_zeros(core_read_register(core, inst.fmtB.r2)));
         break;
 
     case OP_EXT: { // fmtC
