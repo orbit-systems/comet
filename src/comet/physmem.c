@@ -1,6 +1,8 @@
 #include "physmem.h"
 #include "message.h"
 
+#include "common/util.h"
+
 PhysMemUnit* physmem_init(void) {
     PhysMemUnit* new_physmem = malloc(sizeof(*new_physmem));
     new_physmem->blocks = vec_new(PhysMemBlock, 1);
@@ -16,7 +18,7 @@ void physmem_create_block(PhysMemUnit* pmu, u64 size, u64 addr) {
 }
 
 PhysMemBlock* physmem_find_block(PhysMemUnit* pmu, u64 addr) {
-    for (size_t i = 0; i < vec_len(pmu); i++) {
+    for_n(i, 0, vec_len(pmu->blocks)) {
         PhysMemBlock* block = &pmu->blocks[i];
         if (block->address <= addr && addr <= block->address + block->length)
             return block;
