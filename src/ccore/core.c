@@ -18,7 +18,7 @@
 static void core_trigger_interrupt(CpuCore* core, AphelInterrupt interrupt) {
     assert(interrupt <= INT_COUNT && "Out of bounds interrupt!");
 
-    DPRINTF("Firing interrupt: %s\n", int_name[interrupt]);
+    CDPRINTF("Firing interrupt: %s\n", int_name[interrupt]);
 
     /* TODO: handle interrupts correctly */
 
@@ -90,7 +90,7 @@ static inline u64 core_read_register(CpuCore* core, AphelGpr reg_idx) {
 static CpuError core_execute_instruction(CpuCore* core, u32 instruction) {
     AphelDecodedInst inst;
     inst.inst = instruction;
-    DPRINTF("Got inst: %"PRIx32", op: %s\n", instruction, op_name[inst.fmtA.op]);
+    CDPRINTF("Got inst: %08"PRIx32", op: %s\n", instruction, op_name[inst.fmtA.op]);
 
     switch (inst.fmtA.op) {
     case OP_SSI: { // fmtA
@@ -110,6 +110,14 @@ static CpuError core_execute_instruction(CpuCore* core, u32 instruction) {
 
         break;
     }
+    case OP_ADD: // fmtB
+        core_write_register(core, inst.fmtC.r1, 
+            core_read_register(core, inst.fmtC.r2) + 
+            core_read_register(core, inst.fmtC.r3) + 
+            core_zero_extend(inst.fmtC.imm, 9));
+        
+        break;
+
     case OP_FENCE: { // fmtA
         /* TODO: handle active memory operations */
 
@@ -410,7 +418,7 @@ CpuCore* core_init(void) {
 CpuError core_enqueue_message(CpuCore* core, SystemMessage message) {
     comet_lock(&core->message_lock);
     {
-        DPRINTF("Enqueued message: %s\n", message_str[message.type]);
+        MDPRINTF("Enqueued message: %s\n", message_str[message.type]);
         vec_append(&core->messages, message);
     }
     comet_unlock(&core->message_lock);
@@ -431,7 +439,7 @@ SystemMessage core_dequeue_message(CpuCore* core) {
     comet_unlock(&core->message_lock);
 
     if (new_msg.type != MSG_NONE) 
-        DPRINTF("Dequeued message: %s\n", message_str[new_msg.type]);
+        MDPRINTF("Dequeued message: %s\n", message_str[new_msg.type]);
     
     return new_msg;
 }
@@ -441,7 +449,7 @@ SystemMessageType core_process_message(CpuCore* core) {
 
     switch (curr_msg.type) {
     case MSG_SYS_STOP:
-        DPRINTF("Stopping core\n");
+        CDPRINTF("Stopping core\n");
         core->running = false;
         break;
 
@@ -482,8 +490,20 @@ SystemMessageType core_process_message(CpuCore* core) {
     return curr_msg.type;
 }
 
+void core_dump_regs(CpuCore* core) {
+    printf("\t IP:  0x%016"PRIX64" TP:  0x%016"PRIX64" SP:  0x%016"PRIX64" FP:  0x%016"PRIX64"\n", core->regfile[GPR_IP], core->regfile[GPR_TP], core->regfile[GPR_SP], core->regfile[GPR_FP]);
+    printf("\t LP:  0x%016"PRIX64" ZR:  0x%016"PRIX64" A0:  0x%016"PRIX64" A1:  0x%016"PRIX64"\n", core->regfile[GPR_LP], core->regfile[GPR_ZR], core->regfile[GPR_A0], core->regfile[GPR_A1]);
+    printf("\t A2:  0x%016"PRIX64" A3:  0x%016"PRIX64" A4:  0x%016"PRIX64" A5:  0x%016"PRIX64"\n", core->regfile[GPR_A2], core->regfile[GPR_A3], core->regfile[GPR_A4], core->regfile[GPR_A5]);
+    printf("\t L0:  0x%016"PRIX64" L1:  0x%016"PRIX64" L2:  0x%016"PRIX64" L3:  0x%016"PRIX64"\n", core->regfile[GPR_L0], core->regfile[GPR_L1], core->regfile[GPR_L2], core->regfile[GPR_L3]);
+    printf("\t L4:  0x%016"PRIX64" L5:  0x%016"PRIX64" L6:  0x%016"PRIX64" L7:  0x%016"PRIX64"\n", core->regfile[GPR_L4], core->regfile[GPR_L5], core->regfile[GPR_L6], core->regfile[GPR_L7]);
+    printf("\t L8:  0x%016"PRIX64" L9:  0x%016"PRIX64" L10: 0x%016"PRIX64" L11: 0x%016"PRIX64"\n", core->regfile[GPR_L8], core->regfile[GPR_L9], core->regfile[GPR_L10], core->regfile[GPR_L11]);
+    printf("\t L12: 0x%016"PRIX64" L13: 0x%016"PRIX64" T0:  0x%016"PRIX64" T1:  0x%016"PRIX64"\n", core->regfile[GPR_L12], core->regfile[GPR_L13], core->regfile[GPR_T0], core->regfile[GPR_T1]);
+    printf("\t T2:  0x%016"PRIX64" T3:  0x%016"PRIX64" T4:  0x%016"PRIX64" T5:  0x%016"PRIX64"\n", core->regfile[GPR_T2], core->regfile[GPR_T3], core->regfile[GPR_T4], core->regfile[GPR_T5]);
+    return;
+}
+
 void* core_thread_main(void* arguments) {
-    DPRINTF("Running core\n");
+    CDPRINTF("Running core\n");
     CpuCore* core = (CpuCore*)arguments;
     while (core->running) {
         /* Get instruction from main memory */
@@ -493,6 +513,10 @@ void* core_thread_main(void* arguments) {
             core->regfile[GPR_IP] += 4;
         }
 
+        core->pc++;
+
+        //core_dump_regs(core);
+
         SystemMessageCoreLoad load = (SystemMessageCoreLoad){.addr = core->regfile[GPR_IP], .size = 4};
         system_enqueue_message(CREATE_MESSAGE(MSG_CORE_LOAD, load, sizeof(load)));
         
@@ -500,7 +524,7 @@ void* core_thread_main(void* arguments) {
         bool bad_load = false;
         /* Process messages until LOAD_OK occurs */
         core->is_waiting_load_ok = true;
-        DPRINTF("Waiting on LOAD_OK\n");
+        MDPRINTF("Waiting on LOAD_OK\n");
         while (core->is_waiting_load_ok) {
             SystemMessageType curr_msg = core_process_message(core);
             switch (curr_msg) {

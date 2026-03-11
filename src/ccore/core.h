@@ -55,6 +55,8 @@ typedef struct {
 
     /// Current messages for the core
     Vec(SystemMessage) messages;
+
+    uint64_t pc;
 } CpuCore;
 
 /// All types of errors that the core can return
